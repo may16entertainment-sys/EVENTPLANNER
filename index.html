@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Build-Up Site Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: site-office board — drawing sheet in the middle, tool rail left, schedule/brief panel right, day scrubber under the sheet */
+:root{
+  --bg:#eef0ec; --sheet:#fbfcf9; --panel:#ffffff; --fg:#1d2420; --muted:#5f6b64; --line:#d3d8d2; --line2:#e4e8e3;
+  --accent:#e8590c; --accent-ink:#ffffff; --snap:#0b7285; --hazard:#f2a516; --hazard2:#1d2420;
+  --ok:#2f8f4e; --warn:#c77c02; --bad:#c92a2a; --info:#3b6fb6;
+  --grid:#dfe4de; --shadow:0 1px 2px rgba(20,30,25,.06),0 6px 20px rgba(20,30,25,.08);
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151a17; --sheet:#1b211e; --panel:#1f2622; --fg:#e6ebe7; --muted:#9aa69f; --line:#34403a; --line2:#2a332e;
+  --accent:#ff7a2e; --accent-ink:#1a1008; --snap:#3bc9db; --hazard:#e6a019; --hazard2:#151a17;
+  --ok:#55c27a; --warn:#e6a019; --bad:#ff6b6b; --info:#7aa7ea; --grid:#28312c; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151a17; --sheet:#1b211e; --panel:#1f2622; --fg:#e6ebe7; --muted:#9aa69f; --line:#34403a; --line2:#2a332e;
+  --accent:#ff7a2e; --accent-ink:#1a1008; --snap:#3bc9db; --hazard:#e6a019; --hazard2:#151a17;
+  --ok:#55c27a; --warn:#e6a019; --bad:#ff6b6b; --info:#7aa7ea; --grid:#28312c; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;gap:12px}
+header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;min-width:0;flex:1 1 220px}
+.brand small{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.01em;line-height:1.05;text-wrap:balance;overflow-wrap:anywhere}
+.top .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.save{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.small{padding:3px 8px;font-size:12.5px}
+.btn.danger{color:var(--bad)}
+.btn.on{border-color:var(--snap);color:var(--snap)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 8px;min-width:0}
+.pill{font-family:var(--f-mono);font-size:11.5px;border-radius:999px;padding:2px 9px;border:1px solid var(--line);white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:currentColor}
+.main{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(320px,400px);gap:12px;min-height:0}
+.rail{display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;overflow-y:auto;width:180px}
+.rail h3{margin:6px 4px 2px;font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tool{display:flex;align-items:center;gap:8px;border:1px solid transparent;background:none;border-radius:6px;padding:5px 6px;text-align:left;font-size:13px}
+.tool:hover{background:var(--line2)}
+.tool[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.tool svg{flex:none}
+.sheetwrap{display:flex;flex-direction:column;min-height:0;min-width:0;gap:8px}
+.sheet{position:relative;flex:1;min-height:0;background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.sheet svg#map{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.sheet.drawing svg#map{cursor:crosshair}
+.mapbar{position:absolute;top:8px;right:8px;display:flex;gap:4px;flex-direction:column}
+.mapbar .btn{padding:4px 8px;justify-content:center;min-width:32px}
+.hint{position:absolute;left:8px;bottom:8px;right:60px;font-size:12.5px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:6px;padding:5px 9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hint kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
+.banner{position:absolute;top:8px;left:8px;right:56px;font-size:12.5px;background:var(--panel);border:1px solid var(--warn);border-radius:6px;padding:6px 10px}
+.empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;pointer-events:none}
+.empty .box{pointer-events:auto;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;box-shadow:var(--shadow)}
+.empty h2{font-family:var(--f-display);margin:0 0 6px;font-size:24px}
+.scrub{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}
+.scrub .day{font-family:var(--f-display);font-size:20px;font-weight:600;line-height:1;min-width:150px}
+.scrub .day small{display:block;font-family:var(--f-mono);font-size:10.5px;font-weight:400;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.scrub input[type=range]{width:100%;accent-color:var(--accent)}
+.ticks{grid-column:2;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.legend{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block;border:1px solid var(--line)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0;min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:none;background:none;padding:10px 12px;font-family:var(--f-display);font-weight:600;font-size:16px;letter-spacing:.02em;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tab .n{font-family:var(--f-mono);font-size:11px;background:var(--bad);color:var(--sheet);border-radius:999px;padding:0 6px}
+.pbody{overflow-y:auto;padding:12px;min-height:0;flex:1;display:flex;flex-direction:column;gap:12px}
+.sec h4{margin:0 0 6px;font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field label{font-size:12px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.meas{display:flex;gap:16px;flex-wrap:wrap}
+.meas div{display:flex;flex-direction:column}
+.meas b{font-family:var(--f-display);font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.meas span{font-size:11px;color:var(--muted);font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em}
+.gantt{overflow-x:auto;border:1px solid var(--line2);border-radius:8px}
+.grow{display:grid;grid-template-columns:150px 1fr;min-width:420px;border-bottom:1px solid var(--line2);font-size:12.5px;cursor:pointer}
+.grow:hover{background:var(--line2)}
+.grow.sel{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.grow .gl{padding:5px 8px;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line2)}
+.grow .gl b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grow .gl span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt{position:relative}
+.gt .bar{position:absolute;top:8px;bottom:8px;border-radius:3px;min-width:6px}
+.gt .bar.done{opacity:.45}
+.gt .now{position:absolute;top:0;bottom:0;width:2px;background:var(--accent)}
+.gt .ev{position:absolute;top:0;bottom:0;border-left:2px dashed var(--bad)}
+.ghead{display:grid;grid-template-columns:150px 1fr;min-width:420px;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.ghead .gt{display:flex}
+.ghead .gt div{flex:1;padding:4px 0 4px 3px;border-left:1px solid var(--line2);white-space:nowrap;overflow:hidden}
+.task{border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.task .t1{display:flex;gap:8px;align-items:center}
+.task .t1 input{flex:1}
+.st{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.st.done{color:var(--ok)} .st.ready{color:var(--accent)} .st.wait{color:var(--muted)} .st.started{color:var(--info)}
+.conf{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.conf.critical{border-left-color:var(--bad)} .conf.info{border-left-color:var(--info)}
+.conf b{font-weight:600}
+.brief{white-space:pre-wrap;font-family:var(--f-mono);font-size:12px;background:var(--line2);border-radius:8px;padding:10px;overflow-x:auto}
+.vrow{display:grid;grid-template-columns:auto 1fr;gap:6px 8px;border:1px solid var(--line);border-radius:8px;padding:8px;align-items:center}
+.vrow input[type=color]{width:28px;height:28px;border:none;background:none;padding:0}
+.modal{position:fixed;inset:0;background:rgba(10,15,12,.45);display:grid;place-items:center;padding:16px;z-index:20}
+.modal .card{background:var(--panel);border-radius:12px;box-shadow:var(--shadow);width:min(560px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;border:1px solid var(--line);min-height:0}
+.modal .mb{min-height:0}
+.modal .mh{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.modal .mh h2{margin:0;font-family:var(--f-display);font-size:24px}
+.modal .mh p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.modal .mb{padding:14px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal .mf{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.q{display:flex;flex-direction:column;gap:6px}
+.q > label.ql,.q > .ql{font-weight:600;font-size:13.5px}
+.q .help{font-size:12px;color:var(--muted)}
+.chks{display:flex;flex-direction:column;gap:2px;max-height:170px;overflow-y:auto;border:1px solid var(--line2);border-radius:6px;padding:6px}
+.chks label{display:flex;gap:7px;align-items:center;font-size:13px;padding:2px}
+.chks .grp{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.follow{display:grid;grid-template-columns:1fr 120px 64px auto;gap:6px;align-items:center}
+.qed{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;border:1px solid var(--line2);border-radius:6px;padding:6px}
+.qed .kind{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);text-transform:uppercase}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--sheet);padding:8px 14px;border-radius:8px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+.zl{font-family:var(--f-display);font-weight:600;font-size:15px;paint-order:stroke;stroke:var(--sheet);stroke-width:3px;stroke-linejoin:round}
+.zs{font-family:var(--f-mono);font-size:9.5px;paint-order:stroke;stroke:var(--sheet);stroke-width:3px;stroke-linejoin:round}
+.ml{font-family:var(--f-mono);font-size:11px;font-weight:500;paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.main.norail{grid-template-columns:minmax(0,1fr) minmax(320px,400px)}
+@media (max-width:1100px){.main{grid-template-columns:auto minmax(0,1fr)}.main.norail{grid-template-columns:minmax(0,1fr)}.panel{grid-column:1/-1}}
+@media (max-width:720px){
+  html,body{height:auto}.app{height:auto}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .rail{flex-direction:row;width:auto;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}
+  .rail h3{display:none}.tool{flex:none}
+  .sheet{height:62svh;flex:none}
+  .follow{grid-template-columns:1fr 1fr}
+  .brand h1{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><small id="dates">Build-up board</small><h1 id="planName">Site board</h1></div>
+    <div class="ctl">
+      <span class="save" id="saveState"></span>
+      <label class="muted" for="viewAs" style="font-size:12px">Viewing as</label>
+      <select id="viewAs" class="sel"></select>
+      <button class="btn" id="btnLogin" type="button" hidden>Planner sign-in</button>
+      <button class="btn" id="btnSettings" type="button">Event settings</button>
+    </div>
+  </header>
+  <div class="main">
+    <nav class="rail" id="rail" aria-label="Drawing tools"></nav>
+    <div class="sheetwrap">
+      <div class="sheet" id="sheet">
+        <svg id="map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" aria-label="Site map">
+          <defs>
+            <pattern id="hz" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)"><rect width="16" height="16" style="fill:var(--hazard2)" opacity=".85"/><rect width="8" height="16" style="fill:var(--hazard)"/></pattern>
+            <pattern id="turfp" patternUnits="userSpaceOnUse" width="10" height="10"><path d="M2 8 l1.5-4 M6 9 l1-3.5" style="stroke:var(--ok)" stroke-width="1" fill="none" opacity=".7"/></pattern>
+            <pattern id="dropp" patternUnits="userSpaceOnUse" width="12" height="12"><circle cx="3" cy="3" r="1.4" style="fill:var(--ok)"/></pattern>
+            <pattern id="dropbad" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)"><rect width="3" height="12" style="fill:var(--bad)" opacity=".5"/></pattern>
+            <pattern id="grid" patternUnits="userSpaceOnUse" width="50" height="50"><path d="M50 0H0V50" fill="none" style="stroke:var(--grid)" stroke-width="1"/></pattern>
+          </defs>
+          <rect x="-5000" y="-5000" width="11000" height="11000" fill="url(#grid)"/>
+          <image id="bgimg" x="0" y="0" width="1000" height="640" preserveAspectRatio="none" style="display:none"/>
+          <rect id="sheetedge" x="0" y="0" width="1000" height="640" fill="none" style="stroke:var(--line)" stroke-dasharray="4 4"/>
+          <g id="zonesL"></g>
+          <g id="draftL" pointer-events="none"></g>
+          <g id="handlesL"></g>
+        </svg>
+        <div class="mapbar">
+          <button class="btn" id="zin" type="button" aria-label="Zoom in">+</button>
+          <button class="btn" id="zout" type="button" aria-label="Zoom out">−</button>
+          <button class="btn" id="zfit" type="button" aria-label="Fit to sheet" style="font-size:11px">Fit</button>
+        </div>
+        <div class="banner" id="banner" hidden></div>
+        <div class="hint" id="hint" hidden></div>
+        <div class="empty" id="empty" hidden></div>
+      </div>
+      <div class="scrub">
+        <div class="day" id="dayLabel"><small>Showing</small>—</div>
+        <input type="range" id="day" min="0" max="7" step="0.5" value="0" aria-label="Day of build-up">
+        <div class="ticks" id="ticks"></div>
+        <div class="legend">
+          <span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--hazard) 0 4px,var(--hazard2) 4px 8px)"></i>Locked: vendor installing</span>
+          <span><i class="sw" style="border:1.5px dashed var(--muted)"></i>Upcoming</span>
+          <span><i class="sw" style="background:var(--muted);opacity:.5"></i>Installed</span>
+          <span><i class="sw" style="background:radial-gradient(var(--ok) 30%,transparent 35%) 0 0/5px 5px"></i>Drop-off open</span>
+          <span><i class="sw" style="border:2px solid var(--bad)"></i>Restriction in force</span>
+        </div>
+      </div>
+    </div>
+    <section class="panel" aria-label="Plan details">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="pbody" id="pbody"></div>
+    </section>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+(function(){
+"use strict";
+/* ============ CONFIG ============ */
+const CONFIG={
+  // Your GitHub repository. Leave owner and repo empty when the board runs on <you>.github.io/<repo>/ — they are read from the address.
+  // Fill them in if you use your own domain, e.g. owner:'my-company', repo:'site-board'.
+  owner:'',
+  repo:'',
+  branch:'main',              // the branch GitHub Pages publishes from
+  planPath:'data/plan.json',  // where the plan is saved in the repository
+  pollSeconds:60,             // how often vendor pages check for updates
+  saveDelaySeconds:3,         // wait this long after your last change before saving (each save is one commit)
+  maxImageMB:20,              // largest floor plan image
+  snapPixels:11,              // how close (on screen) the cursor must be to snap to a corner or edge
+  snapDegrees:6,              // how close a line must be to straight / 45° / square to snap
+  apiBase:'https://api.github.com',
+  rawBase:'https://raw.githubusercontent.com'
+};
+if(window.SITEBOARD_CONFIG)Object.assign(CONFIG,window.SITEBOARD_CONFIG);
+
+/* ============ constants ============ */
+const W=1000;
+const TYPES={
+  structure:{name:'Caravan / structure',geom:'poly',task:'Place',days:1},
+  stage:{name:'Stage',geom:'poly',task:'Build stage',days:2,follow:[{title:'Stairs',days:1},{title:'Paint stage',days:1},{title:'Furniture',days:1},{title:'Numbering',days:0.5}],power:true},
+  turf:{name:'Turf',geom:'poly',task:'Install turf',days:2,after:'no_walking'},
+  furniture:{name:'Furniture area',geom:'poly',task:'Set up furniture',days:1},
+  area:{name:'Other work area',geom:'poly',task:'Install',days:1},
+  dropoff:{name:'Drop-off / storage',geom:'poly',drop:true},
+  nogo:{name:'No-go zone',geom:'poly',noTask:true,after:'closed'},
+  wall:{name:'Wall',geom:'line',task:'Build wall',days:1},
+  fence_high:{name:'High fence',geom:'line',task:'Install high fence',days:1},
+  fence_low:{name:'Low fence',geom:'line',task:'Install low fence',days:1},
+  cable:{name:'Electrical cables',geom:'line',task:'Lay cables',days:1,after:'no_vehicles'},
+  route:{name:'Vehicle route',geom:'line',noTask:true,route:true}
+};
+const TYPE_GROUPS=[['Areas · click each corner',['structure','stage','turf','furniture','area','dropoff','nogo']],['Lines · click each point',['wall','fence_high','fence_low','cable','route']]];
+const AFTER={none:'No restriction',no_vehicles:'No vehicles',no_walking:'Keep off: no foot traffic',no_items:'Keep clear: no items',closed:'Closed to everyone'};
+const AFTER_SHORT={no_vehicles:'NO VEHICLES',no_walking:'KEEP OFF',no_items:'KEEP CLEAR',closed:'CLOSED'};
+const PALETTE=['#d9480f','#1971c2','#2b8a3e','#9c36b5','#e67700','#0c8599','#c2255c','#5c940d','#3b5bdb','#862e9c','#a61e4d','#495057'];
+const KINDS={vendor:'Who does it',days:'Install days',before:'Must finish before',after:'Starts after this',parallel:'Can work in parallel',restrict:'Restriction after install',clear_by:'Clear-by date',follow:'Steps (subtasks)',power:'Needs power',text:'Your question: text',yesno:'Your question: yes / no',number:'Your question: number',choice:'Your question: options'};
+function defaultQuestions(type){
+  const T=TYPES[type];
+  if(T.drop) return [{id:'vendor',kind:'vendor',label:'Whose items are stored here?'},{id:'clear_by',kind:'clear_by',label:'Until what date can items stay here?'},{id:'note',kind:'text',label:'What will be stored?'}];
+  if(T.route) return [{id:'note',kind:'text',label:'What uses this route (trucks, forklifts, winch)?'}];
+  if(T.noTask) return [{id:'note',kind:'text',label:'Why is this area closed?'},{id:'restrict',kind:'restrict',label:'What is not allowed here?'}];
+  const q=[{id:'vendor',kind:'vendor',label:'Who installs this?'},{id:'days',kind:'days',label:'How many days to install?'},{id:'before',kind:'before',label:'Who has to finish before they can start here?'},{id:'after',kind:'after',label:'Who comes in after them?'},{id:'parallel',kind:'parallel',label:'Who can work in this area at the same time?'}];
+  q.push({id:'follow',kind:'follow',label:'What are the next steps here, in order?'});
+  if(T.power||type==='structure'||type==='furniture') q.push({id:'power',kind:'power',label:'Does it need power? Where do the electrical lines go?'});
+  q.push({id:'restrict',kind:'restrict',label:'Once installed, what is not allowed here?'});
+  return q;
+}
+
+/* ============ utils ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const r1=v=>Math.round(v*10)/10;
+function toast(msg){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+const ls={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function baseDate(){const s=S().setupStart;const d=s?new Date(s+'T00:00:00'):new Date();d.setHours(0,0,0,0);return d;}
+function dateAt(off){const d=baseDate();d.setDate(d.getDate()+Math.floor(off));return d;}
+function fmtDay(off,withHalf=true){const d=dateAt(off);let s=DOW[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()];if(withHalf&&off%1)s+=' midday';return s;}
+function shortDay(off){const d=dateAt(off);return DOW[d.getDay()]+' '+d.getDate();}
+function offOf(dateStr){if(!dateStr)return null;const d=new Date(dateStr+'T00:00:00');if(isNaN(d))return null;return Math.round((d-baseDate())/864e5);}
+function isoOf(off){const d=dateAt(off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+/* ============ example plan ============ */
+function makeSample(){
+  const V_=(name,color,trade)=>({name,color,trade,contact:'',phone:'',email:'',notes:''});
+  const vendors={
+    v_caravan:V_('Site ops — caravans & winch','#495057','Caravan placement with winch truck'),
+    v_av:V_('SoundWave AV','#1971c2','Sound, lighting and screens'),
+    v_stage:V_('StageCo','#d9480f','Stage structure, stairs and backstage walls'),
+    v_paint:V_('ColorWorks painters','#c2255c','Painting and finishing'),
+    v_power:V_('PowerGrid electrical','#e67700','Power distribution, cables and generators'),
+    v_turf:V_('GreenLay turf','#2b8a3e','Artificial turf supply and install'),
+    v_fence:V_('Barrier Pro fencing','#9c36b5','High and low fencing, crowd barriers'),
+    v_furn:V_('Lounge Rentals','#0c8599','Furniture rental and setup'),
+    v_sign:V_('SignPro','#5c940d','Signage, seat and area numbering')
+  };
+  const P=a=>a.map(([x,y])=>({x,y}));
+  const base={after:'none',parallel:[],answers:{}};
+  const zones={
+    z_perim:{...base,type:'fence_high',label:'Perimeter fence',geom:'line',pts:P([[40,40],[960,40],[960,600],[40,600],[40,40]]),vendorId:'v_fence'},
+    z_cable:{...base,type:'cable',label:'Main power cables',geom:'line',pts:P([[80,560],[300,560],[300,350],[480,350],[480,200],[640,200]]),vendorId:'v_power',after:'no_vehicles'},
+    z_route:{...base,type:'route',label:'Service road (trucks, winch)',geom:'line',pts:P([[60,470],[940,470]]),answers:{note:'Winch truck and deliveries'}},
+    z_stage:{...base,type:'stage',label:'Main stage',geom:'poly',pts:P([[560,90],[820,90],[820,200],[740,200],[740,230],[640,230],[640,200],[560,200]]),vendorId:'v_stage'},
+    z_wall:{...base,type:'wall',label:'Backstage wall',geom:'line',pts:P([[560,76],[820,76]]),vendorId:'v_stage'},
+    z_caravan:{...base,type:'structure',label:'Caravan points',geom:'poly',pts:P([[120,90],[340,90],[340,180],[120,180]]),vendorId:'v_caravan'},
+    z_avdrop:{...base,type:'dropoff',label:'AV equipment drop-off',geom:'poly',pts:P([[210,125],[400,125],[400,225],[210,225]]),vendorId:'v_av',clearBy:'2026-10-20',answers:{note:'Road cases, truss'}},
+    z_turf:{...base,type:'turf',label:'Lounge turf',geom:'poly',pts:P([[120,262],[420,262],[420,360],[360,440],[120,440]]),vendorId:'v_turf',after:'no_walking'},
+    z_lounge:{...base,type:'furniture',label:'Lounge furniture',geom:'poly',pts:P([[160,300],[330,300],[330,400],[160,400]]),vendorId:'v_furn'},
+    z_low:{...base,type:'fence_low',label:'Low fence around turf',geom:'line',pts:P([[108,250],[432,250],[432,365],[368,452],[108,452],[108,250]]),vendorId:'v_fence'},
+    z_gen:{...base,type:'nogo',label:'Generator',geom:'poly',pts:P([[850,500],[940,500],[940,580],[850,580]]),after:'closed',answers:{note:'Live generator, electricians only'}}
+  };
+  const T=(title,zoneId,vendorId,days,deps,notBefore)=>({title,zoneId,vendorId,days,deps:deps||[],status:'todo',notBefore:notBefore||''});
+  const ST=(parentId,order,title,vendorId,days,withPrev)=>({title,zoneId:'z_stage',vendorId,days,deps:[],status:'todo',notBefore:'',parentId,order,withPrev:!!withPrev});
+  const tasks={
+    t_perim:T('Install high fence','z_perim','v_fence',1),
+    t_cable:T('Lay power cables','z_cable','v_power',1),
+    t_stage:T('Main stage works','z_stage','v_stage',2),
+    t_s1:ST('t_stage',0,'Build structure','v_stage',2),
+    t_s2:ST('t_stage',1,'Stairs','v_stage',0.5),
+    t_s3:ST('t_stage',2,'Paint stage','v_paint',1),
+    t_s4:ST('t_stage',3,'Furniture','v_furn',0.5),
+    t_s5:ST('t_stage',4,'Rig AV','v_av',1,true),
+    t_s6:ST('t_stage',5,'Numbering','v_sign',0.5),
+    t_wall:T('Build wall','z_wall','v_stage',1),
+    t_caravan:T('Place caravans with winch','z_caravan','v_caravan',1,[],'2026-10-19'),
+    t_turf:T('Install turf','z_turf','v_turf',2,['t_cable']),
+    t_furn:T('Set up furniture','z_lounge','v_furn',1,['t_turf']),
+    t_low:T('Install low fence','z_low','v_fence',1,['t_turf'])
+  };
+  const settings={name:'Riverside Festival (example)',setupStart:'2026-10-18',eventDate:'2026-10-24',bgUrl:'',bgW:0,bgH:0,bgOpacity:0.8,mPerUnit:0.1};
+  return {settings,vendors,zones,tasks,templates:{}};
+}
+function emptyPlan(){return {settings:{name:'New event',setupStart:isoOf0(0),eventDate:isoOf0(7),bgUrl:'',bgW:0,bgH:0,bgOpacity:0.8,mPerUnit:0},vendors:{},zones:{},tasks:{},templates:{}};}
+function isoOf0(add){const d=new Date();d.setDate(d.getDate()+add);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function normalize(d){
+  d=d&&typeof d==='object'?d:emptyPlan();
+  ['vendors','zones','tasks','templates'].forEach(k=>{if(!d[k]||typeof d[k]!=='object')d[k]={};});
+  d.settings=d.settings||{};
+  Object.values(d.zones).forEach(z=>{
+    if(z.geom==='rect'){z.pts=[{x:z.x,y:z.y},{x:z.x+z.w,y:z.y},{x:z.x+z.w,y:z.y+z.h},{x:z.x,y:z.y+z.h}];z.geom='poly';delete z.x;delete z.y;delete z.w;delete z.h;}
+    z.pts=Array.isArray(z.pts)?z.pts:[];z.parallel=z.parallel||[];z.answers=z.answers||{};
+  });
+  Object.values(d.tasks).forEach(t=>{t.deps=Array.isArray(t.deps)?t.deps:[];});
+  Object.values(d.vendors).forEach(v=>{['trade','contact','phone','email','notes'].forEach(k=>{if(typeof v[k]!=='string')v[k]='';});});
+  return d;
+}
+
+/* ============ storage: your GitHub repository, or this browser ============
+   The plan lives in data/plan.json inside the repository.
+   Everyone reads it through GitHub's public API (no sign-in needed).
+   The planner saves with a personal access token kept only in their own browser. */
+function b64enc(str){const bytes=new TextEncoder().encode(str);let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin);}
+function b64dec(b64){const bin=atob(String(b64).replace(/\s/g,''));const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder().decode(bytes);}
+function repoInfo(){
+  let owner=CONFIG.owner,repo=CONFIG.repo;
+  if((!owner||!repo)&&/\.github\.io$/i.test(location.hostname)){
+    owner=owner||location.hostname.split('.')[0];
+    const seg=location.pathname.split('/').filter(Boolean)[0];
+    repo=repo||(seg&&!/\.html?$/i.test(seg)?seg:location.hostname.toLowerCase());
+  }
+  return owner&&repo?{owner,repo}:null;
+}
+const GH={
+  url(path){const r=repoInfo();return `${CONFIG.apiBase}/repos/${r.owner}/${r.repo}${path||''}`;},
+  headers(token,accept){const h={Accept:accept||'application/vnd.github+json'};if(token)h.Authorization='Bearer '+token;return h;},
+  err(r,j){const e=new Error((j&&j.message)||('GitHub error '+r.status));e.status=r.status;e.limited=r.status===403&&r.headers.get('x-ratelimit-remaining')==='0'||r.status===429;return e;},
+  // returns {sha, wrap} — wrap is null when the plan file doesn't exist yet
+  async readPlan(token){
+    const u=this.url('/contents/'+CONFIG.planPath)+'?ref='+encodeURIComponent(CONFIG.branch);
+    const r=await fetch(u,{headers:this.headers(token),cache:'no-cache'});
+    if(r.status===404){const e=this.err(r,await r.json().catch(()=>null));e.missing=true;throw e;}
+    if(!r.ok)throw this.err(r,await r.json().catch(()=>null));
+    const j=await r.json();let text;
+    if(j.encoding==='base64'&&j.content)text=b64dec(j.content);
+    else{const r2=await fetch(u,{headers:this.headers(token,'application/vnd.github.raw+json'),cache:'no-cache'});if(!r2.ok)throw this.err(r2,null);text=await r2.text();}
+    let wrap=null;try{wrap=JSON.parse(text);}catch(e){}
+    return {sha:j.sha,wrap};
+  },
+  async repoExists(token){const r=await fetch(this.url(''),{headers:this.headers(token),cache:'no-cache'});if(r.ok)return await r.json();if(r.status===404)return null;throw this.err(r,await r.json().catch(()=>null));},
+  async put(token,path,b64,sha,message){
+    const r=await fetch(this.url('/contents/'+path),{method:'PUT',headers:{...this.headers(token),'Content-Type':'application/json'},body:JSON.stringify({message,content:b64,branch:CONFIG.branch,...(sha?{sha}:{})})});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok){const e=this.err(r,j);e.conflict=r.status===409||(r.status===422&&/sha/i.test(e.message));throw e;}
+    return j.content.sha;
+  },
+  // fallback for viewers when GitHub's hourly limit for signed-out visitors is used up: the copy GitHub Pages serves
+  async readPages(){const r=await fetch(CONFIG.planPath+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Pages '+r.status);return {sha:null,wrap:await r.json()};}
+};
+const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token:'',dirty:false,saving:false,again:false,lockedVendor:null,lastSaved:null,problem:'',
+  async init(){
+    const qs=new URLSearchParams(location.search);this.lockedVendor=qs.get('vendor');
+    this.token=this.lockedVendor?'':(ls.get('siteboard.ghtoken')||'');
+    const info=location.protocol==='file:'?null:repoInfo();
+    if(info){
+      this.mode='github';
+      try{await this.load();}
+      catch(e){
+        if(e.missing){
+          // no plan saved yet — check the repository itself is reachable
+          try{const repo=await GH.repoExists(this.token);if(!repo)this.problem=`Can’t find the repository ${info.owner}/${info.repo}. Check owner and repo at the top of index.html.`;}catch(e2){}
+          this.d=emptyPlan();this.sha=null;this.version=0;
+        }else if(e.limited){try{const p=await GH.readPages();this.apply(p);}catch(e2){this.problem='GitHub is busy. The plan will load in a minute.';}}
+        else this.problem='Could not load the plan from GitHub ('+e.message+').';
+      }
+      if(this.token)this.canEdit=await this.check(this.token,true);
+      const every=(this.canEdit?Math.min(20,CONFIG.pollSeconds):CONFIG.pollSeconds)*1000;
+      setInterval(()=>this.poll(),every);
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.poll();else if(this.dirty)this.flush();});
+    }else{
+      this.mode='local';
+      let saved=null;try{saved=JSON.parse(ls.get('siteboard.v2')||'null');}catch(e){}
+      this.d=normalize(saved&&saved.zones?saved:makeSample());
+      this.canEdit=!this.lockedVendor;
+    }
+    setSave();
+  },
+  apply(res){this.sha=res.sha;const w=res.wrap;this.version=w&&w.version||0;this.d=normalize(w&&w.data?w.data:emptyPlan());},
+  async load(){const res=await GH.readPlan(this.token);this.apply(res);},
+  // checks the token can write to this repository
+  async check(token,quiet){
+    try{const repo=await GH.repoExists(token);
+      if(!repo){if(!quiet)toast('That token can’t see this repository. Give it access to this repository only.');return false;}
+      if(!repo.permissions||!repo.permissions.push){if(!quiet)toast('That token can read but not write. Set “Contents” to “Read and write”.');return false;}
+      return true;
+    }catch(e){if(!quiet)toast(e.status===401?'GitHub didn’t accept that token. Check it was copied in full and hasn’t expired.':'Could not reach GitHub: '+e.message);return false;}
+  },
+  touch(){changed();
+    if(this.mode==='local'){if(!ls.set('siteboard.v2',JSON.stringify(this.d)))toast('This browser is out of space. Use a smaller floor plan image or download a backup.');this.lastSaved=new Date();setSave();return;}
+    if(!this.canEdit)return;
+    // every save is a commit, so wait for a short pause in editing
+    this.dirty=true;setSave();clearTimeout(this.tm);this.tm=setTimeout(()=>this.flush(),CONFIG.saveDelaySeconds*1000);},
+  put(col,id,obj){this.d[col]={...this.d[col],[id]:obj};this.touch();},
+  del(col,id){const c={...this.d[col]};delete c[id];this.d[col]=c;this.touch();},
+  setSettings(patch){this.d.settings={...this.d.settings,...patch};this.touch();},
+  replaceAll(d){this.d=normalize(d);this.touch();},
+  async flush(){
+    clearTimeout(this.tm);
+    if(this.mode!=='github'||!this.canEdit||!this.dirty)return;
+    if(this.saving){this.again=true;return;}
+    this.saving=true;this.dirty=false;setSave();
+    const wrap={version:this.version+1,savedAt:new Date().toISOString(),data:this.d};
+    try{
+      this.sha=await GH.put(this.token,CONFIG.planPath,b64enc(JSON.stringify(wrap)),this.sha,`Update site plan: ${S().name||'event'}`);
+      this.version=wrap.version;this.lastSaved=new Date();
+    }catch(e){
+      if(e.conflict){
+        try{await this.load();}catch(e2){}
+        toast('The plan was changed from another device. Loaded the latest version; redo your last change.');changed();
+      }else if(e.status===401||e.status===403&&!e.limited){this.canEdit=false;this.dirty=true;toast('GitHub refused the save: your token has expired or lost access. Sign in again; your changes are still on screen.');changed();}
+      else{this.dirty=true;toast('Could not save to GitHub ('+(e.message||'connection lost')+'). Retrying…');setTimeout(()=>this.flush(),8000);}
+    }finally{this.saving=false;setSave();if(this.again){this.again=false;if(this.dirty)this.flush();}}
+  },
+  async poll(){
+    if(this.mode!=='github'||document.hidden||this.dirty||this.saving||ui.ptr||$('#modalRoot').firstChild)return;
+    try{const res=await GH.readPlan(this.token);if(res.sha!==this.sha&&!this.dirty&&!this.saving){this.apply(res);this.problem='';changed();}}
+    catch(e){if(e.limited&&!this.canEdit){try{const p=await GH.readPages();if(p.wrap&&p.wrap.version>this.version){this.apply(p);changed();}}catch(e2){}}}
+  },
+  async upload(file){
+    const ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type]||'png';
+    if(file.size>CONFIG.maxImageMB*1024*1024)throw new Error(`the image is over ${CONFIG.maxImageMB} MB. Export it smaller.`);
+    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.onerror=()=>rej(new Error('could not read the file'));fr.readAsDataURL(file);});
+    const d=new Date();const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
+    const path=`uploads/plan-${stamp}.${ext}`;
+    await GH.put(this.token,path,b64,null,'Add floor plan');
+    const r=repoInfo();
+    // served straight from the repository, so it shows immediately without waiting for Pages
+    return {url:`${CONFIG.rawBase}/${r.owner}/${r.repo}/${CONFIG.branch}/${path}`};
+  }
+};
+function setSave(){
+  const el=$('#saveState');if(!el)return;
+  if(Store.mode==='local')el.textContent='Saved in this browser';
+  else if(Store.mode==='github'){
+    if(!Store.canEdit)el.textContent='Live plan · read-only';
+    else if(Store.saving)el.textContent='Saving to GitHub…';
+    else if(Store.dirty)el.textContent='Unsaved changes…';
+    else el.textContent=Store.lastSaved?'Saved to GitHub '+Store.lastSaved.toTimeString().slice(0,5):'Live plan';
+  }else el.textContent='';
+}
+const S=()=>Store.d.settings||{};
+const Z=()=>Store.d.zones||{}, TK=()=>Store.d.tasks||{}, V=()=>Store.d.vendors||{};
+const editable=()=>Store.canEdit&&ui.viewAs==='planner';
+
+/* ============ UI state ============ */
+const ui={tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
+function mapH(){const s=S();return s.bgW&&s.bgH?Math.round(W*s.bgH/s.bgW):640;}
+
+/* ============ schedule ============ */
+/* A task can be a job with ordered steps (subtasks). Steps run one after another;
+   a step marked "withPrev" runs alongside the step before it. A job spans its steps,
+   and anything that waits for a job waits for all of its steps. */
+let SCH={},CYC=new Set(),EDEPS={},KIDS={},STATE={};
+function computeSchedule(){
+  const T=TK();SCH={};CYC=new Set();EDEPS={};KIDS={};STATE={};const vis={};
+  Object.entries(T).forEach(([id,t])=>{if(t.parentId&&T[t.parentId])(KIDS[t.parentId]=KIDS[t.parentId]||[]).push(id);});
+  Object.values(KIDS).forEach(a=>a.sort((x,y)=>(T[x].order??0)-(T[y].order??0)));
+  function go(id){
+    if(SCH[id])return SCH[id];
+    if(vis[id]){CYC.add(id);return {s:0,e:0};}
+    vis[id]=1;const t=T[id];const ks=KIDS[id];
+    if(ks&&ks.length){ks.forEach(go);const r={s:Math.min(...ks.map(k=>SCH[k].s)),e:Math.max(...ks.map(k=>SCH[k].e))};SCH[id]=r;EDEPS[id]=(t.deps||[]).filter(d=>T[d]);return r;}
+    let deps=[...(t.deps||[])],s=0,nb=offOf(t.notBefore);
+    const p=t.parentId&&T[t.parentId];
+    if(p){const sib=KIDS[t.parentId];const i=sib.indexOf(id);
+      if(i===0){deps.push(...(p.deps||[]));const pnb=offOf(p.notBefore);if(pnb!=null)nb=nb==null?pnb:Math.max(nb,pnb);}
+      else if(t.withPrev){const pr=sib[i-1];s=Math.max(s,go(pr).s);deps.push(...(EDEPS[pr]||[]));}
+      else{let m=i-1;deps.push(sib[m]);while(m>0&&T[sib[m]].withPrev){m--;deps.push(sib[m]);}}
+    }
+    deps=[...new Set(deps.filter(d=>T[d]&&d!==id))];EDEPS[id]=deps;
+    if(nb!=null)s=Math.max(s,nb);
+    deps.forEach(d=>{s=Math.max(s,go(d).e);});
+    const r={s,e:s+Math.max(0.5,Number(t.days)||1)};SCH[id]=r;return r;
+  }
+  Object.keys(T).forEach(go);
+}
+const isParent=id=>!!(KIDS[id]&&KIDS[id].length);
+const isLeaf=id=>!isParent(id);
+function taskLabel(id){const t=TK()[id];if(!t)return '';const p=t.parentId&&TK()[t.parentId];return p?`${p.title} › ${t.title}`:t.title;}
+function taskState(id){
+  if(STATE[id])return STATE[id]==='…'?'wait':STATE[id];
+  STATE[id]='…';const t=TK()[id];let r='wait';
+  if(t){
+    if(isParent(id)){const st=KIDS[id].map(taskState);r=st.every(x=>x==='done')?'done':st.some(x=>x==='done'||x==='started')?'started':st.some(x=>x==='ready')?'ready':'wait';}
+    else if(t.status==='done')r='done';else if(t.status==='started')r='started';
+    else r=(EDEPS[id]||[]).every(d=>taskState(d)==='done')?'ready':'wait';
+  }
+  STATE[id]=r;return r;
+}
+const STATE_LABEL={done:'Done',started:'In progress',ready:'Ready to start',wait:'Waiting'};
+// the actual pieces of work in an area (steps, or tasks without steps)
+function zoneTasks(zid){return Object.keys(TK()).filter(id=>TK()[id].zoneId===zid&&isLeaf(id)).sort((a,b)=>(SCH[a]?.s??0)-(SCH[b]?.s??0));}
+// top-level jobs in an area
+function zoneJobs(zid){return Object.keys(TK()).filter(id=>TK()[id].zoneId===zid&&!(TK()[id].parentId&&TK()[TK()[id].parentId])).sort((a,b)=>(SCH[a]?.s??0)-(SCH[b]?.s??0));}
+function successors(id){
+  const pid=TK()[id]?.parentId;const last=pid&&SCH[pid]&&SCH[id].e>=SCH[pid].e;
+  const firstStepOf=(o)=>{const ks=KIDS[o];return ks&&ks.length?ks[0]:o;};
+  const out=new Set();
+  Object.keys(TK()).forEach(o=>{if(o===id)return;const ds=EDEPS[o]||[];if(ds.includes(id)||(last&&ds.includes(pid)))out.add(isLeaf(o)?o:firstStepOf(o));});
+  return [...out];
+}
+function zoneWindow(zid){const ts=zoneTasks(zid);if(!ts.length)return null;return {s:Math.min(...ts.map(i=>SCH[i].s)),e:Math.max(...ts.map(i=>SCH[i].e))};}
+function restrictFrom(zid){const w=zoneWindow(zid);return w?w.e:0;}
+function vendorName(id){return V()[id]?.name||'Unassigned';}
+function vendorColor(id){return V()[id]?.color||'#868e96';}
+function eventOff(){const e=offOf(S().eventDate);return e==null?7:e;}
+function autoClearBy(zid){
+  const z=Z()[zid];let m=null,who=null;
+  Object.keys(Z()).forEach(o=>{if(o===zid)return;if(!overlap(z,Z()[o]))return;zoneTasks(o).forEach(t=>{if(TK()[t].vendorId===z.vendorId)return;if(m==null||SCH[t].s<m){m=SCH[t].s;who=t;}});});
+  return m==null?null:{off:m,task:who};
+}
+function clearByOff(zid){const z=Z()[zid];const man=offOf(z.clearBy);if(man!=null)return {off:man,manual:true};const a=autoClearBy(zid);return a?{off:a.off,manual:false,task:a.task}:null;}
+
+/* ============ geometry ============ */
+function edges(z){const p=z.pts||[];const r=[];for(let i=1;i<p.length;i++)r.push([p[i-1],p[i]]);if(z.geom==='poly'&&p.length>2)r.push([p[p.length-1],p[0]]);return r;}
+function orient(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
+function segX(a,b,c,d){const d1=orient(c,d,a),d2=orient(c,d,b),d3=orient(a,b,c),d4=orient(a,b,d);return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));}
+function pip(p,poly){let ins=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x))ins=!ins;}return ins;}
+function overlap(a,b){
+  if(!a||!b||!a.pts||!b.pts)return false;
+  const ea=edges(a),eb=edges(b);
+  if(ea.some(([p,q])=>eb.some(([r,s])=>segX(p,q,r,s))))return true;
+  const mid=(e)=>({x:(e[0].x+e[1].x)/2,y:(e[0].y+e[1].y)/2});
+  if(a.geom==='poly'&&(b.pts.some(p=>pip(p,a.pts))||eb.some(e=>pip(mid(e),a.pts))))return true;
+  if(b.geom==='poly'&&(a.pts.some(p=>pip(p,b.pts))||ea.some(e=>pip(mid(e),b.pts))))return true;
+  return false;
+}
+function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const j=(i+1)%p.length;a+=p[i].x*p[j].y-p[j].x*p[i].y;}return a/2;}
+function polyCentroid(p){const A=polyArea(p);if(Math.abs(A)<1)return {x:p.reduce((s,q)=>s+q.x,0)/p.length,y:p.reduce((s,q)=>s+q.y,0)/p.length};let cx=0,cy=0;for(let i=0;i<p.length;i++){const j=(i+1)%p.length;const f=p[i].x*p[j].y-p[j].x*p[i].y;cx+=(p[i].x+p[j].x)*f;cy+=(p[i].y+p[j].y)*f;}return {x:cx/(6*A),y:cy/(6*A)};}
+function bbox(z){const xs=z.pts.map(p=>p.x),ys=z.pts.map(p=>p.y);return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function lengthOf(z){return edges(z).reduce((s,[a,b])=>s+dist(a,b),0);}
+function nearestOnSeg(p,a,b){const dx=b.x-a.x,dy=b.y-a.y;const L=dx*dx+dy*dy;if(!L)return {...a};const t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/L,0,1);return {x:a.x+t*dx,y:a.y+t*dy};}
+function mPer(){return Number(S().mPerUnit)||0;}
+function fmtLen(u){const m=mPer();return m?(u*m>=100?Math.round(u*m):r1(u*m))+' m':Math.round(u)+' u';}
+function fmtArea(u2){const m=mPer();return m?Math.round(u2*m*m).toLocaleString()+' m²':Math.round(u2).toLocaleString()+' u²';}
+function polyPts(p){return p.map(q=>q.x+','+q.y).join(' ');}
+
+/* ============ snapping ============ */
+function pxUnits(px){const r=$('#map').getBoundingClientRect();return px*ui.vb.w/(r.width||1000);}
+// ctx: {prev, prevPrev, first, skipZone, skipIdx, extra:[points]}
+function snapPoint(raw,ctx){
+  ctx=ctx||{};
+  const res={p:{x:r1(raw.x),y:r1(raw.y)},kind:null,guides:[],closes:false};
+  if(!ui.snap||ui.shift)return res;
+  const tol=pxUnits(CONFIG.snapPixels);
+  const verts=[];const segsAll=[];
+  Object.entries(Z()).forEach(([id,z])=>{
+    (z.pts||[]).forEach((p,i)=>{if(id===ctx.skipZone&&i===ctx.skipIdx)return;verts.push(p);});
+    edges(z).forEach((e,i)=>{if(id===ctx.skipZone&&ctx.skipIdx!=null){const n=z.pts.length;const a=i,b=(i+1)%n;if(a===ctx.skipIdx||b===ctx.skipIdx)return;}segsAll.push(e);});
+  });
+  (ctx.extra||[]).forEach(p=>verts.push(p));
+  for(let i=1;i<(ctx.extra||[]).length;i++)segsAll.push([ctx.extra[i-1],ctx.extra[i]]);
+  // 1. corners
+  let best=null,bd=tol;
+  verts.forEach(v=>{const d=dist(v,raw);if(d<bd){bd=d;best=v;}});
+  if(best){res.p={x:best.x,y:best.y};res.kind='vertex';res.closes=!!(ctx.first&&best===ctx.first);return res;}
+  // 2. straight / 45° / square to previous segment
+  if(ctx.prev){
+    const pv=ctx.prev;const dx=raw.x-pv.x,dy=raw.y-pv.y;const len=Math.hypot(dx,dy);
+    if(len>tol*0.6){
+      const ang=Math.atan2(dy,dx)*180/Math.PI;
+      const bases=[];for(let a=-180;a<=180;a+=45)bases.push(a);
+      if(ctx.prevPrev){const pa=Math.atan2(pv.y-ctx.prevPrev.y,pv.x-ctx.prevPrev.x)*180/Math.PI;for(let k=-2;k<=2;k++)bases.push(pa+k*90);}
+      let bA=null,bDiff=CONFIG.snapDegrees;
+      bases.forEach(b=>{let d=Math.abs(((ang-b)%360+540)%360-180);if(d<bDiff){bDiff=d;bA=b;}});
+      if(bA!=null){
+        const rad=bA*Math.PI/180;const ux=Math.cos(rad),uy=Math.sin(rad);
+        let L=dx*ux+dy*uy;let p={x:pv.x+L*ux,y:pv.y+L*uy};
+        // slide along the ray to line up with another corner, or stop on an edge
+        let align=null,ad=tol;
+        verts.forEach(v=>{if(v===pv)return;const t=(v.x-pv.x)*ux+(v.y-pv.y)*uy;const q={x:pv.x+t*ux,y:pv.y+t*uy};const off=Math.abs(t-L);if(off<ad&&dist(q,v)>0.5){ad=off;align={t,v};}});
+        let edgeHit=null,ed=tol;
+        segsAll.forEach(([a,b])=>{const den=ux*(b.y-a.y)-uy*(b.x-a.x);if(Math.abs(den)<1e-9)return;const t=((a.x-pv.x)*(b.y-a.y)-(a.y-pv.y)*(b.x-a.x))/den;const s=((a.x-pv.x)*uy-(a.y-pv.y)*ux)/den;if(s<0||s>1||t<=0.5)return;const off=Math.abs(t-L);if(off<ed){ed=off;edgeHit=t;}});
+        if(edgeHit!=null&&ed<=ad){L=edgeHit;res.kind='edge';}
+        else if(align){L=align.t;res.guides.push({a:align.v,b:{x:pv.x+L*ux,y:pv.y+L*uy}});}
+        p={x:pv.x+L*ux,y:pv.y+L*uy};
+        res.p={x:r1(p.x),y:r1(p.y)};res.angle=bA;res.kind=res.kind||'angle';
+        res.guides.push({a:pv,b:{x:pv.x+ux*(L+tol*4),y:pv.y+uy*(L+tol*4)},ray:true});
+        return res;
+      }
+    }
+  }
+  // 3. on an existing edge
+  let eb=null;bd=tol;
+  segsAll.forEach(([a,b])=>{const q=nearestOnSeg(raw,a,b);const d=dist(q,raw);if(d<bd){bd=d;eb=q;}});
+  if(eb){res.p={x:r1(eb.x),y:r1(eb.y)};res.kind='edge';return res;}
+  // 4. line up horizontally / vertically with another corner
+  let ax=null,ay=null,dxm=tol,dym=tol;
+  verts.forEach(v=>{const ddx=Math.abs(v.x-raw.x),ddy=Math.abs(v.y-raw.y);if(ddx<dxm){dxm=ddx;ax=v;}if(ddy<dym){dym=ddy;ay=v;}});
+  if(ax){res.p.x=ax.x;res.guides.push({a:ax,b:res.p});res.kind='align';}
+  if(ay){res.p.y=ay.y;res.guides.push({a:ay,b:res.p});res.kind='align';}
+  if(res.guides.length)res.guides.forEach(g=>g.b={...res.p});
+  return res;
+}
+// Make near-straight segments exactly straight (multiples of 45°, or square to the previous segment)
+function straighten(z){
+  const p=z.pts.map(q=>({...q}));const tolDeg=10;
+  for(let i=1;i<p.length;i++){
+    const a=p[i-1],b=p[i];const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)continue;
+    const ang=Math.atan2(dy,dx)*180/Math.PI;const bases=[];for(let k=-180;k<=180;k+=45)bases.push(k);
+    if(i>=2){const pa=Math.atan2(a.y-p[i-2].y,a.x-p[i-2].x)*180/Math.PI;for(let k=-2;k<=2;k++)bases.push(pa+k*90);}
+    let bA=null,bd=tolDeg;bases.forEach(bb=>{const d=Math.abs(((ang-bb)%360+540)%360-180);if(d<bd){bd=d;bA=bb;}});
+    if(bA==null)continue;const r=bA*Math.PI/180;
+    const isClose=z.geom==='line'&&i===p.length-1&&dist(z.pts[0],z.pts[i])<0.5;
+    if(!isClose){p[i]={x:r1(a.x+len*Math.cos(r)),y:r1(a.y+len*Math.sin(r))};}
+  }
+  if(z.geom==='line'&&dist(z.pts[0],z.pts[z.pts.length-1])<0.5)p[p.length-1]={...p[0]};
+  return p;
+}
+
+/* ============ conflicts ============ */
+function conflicts(){
+  const out=[];const zs=Z(),T=TK();const zids=Object.keys(zs);
+  CYC.forEach(id=>out.push({level:'critical',title:'Circular dependency',detail:`"${T[id]?.title}" ends up waiting on itself. Remove one of its "starts after" links.`,zones:[T[id]?.zoneId]}));
+  const ev=eventOff();
+  Object.keys(T).filter(isLeaf).forEach(id=>{if(SCH[id]&&SCH[id].e>ev)out.push({level:'critical',title:'Finishes after event day',detail:`${taskLabel(id)} (${vendorName(T[id].vendorId)}) ends ${fmtDay(SCH[id].e)}, after the event on ${fmtDay(ev,false)}.`,zones:[T[id].zoneId]});});
+  const seen=new Set();
+  for(let i=0;i<zids.length;i++)for(let j=i;j<zids.length;j++){
+    const a=zs[zids[i]],b=zs[zids[j]];if(i!==j&&!overlap(a,b))continue;
+    const ta=zoneTasks(zids[i]),tb=zoneTasks(zids[j]);
+    ta.forEach(x=>tb.forEach(y=>{
+      if(x===y)return;const k=[x,y].sort().join('|');if(seen.has(k))return;seen.add(k);
+      const X=T[x],Y=T[y];if(X.vendorId===Y.vendorId)return;
+      if(X.parentId&&X.parentId===Y.parentId)return; // steps of one job: you set their order yourself
+      if((a.parallel||[]).includes(Y.vendorId)||(b.parallel||[]).includes(X.vendorId))return;
+      const sx=SCH[x],sy=SCH[y];
+      if(sx.s<sy.e&&sy.s<sx.e){
+        const first=sx.s<=sy.s?x:y,second=first===x?y:x;
+        // make the later job (or task) wait for the earlier one
+        const waiter=T[second].parentId&&T[T[second].parentId]?T[second].parentId:second;
+        out.push({level:'critical',title:'Two vendors in the same area',detail:`${vendorName(X.vendorId)} (${taskLabel(x)}) and ${vendorName(Y.vendorId)} (${taskLabel(y)}) are both scheduled in ${a.label}${i!==j?' / '+b.label:''} on ${fmtDay(Math.max(sx.s,sy.s))}.`,zones:[zids[i],zids[j]],
+          fix:{label:`${T[waiter].title} waits for ${taskLabel(first)}`,run:()=>{const t=clone(T[waiter]);t.deps=[...new Set([...(t.deps||[]),first])];Store.put('tasks',waiter,t);}},
+          fix2:{label:'They can work in parallel',run:()=>{const zid=T[second].zoneId;const z=clone(zs[zid]);z.parallel=[...new Set([...(z.parallel||[]),T[first].vendorId])];Store.put('zones',zid,z);}}});
+      }
+    }));
+  }
+  zids.filter(id=>zs[id].type==='dropoff').forEach(id=>{
+    const z=zs[id];const a=autoClearBy(id);const man=offOf(z.clearBy);
+    if(a&&man!=null&&man>a.off)out.push({level:'critical',title:'Items still stored where work starts',detail:`${vendorName(z.vendorId)} may leave items in ${z.label} until ${fmtDay(man)}, but ${taskLabel(a.task)} (${vendorName(T[a.task].vendorId)}) starts there ${fmtDay(a.off)}.`,zones:[id,T[a.task].zoneId],fix:{label:`Clear by ${fmtDay(a.off)}`,run:()=>{const c=clone(z);c.clearBy=isoOf(a.off);Store.put('zones',id,c);}}});
+    else if(a&&man==null)out.push({level:'info',title:'Drop-off deadline set automatically',detail:`${vendorName(z.vendorId)} must clear ${z.label} by ${fmtDay(a.off)} so ${taskLabel(a.task)} can start.`,zones:[id]});
+  });
+  zids.filter(id=>TYPES[zs[id].type]?.route).forEach(rid=>{
+    zids.forEach(o=>{const oz=zs[o];if(o===rid)return;const r=oz.after||'none';if(!['no_vehicles','closed','no_walking'].includes(r))return;if(!overlap(zs[rid],oz))return;
+      out.push({level:oz.type==='cable'?'critical':'warn',title:oz.type==='cable'?'Vehicle route crosses live cables':'Vehicle route crosses a restricted area',detail:`${zs[rid].label} crosses ${oz.label} (${AFTER[r].toLowerCase()} from ${fmtDay(restrictFrom(o))}). Reroute, add a cable ramp, or brief the drivers.`,zones:[rid,o]});});
+  });
+  const ord={critical:0,warn:1,info:2};return out.sort((a,b)=>ord[a.level]-ord[b.level]);
+}
+
+/* ============ render: tool rail ============ */
+function swatch(type){
+  const s='style="stroke:var(--fg)"';
+  const m={structure:`<path d="M3 4h10v3h6v6H3z" fill="none" ${s} stroke-width="1.5"/>`,
+    stage:`<path d="M2 4h18v6h-5v3H7v-3H2z" fill="none" ${s} stroke-width="1.5"/>`,
+    turf:`<path d="M2 3h18v6l-5 5H2z" style="fill:var(--ok)" opacity=".35"/><path d="M5 11l1-4M9 12l1-5M13 10l1-4" style="stroke:var(--ok)"/>`,
+    furniture:`<rect x="3" y="7" width="16" height="5" rx="2" fill="none" ${s} stroke-width="1.5"/><path d="M5 7V4h12v3" fill="none" ${s}/>`,
+    area:`<path d="M3 3h16v6l-6 4H3z" fill="none" ${s} stroke-dasharray="3 2" stroke-width="1.5"/>`,
+    dropoff:`<rect x="2" y="3" width="18" height="10" style="fill:var(--ok)" opacity=".18"/><rect x="2" y="3" width="18" height="10" fill="none" style="stroke:var(--ok)" stroke-width="1.5"/><path d="M11 5v6M8 8l3 3 3-3" fill="none" style="stroke:var(--ok)" stroke-width="1.5"/>`,
+    nogo:`<rect x="2" y="3" width="18" height="10" fill="url(#hz)"/>`,
+    wall:`<path d="M2 12V5h18" fill="none" ${s} stroke-width="3.5"/>`,
+    fence_high:`<path d="M2 8h18" ${s} stroke-width="2"/><path d="M4 4v8M8 4v8M12 4v8M16 4v8M20 4v8" ${s}/>`,
+    fence_low:`<path d="M2 9h18" ${s} stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/><path d="M5 7v4M11 7v4M17 7v4" ${s}/>`,
+    cable:`<path d="M2 12h7V4h11" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="4 2"/>`,
+    route:`<path d="M2 8h18" style="stroke:var(--muted)" stroke-width="7" opacity=".45"/><path d="M2 8h18" ${s} stroke-dasharray="3 3"/>`};
+  return `<svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true">${m[type]||''}</svg>`;
+}
+function renderRail(){
+  const r=$('#rail');const ed=editable();
+  r.hidden=!ed;document.querySelector('.main').classList.toggle('norail',!ed);
+  let h=`<h3>Navigate</h3><button class="tool" data-tool="select" aria-pressed="${ui.tool==='select'}" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M7 2l9 6-4 1 2 5-2 1-2-5-3 3z" style="fill:var(--fg)"/></svg>Select / edit</button>`;
+  if(ed){
+    TYPE_GROUPS.forEach(([g,ts])=>{h+=`<h3>${g}</h3>`;ts.forEach(t=>{h+=`<button class="tool" data-tool="${t}" aria-pressed="${ui.tool===t}" type="button">${swatch(t)}${esc(TYPES[t].name)}</button>`;});});
+    h+=`<h3>Setup</h3><button class="tool" data-tool="scale" aria-pressed="${ui.tool==='scale'}" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M2 11h18M2 8v6M20 8v6M8 10v2M14 10v2" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/></svg>Set scale</button>`;
+    h+=`<button class="tool" data-act="questions" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><circle cx="11" cy="8" r="6.5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M9 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.6.6-.6 1.1M11 11.5v.3" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-linecap="round"/></svg>Edit questions</button>`;
+  }
+  r.innerHTML=h;
+}
+
+/* ============ render: map ============ */
+function zoneVisual(id,z,D){
+  const T=TYPES[z.type]||TYPES.area;const col=z.vendorId?vendorColor(z.vendorId):'#868e96';
+  const ts=zoneTasks(id);const w=zoneWindow(id);
+  const activeTask=ts.find(t=>SCH[t].s<=D&&D<SCH[t].e);
+  const active=!!activeTask,upcoming=w&&D<w.s,done=w&&D>=w.e;
+  const restr=(z.after&&z.after!=='none')&&(!w||done);
+  let sub='';
+  if(T.drop){const c=clearByOff(id);sub=c&&D>=c.off?'MUST BE CLEAR':c?`Drop-off OK until ${shortDay(c.off)}`:'Drop-off open';}
+  else if(active)sub=`LOCKED · ${vendorName(TK()[activeTask].vendorId)}`;
+  else if(upcoming)sub=`${vendorName(TK()[ts[0]].vendorId)} starts ${shortDay(w.s)}`;
+  else if(restr)sub=AFTER_SHORT[z.after]||'';
+  else if(done)sub='Installed';
+  return {T,col,active,upcoming,done,restr,sub,dropBad:T.drop&&sub==='MUST BE CLEAR'};
+}
+function renderMap(){
+  ensureSchedule();
+  const s=S();const H=mapH();const D=ui.day;
+  const img=$('#bgimg');if(s.bgUrl){img.setAttribute('href',s.bgUrl);img.setAttribute('height',H);img.style.display='';img.setAttribute('opacity',s.bgOpacity??0.8);}else img.style.display='none';
+  $('#sheetedge').setAttribute('height',H);
+  $('#map').setAttribute('viewBox',`${ui.vb.x} ${ui.vb.y} ${ui.vb.w} ${ui.vb.h}`);
+  $('#sheet').classList.toggle('drawing',!!(TYPES[ui.tool]||ui.tool==='scale'));
+  const va=ui.viewAs;const zs=Z();let out='';
+  const order=Object.keys(zs).filter(id=>(zs[id].pts||[]).length>=2).sort((a,b)=>{const ga=zs[a].geom==='poly'?0:1,gb=zs[b].geom==='poly'?0:1;if(ga!==gb)return ga-gb;return Math.abs(polyArea(zs[b].pts))-Math.abs(polyArea(zs[a].pts));});
+  const fsBase=clamp(ui.vb.w/70,9,22);
+  order.forEach(id=>{
+    const z=zs[id];const v=zoneVisual(id,z,D);const sel=ui.sel===id;
+    const mine=va==='planner'||z.vendorId===va||zoneTasks(id).some(t=>TK()[t].vendorId===va);
+    const dim=!mine&&!v.restr&&!v.active&&!TYPES[z.type]?.route&&!v.dropBad;
+    const pts=polyPts(z.pts);
+    let g=`<g data-zone="${id}" style="cursor:pointer" opacity="${dim?0.35:1}">`;
+    if(z.geom==='poly'){
+      const fill=z.type==='turf'?'url(#turfp)':v.T.drop?(v.dropBad?'url(#dropbad)':'url(#dropp)'):'';
+      g+=`<polygon points="${pts}" style="fill:${z.type==='nogo'?'var(--bad)':v.col}" fill-opacity="${z.type==='nogo'?.12:v.done?.3:.13}"/>`;
+      if(fill)g+=`<polygon points="${pts}" fill="${fill}"/>`;
+      if(v.active||z.type==='nogo')g+=`<polygon points="${pts}" fill="url(#hz)" opacity="${z.type==='nogo'?.35:.55}"/>`;
+      const stroke=v.restr||v.dropBad?'var(--bad)':v.T.drop?'var(--ok)':v.col;
+      g+=`<polygon points="${pts}" fill="none" style="stroke:${stroke}" stroke-width="${sel?3:v.restr?2.5:1.6}" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="7 5"':''} vector-effect="non-scaling-stroke"/>`;
+      if(sel)g+=`<polygon points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      const c=polyCentroid(z.pts);const b=bbox(z);const fs=clamp(Math.min(b.w/9,b.h/3.2,fsBase*1.1),7,24);
+      g+=`<text class="zl" x="${c.x}" y="${c.y}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px">${esc(z.label)}</text>`;
+      if(v.sub&&b.h>fs*2)g+=`<text class="zs" x="${c.x}" y="${c.y+fs*0.95}" text-anchor="middle" style="fill:${v.active||v.restr||v.dropBad?'var(--bad)':'var(--muted)'};font-weight:${v.active?600:400};font-size:${fs*0.65}px">${esc(v.sub)}</text>`;
+    }else{
+      const t=z.type;
+      g+=`<polyline points="${pts}" fill="none" stroke="transparent" stroke-width="${pxUnits(18)}"/>`;
+      if(v.active)g+=`<polyline points="${pts}" fill="none" style="stroke:var(--hazard)" stroke-width="16" opacity=".55" stroke-linejoin="round"/>`;
+      if(t==='route')g+=`<polyline points="${pts}" fill="none" style="stroke:var(--muted)" stroke-width="18" opacity=".28" stroke-linejoin="round"/><polyline points="${pts}" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-dasharray="10 8" opacity=".6"/>`;
+      else if(t==='wall')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="7" stroke-linejoin="miter" opacity="${v.upcoming?.45:1}"/>`;
+      else if(t==='fence_high')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="3" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="8 6"':''}/><polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="10" stroke-dasharray="2 12" opacity=".9"/>`;
+      else if(t==='fence_low')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+      else if(t==='cable')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.restr?'var(--bad)':'var(--accent)'}" stroke-width="${v.restr?3.5:2.5}" stroke-dasharray="9 5" stroke-linejoin="round" ${v.upcoming?'opacity=".5"':''}/>`;
+      else g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="3"/>`;
+      if(sel)g+=`<polyline points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      let li=0,ll=0;edges(z).forEach(([a,b],i)=>{const d=dist(a,b);if(d>ll){ll=d;li=i;}});const [a,b]=edges(z)[li];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+      const fs=clamp(fsBase*0.75,7,16);
+      g+=`<text class="zs" x="${mx}" y="${my-fs*0.8}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px;font-weight:500">${esc(z.label)}${v.sub&&t!=='route'?' · ':''}<tspan style="fill:${v.restr||v.active?'var(--bad)':'var(--muted)'}">${t!=='route'?esc(v.sub):''}</tspan></text>`;
+    }
+    out+=g+'</g>';
+  });
+  $('#zonesL').innerHTML=out;
+  renderHandles();renderDraft();
+}
+function renderHandles(){
+  let h='';const z=Z()[ui.sel];
+  if(z&&editable()&&ui.tool==='select'){
+    const r=pxUnits(6),m=pxUnits(4);const n=z.pts.length;
+    const closed=z.geom==='line'&&n>2&&dist(z.pts[0],z.pts[n-1])<0.5;
+    edges(z).forEach(([a,b],i)=>{if(dist(a,b)<pxUnits(24))return;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;h+=`<rect data-m="${i}" x="${mx-m}" y="${my-m}" width="${m*2}" height="${m*2}" style="fill:var(--sheet);stroke:var(--accent);cursor:copy" stroke-width="${pxUnits(1.5)}"><title>Drag to add a corner</title></rect>`;});
+    z.pts.forEach((p,i)=>{if(closed&&i===n-1)return;h+=`<circle data-v="${i}" cx="${p.x}" cy="${p.y}" r="${r}" style="fill:var(--accent);stroke:var(--sheet);cursor:move" stroke-width="${pxUnits(2)}"><title>Drag to move. Right-click to remove.</title></circle>`;});
+  }
+  $('#handlesL').innerHTML=h;
+}
+function renderDraft(){
+  const d=ui.draft;const hv=ui.hover;let h='';
+  const sw=pxUnits(2);
+  // snap feedback
+  if(hv&&(TYPES[ui.tool]||ui.tool==='scale'||ui.ptr?.mode==='vertex')){
+    hv.guides.forEach(g=>{h+=`<line x1="${g.a.x}" y1="${g.a.y}" x2="${g.b.x}" y2="${g.b.y}" style="stroke:var(--snap)" stroke-width="${pxUnits(1)}" stroke-dasharray="${pxUnits(4)} ${pxUnits(3)}"/>`;});
+    const p=hv.p,k=pxUnits(6);
+    if(hv.kind==='vertex')h+=`<rect x="${p.x-k}" y="${p.y-k}" width="${k*2}" height="${k*2}" fill="none" style="stroke:var(--snap)" stroke-width="${sw}"/>`;
+    else if(hv.kind==='edge')h+=`<path d="M${p.x} ${p.y-k}L${p.x+k} ${p.y}L${p.x} ${p.y+k}L${p.x-k} ${p.y}Z" fill="none" style="stroke:var(--snap)" stroke-width="${sw}"/>`;
+    else if(hv.kind)h+=`<circle cx="${p.x}" cy="${p.y}" r="${k*0.7}" fill="none" style="stroke:var(--snap)" stroke-width="${sw}"/>`;
+    else h+=`<circle cx="${p.x}" cy="${p.y}" r="${pxUnits(2.5)}" style="fill:var(--accent)"/>`;
+  }
+  if(d&&d.pts.length){
+    const pts=[...d.pts];const live=hv&&!ui.ptr?.moved?hv.p:null;if(live)pts.push(live);
+    if(d.geom==='poly'&&pts.length>=3)h=`<polygon points="${polyPts(pts)}" style="fill:var(--accent)" fill-opacity=".1"/>`+h;
+    h+=`<polyline points="${polyPts(pts)}" fill="none" style="stroke:var(--accent)" stroke-width="${pxUnits(2.5)}" stroke-dasharray="${pxUnits(7)} ${pxUnits(4)}" stroke-linejoin="round"/>`;
+    if(d.geom==='poly'&&live&&pts.length>=3)h+=`<line x1="${live.x}" y1="${live.y}" x2="${d.pts[0].x}" y2="${d.pts[0].y}" style="stroke:var(--accent)" stroke-width="${pxUnits(1)}" stroke-dasharray="${pxUnits(3)} ${pxUnits(3)}" opacity=".7"/>`;
+    d.pts.forEach((p,i)=>{h+=`<circle cx="${p.x}" cy="${p.y}" r="${pxUnits(i===0&&d.geom==='poly'?6:4)}" style="fill:${i===0&&d.geom==='poly'?'var(--sheet)':'var(--accent)'};stroke:var(--accent)" stroke-width="${pxUnits(2)}"/>`;});
+    if(live){const last=d.pts[d.pts.length-1];const L=dist(last,live);if(L>0.5){const ang=Math.round(((Math.atan2(-(live.y-last.y),live.x-last.x)*180/Math.PI)+360)%360);
+      h+=`<text class="ml" x="${live.x+pxUnits(12)}" y="${live.y-pxUnits(10)}" style="fill:var(--fg);font-size:${pxUnits(12)}px">${fmtLen(L)} · ${ang}°</text>`;}
+      if(d.geom==='poly'&&pts.length>=3)h+=`<text class="ml" x="${live.x+pxUnits(12)}" y="${live.y+pxUnits(6)}" style="fill:var(--muted);font-size:${pxUnits(11)}px">${fmtArea(Math.abs(polyArea(pts)))}</text>`;}
+  }
+  $('#draftL').innerHTML=h;
+  renderHint();
+}
+function renderHint(){
+  const hint=$('#hint');const d=ui.draft;const snapBtn=`<button class="btn small ${ui.snap?'on':''}" id="snapToggle" type="button" aria-pressed="${ui.snap}">Snap ${ui.snap?'on':'off'}</button>`;
+  if(ui.tool==='scale'){hint.hidden=false;hint.innerHTML=`<span>Click two points a known distance apart (for example both ends of a wall you know the length of).</span>${snapBtn}<button class="btn small" id="cancelDraft" type="button">Cancel</button>`;return;}
+  if(TYPES[ui.tool]){
+    const T=TYPES[ui.tool];const n=d?d.pts.length:0;let msg;
+    if(T.geom==='poly')msg=!n?`Click the first corner of the <b>${esc(T.name.toLowerCase())}</b>.`:n<3?'Click the next corner.':'Keep clicking corners. Click the first corner to close the shape.';
+    else msg=!n?`Click where the <b>${esc(T.name.toLowerCase())}</b> starts.`:n<2?'Click the next point.':'Keep clicking. Click the last point again, or press <kbd>Enter</kbd>, to finish.';
+    hint.hidden=false;
+    hint.innerHTML=`<span>${msg} Hold <kbd>Shift</kbd> to draw freely.</span>${snapBtn}${n?'<button class="btn small" id="undoPt" type="button">Undo point</button>':''}${(T.geom==='poly'&&n>=3)||(T.geom==='line'&&n>=2)?`<button class="btn small primary" id="finishDraft" type="button">Finish ${T.geom==='poly'?'shape':'line'}</button>`:''}<button class="btn small" id="cancelDraft" type="button">${n?'Cancel':'Done'}</button>`;
+    return;
+  }
+  if(ui.sel&&editable()){hint.hidden=false;hint.innerHTML=`<span>Drag a corner to move it, drag a small square to add a corner, right-click a corner to remove it.</span>${snapBtn}`;return;}
+  hint.hidden=true;
+}
+
+/* ============ map interaction ============ */
+const svg=$('#map');
+function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const r=p.matrixTransform(svg.getScreenCTM().inverse());return {x:r.x,y:r.y};}
+function drawCtx(){const d=ui.draft;if(!d||!d.pts.length)return {extra:[]};const n=d.pts.length;return {prev:d.pts[n-1],prevPrev:n>1?d.pts[n-2]:null,first:d.geom==='poly'?d.pts[0]:null,extra:d.pts};}
+function isDrawing(){return !!(TYPES[ui.tool]||ui.tool==='scale');}
+svg.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  ui.shift=e.shiftKey;
+  const p=pt(e);ui.ptr={sx:e.clientX,sy:e.clientY,p,moved:false,vb:{...ui.vb},id:e.pointerId};
+  if(isDrawing()&&editable()){ui.ptr.mode='draw';}
+  else{
+    const h=e.target.closest('[data-v],[data-m]');const zg=e.target.closest('[data-zone]');
+    if(h&&editable()&&Z()[ui.sel]){
+      const z=clone(Z()[ui.sel]);let i;
+      if(h.dataset.m!=null){const m=+h.dataset.m;const a=z.pts[m],b=z.pts[(m+1)%z.pts.length];z.pts.splice(m+1,0,{x:r1((a.x+b.x)/2),y:r1((a.y+b.y)/2)});i=m+1;}
+      else i=+h.dataset.v;
+      const n=z.pts.length;
+      ui.ptr.mode='vertex';ui.ptr.i=i;ui.ptr.live=z;ui.ptr.closedLine=z.geom==='line'&&n>2&&dist(z.pts[0],z.pts[n-1])<0.5;
+      if(h.dataset.m!=null){Store.d.zones={...Store.d.zones,[ui.sel]:z};}
+    }else if(zg){
+      const id=zg.dataset.zone;if(ui.sel!==id){ui.sel=id;ui.tab='zone';renderAll();}else if(ui.tab!=='zone'){ui.tab='zone';renderPanel();}
+      ui.ptr.mode=editable()?'move':'pan';ui.ptr.orig=clone(Z()[id]);
+    }else{ui.ptr.mode='pan';ui.ptr.empty=true;}
+  }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove',e=>{
+  ui.shift=e.shiftKey;
+  const P=ui.ptr;
+  if(!P){if(isDrawing()&&editable()){const ctx=ui.tool==='scale'?{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]}:drawCtx();ui.hover=snapPoint(pt(e),ctx);renderDraft();}return;}
+  if(!P.moved&&Math.hypot(e.clientX-P.sx,e.clientY-P.sy)>6){P.moved=true;if(P.mode==='draw')P.mode='pan';}
+  if(P.mode==='draw'){const ctx=ui.tool==='scale'?{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]}:drawCtx();ui.hover=snapPoint(pt(e),ctx);renderDraft();return;}
+  if(!P.moved)return;
+  if(P.mode==='pan'){const r=svg.getBoundingClientRect();const k=ui.vb.w/r.width;ui.vb.x=P.vb.x-(e.clientX-P.sx)*k;ui.vb.y=P.vb.y-(e.clientY-P.sy)*k;svg.setAttribute('viewBox',`${ui.vb.x} ${ui.vb.y} ${ui.vb.w} ${ui.vb.h}`);return;}
+  const p=pt(e);
+  if(P.mode==='move'){const dx=r1(p.x-P.p.x),dy=r1(p.y-P.p.y);const z=clone(P.orig);z.pts=z.pts.map(q=>({x:r1(q.x+dx),y:r1(q.y+dy)}));P.live=z;Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();return;}
+  if(P.mode==='vertex'){
+    const z=P.live;const n=z.pts.length;const i=P.i;
+    const prevI=z.geom==='poly'?(i-1+n)%n:(i>0?i-1:(P.closedLine?n-2:null));
+    const ctx={skipZone:ui.sel,skipIdx:i,prev:prevI!=null?z.pts[prevI]:null,prevPrev:prevI!=null&&n>2?z.pts[(prevI-1+n)%n]:null};
+    // the moved corner must not snap onto its own neighbours' angle reference when it is the start of an open line
+    const sp=snapPoint(p,ctx);ui.hover=sp;
+    z.pts[i]=sp.p;if(P.closedLine&&i===0)z.pts[n-1]={...sp.p};
+    Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();
+  }
+});
+svg.addEventListener('pointerup',e=>{
+  const P=ui.ptr;ui.ptr=null;if(!P)return;
+  if(P.mode==='draw'&&!P.moved){
+    if(ui.tool==='scale'){const sp=snapPoint(pt(e),{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]});addScalePoint(sp.p);}
+    else{const sp=snapPoint(pt(e),drawCtx());addPoint(sp);}
+    return;
+  }
+  if(P.mode==='pan'&&!P.moved&&P.empty&&ui.sel){ui.sel=null;renderAll();return;}
+  if((P.mode==='move'||P.mode==='vertex')&&P.live&&(P.moved||P.mode==='vertex')){ui.hover=null;Store.put('zones',ui.sel,P.live);return;}
+  ui.hover=null;renderDraft();
+});
+svg.addEventListener('pointercancel',()=>{ui.ptr=null;});
+svg.addEventListener('pointerleave',()=>{if(!ui.ptr&&ui.hover){ui.hover=null;renderDraft();}});
+svg.addEventListener('contextmenu',e=>{
+  const h=e.target.closest('[data-v]');if(!h||!editable())return;e.preventDefault();
+  const z=clone(Z()[ui.sel]);const i=+h.dataset.v;const min=z.geom==='poly'?3:2;
+  const closed=z.geom==='line'&&z.pts.length>2&&dist(z.pts[0],z.pts[z.pts.length-1])<0.5;
+  if(z.pts.length-(closed?1:0)<=min){toast(`A ${z.geom==='poly'?'shape':'line'} needs at least ${min} corners.`);return;}
+  z.pts.splice(i,1);if(closed&&i===0)z.pts[z.pts.length-1]={...z.pts[0]};Store.put('zones',ui.sel,z);
+});
+svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12,pt(e));},{passive:false});
+function zoom(k,c){c=c||{x:ui.vb.x+ui.vb.w/2,y:ui.vb.y+ui.vb.h/2};const nw=clamp(ui.vb.w*k,60,6000);const kk=nw/ui.vb.w;ui.vb={x:c.x-(c.x-ui.vb.x)*kk,y:c.y-(c.y-ui.vb.y)*kk,w:nw,h:ui.vb.h*kk};renderMap();}
+function fit(){const r=svg.getBoundingClientRect();const H=mapH();const ar=r.width&&r.height?r.height/r.width:0.64;let w=W+40,h=w*ar;if(h<H+40){h=H+40;w=h/ar;}ui.vb={x:W/2-w/2,y:H/2-h/2,w,h};renderMap();}
+function addPoint(sp){
+  const T=TYPES[ui.tool];if(!T)return;
+  if(!ui.draft)ui.draft={type:ui.tool,geom:T.geom,pts:[]};
+  const d=ui.draft;const tol=pxUnits(CONFIG.snapPixels);const last=d.pts[d.pts.length-1];
+  if(d.geom==='poly'&&d.pts.length>=3&&(sp.closes||dist(sp.p,d.pts[0])<tol)){finishDraft();return;}
+  if(last&&dist(sp.p,last)<tol*0.6){if((d.geom==='line'&&d.pts.length>=2)||(d.geom==='poly'&&d.pts.length>=3))finishDraft();return;}
+  d.pts.push({...sp.p});ui.hover=null;renderDraft();
+}
+function finishDraft(){
+  const d=ui.draft;if(!d)return;const min=d.geom==='poly'?3:2;
+  if(d.pts.length<min){toast(`Add at least ${min} ${d.geom==='poly'?'corners':'points'} first.`);return;}
+  ui.draft=null;ui.hover=null;renderDraft();
+  if(d.geom==='poly'&&polyArea(d.pts)<0)d.pts.reverse();
+  openCreate({type:d.type,geom:d.geom,pts:d.pts});
+}
+function addScalePoint(p){
+  if(!ui.draft)ui.draft={type:'scale',geom:'line',pts:[]};
+  ui.draft.pts.push(p);renderDraft();
+  if(ui.draft.pts.length===2){const [a,b]=ui.draft.pts;const L=dist(a,b);ui.draft=null;ui.tool='select';renderAll();
+    if(L<2){toast('Pick two points further apart.');return;}
+    openModal(`<div class="mh"><h2>Set the scale</h2><p>How long is the line you just drew in real life?</p></div><form class="mb" id="scf"><div class="row"><input class="inp mono" type="number" id="scm" min="0.1" step="0.1" required style="width:120px" placeholder="e.g. 25"><span>metres</span></div><div class="help muted" style="font-size:12px">After this, every shape shows its area in m² and every line its length in metres. Useful for turf, fencing and cable quantities.</div></form><div class="mf"><span></span><div class="row"><button class="btn" id="scc" type="button">Cancel</button><button class="btn primary" id="scs" type="button">Set scale</button></div></div>`,()=>{
+      const save=()=>{const m=parseFloat($('#scm').value);if(!(m>0)){toast('Enter the real distance in metres.');return;}Store.setSettings({mPerUnit:m/L});closeModal();toast(`Scale set: ${r1(m)} m over that line.`);};
+      $('#scc').onclick=closeModal;$('#scs').onclick=save;$('#scf').addEventListener('submit',e=>{e.preventDefault();save();});});
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Shift'&&!ui.shift){ui.shift=true;}
+  if(e.target.closest('input,textarea,select'))return;
+  if($('#modalRoot').firstChild){if(e.key==='Escape')closeModal();return;}
+  if(e.key==='Enter'&&ui.draft&&ui.tool!=='scale')finishDraft();
+  else if((e.key==='Backspace'||e.key==='Delete')&&ui.draft&&ui.draft.pts.length){e.preventDefault();ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
+  else if(e.key==='Escape'){if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
+  else if((e.key==='s'||e.key==='S')&&!e.metaKey&&!e.ctrlKey){toggleSnap();}
+});
+document.addEventListener('keyup',e=>{if(e.key==='Shift')ui.shift=false;});
+function toggleSnap(){ui.snap=!ui.snap;ls.set('siteboard.snap',ui.snap?'on':'off');renderHint();toast(ui.snap?'Snapping on':'Snapping off — free drawing');}
+document.addEventListener('click',e=>{
+  const id=e.target.id;
+  if(id==='finishDraft')finishDraft();
+  else if(id==='undoPt'&&ui.draft){ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
+  else if(id==='cancelDraft'){ui.draft=null;ui.hover=null;ui.tool='select';renderAll();}
+  else if(id==='snapToggle')toggleSnap();
+});
+$('#zin').onclick=()=>zoom(1/1.25);$('#zout').onclick=()=>zoom(1.25);$('#zfit').onclick=fit;
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b){ui.tool=b.dataset.tool;ui.draft=null;ui.hover=null;if(ui.tool!=='select')ui.sel=null;renderAll();}if(e.target.closest('[data-act="questions"]'))openQuestions();});
+
+/* ============ modal helpers ============ */
+function openModal(html,onMount){$('#modalRoot').innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="card">${html}</div></div>`;const m=$('#modalRoot .modal');m.addEventListener('pointerdown',e=>{m.dataset.down=e.target===m?'1':'';});m.addEventListener('click',e=>{if(e.target===m&&m.dataset.down)closeModal();});onMount&&onMount(m);const f=m.querySelector('input:not([type=checkbox]),select,textarea');f&&f.focus();}
+function closeModal(){$('#modalRoot').innerHTML='';}
+function vendorOptions(sel,allowNone=true){let h=allowNone?`<option value="">— Choose —</option>`:'';Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name)).forEach(([id,v])=>{h+=`<option value="${id}" ${id===sel?'selected':''}>${esc(v.name)}</option>`;});return h+`<option value="__new">+ New vendor…</option>`;}
+function taskChecks(name,checked,exclude,pri){
+  const byZone={};Object.entries(TK()).forEach(([id,t])=>{if(exclude&&exclude.has(id))return;const zl=Z()[t.zoneId]?.label||'No area';const here=pri&&pri.has(t.zoneId);const key=(here?'0':'1')+zl;(byZone[key]=byZone[key]||{label:zl+(here?' · overlaps this spot':''),items:[]}).items.push([id,t]);});
+  const keys=Object.keys(byZone).sort();if(!keys.length)return `<div class="muted" style="font-size:12.5px">No other tasks yet.</div>`;
+  Object.values(byZone).forEach(g=>g.items.sort((a,b)=>(SCH[a[0]]?.s??0)-(SCH[b[0]]?.s??0)||(isParent(a[0])?-1:1)));
+  return `<div class="chks">`+keys.map(k=>`<div class="grp">${esc(byZone[k].label)}</div>`+byZone[k].items.map(([id,t])=>`<label style="${t.parentId&&TK()[t.parentId]?'padding-left:18px':''}"><input type="checkbox" name="${name}" value="${id}" ${checked.has(id)?'checked':''}><span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(t.title)}${isParent(id)?' <b style="font-weight:500">(whole job, all steps)</b>':''} <span class="muted">· ${isParent(id)?KIDS[id].length+' steps':esc(vendorName(t.vendorId))}</span></label>`).join('')).join('')+`</div>`;
+}
+function vendorChecks(name,checked){const vs=Object.entries(V());if(!vs.length)return `<div class="muted" style="font-size:12.5px">No vendors yet.</div>`;return `<div class="chks">`+vs.map(([id,v])=>`<label><input type="checkbox" name="${name}" value="${id}" ${checked.has(id)?'checked':''}><span class="dot" style="background:${esc(v.color)}"></span>${esc(v.name)}</label>`).join('')+`</div>`;}
+function nextColor(){const used=new Set(Object.values(V()).map(v=>v.color));return PALETTE.find(c=>!used.has(c))||PALETTE[Object.keys(V()).length%PALETTE.length];}
+function wireNewVendor(root){root.querySelectorAll('select[data-vendor]').forEach(s=>{s.addEventListener('change',()=>{if(s.value!=='__new')return;const box=s.parentElement.querySelector('.newv');if(box){box.hidden=false;box.querySelector('input').focus();}});});}
+function resolveVendor(sel,nameInput){if(!sel)return '';if(sel.value!=='__new')return sel.value||'';const n=(nameInput?.value||'').trim();if(!n)return '';const ex=Object.entries(V()).find(([,v])=>v.name.toLowerCase()===n.toLowerCase());if(ex)return ex[0];const id='v_'+uid();Store.put('vendors',id,{name:n,color:nextColor(),contact:''});return id;}
+function vendorField(id,sel){return `<select class="sel" id="${id}" data-vendor>${vendorOptions(sel)}</select><div class="newv" hidden><input class="inp" id="${id}_new" placeholder="Vendor name, e.g. GreenLay turf" style="width:100%;margin-top:4px"></div>`;}
+
+/* ============ create item: guided questions ============ */
+function questionsFor(type){return Store.d.templates?.[type]?.questions||defaultQuestions(type);}
+function templateDefaults(type){return Store.d.templates?.[type]?.defaults||{};}
+function openCreate(geo){
+  const type=geo.type,T=TYPES[type],qs=questionsFor(type),def=templateDefaults(type);
+  const overlapping=new Set(Object.keys(Z()).filter(id=>overlap(geo,Z()[id])));
+  const pre=(vs)=>new Set(Object.keys(TK()).filter(t=>overlapping.has(TK()[t].zoneId)&&(vs||[]).includes(TK()[t].vendorId)));
+  const preBefore=pre(def.beforeVendors),preAfter=pre(def.afterVendors);
+  const count=Object.values(Z()).filter(z=>z.type===type).length+1;
+  const size=geo.geom==='poly'?fmtArea(Math.abs(polyArea(geo.pts))):fmtLen(lengthOf(geo));
+  let body=`<div class="q"><label class="ql" for="c_label">Name on the plan</label><input class="inp" id="c_label" value="${esc(T.name+' '+count)}"><div class="help">${geo.geom==='poly'?'Area':'Length'}: ${size}${mPer()?'':' (set the scale to see metres)'}</div></div>`;
+  qs.forEach(q=>{
+    let f='';
+    switch(q.kind){
+      case 'vendor':f=vendorField('q_'+q.id,def.vendor);break;
+      case 'days':f=`<div class="row"><input class="inp mono" type="number" id="q_${q.id}" min="0.5" step="0.5" value="${def.days??T.days??1}" style="width:90px"><span class="muted">days</span><input class="inp" id="q_taskTitle" value="${esc(def.title||T.task||'Install')}" aria-label="Task name" style="flex:1"></div><div class="help">Starts as soon as everything it depends on is finished.</div>`;break;
+      case 'before':f=taskChecks('before',preBefore,null,overlapping)+`<div class="row"><label class="muted" for="q_notBefore" style="font-size:12px">Not before</label><input class="inp" type="date" id="q_notBefore"></div>`;break;
+      case 'after':f=taskChecks('after',preAfter,null,overlapping)+`<div class="help">Those tasks will wait until this one is finished.</div>`;break;
+      case 'parallel':f=vendorChecks('parallel',new Set(def.parallel||[]))+`<div class="help">Clash warnings are skipped for these vendors in this area.</div>`;break;
+      case 'restrict':f=`<select class="sel" id="q_${q.id}">${Object.entries(AFTER).map(([k,v])=>`<option value="${k}" ${(def.restrict??T.after??'none')===k?'selected':''}>${v}</option>`).join('')}</select>`;break;
+      case 'clear_by':f=`<input class="inp" type="date" id="q_${q.id}"><div class="help">Leave blank and the board sets it to the day the next vendor starts in this spot.</div>`;break;
+      case 'follow':f=`<div class="help">The first step is the installation above. Add the steps that follow it; each becomes a subtask with its own vendor and days.</div><div id="followRows" style="display:flex;flex-direction:column;gap:6px"></div><button class="btn small" type="button" id="addFollow" style="align-self:flex-start">+ Add step</button><div class="help">Steps run in order. Tick “same time” to run a step alongside the one before it.</div>`;break;
+      case 'power':f=`<label class="row" style="font-size:13px"><input type="checkbox" id="q_${q.id}" ${def.power?'checked':''}> Yes, let me draw the electrical cable route next</label>`;break;
+      case 'yesno':f=`<select class="sel" id="q_${q.id}"><option value="">—</option><option ${def.answers?.[q.id]==='Yes'?'selected':''}>Yes</option><option ${def.answers?.[q.id]==='No'?'selected':''}>No</option></select>`;break;
+      case 'number':f=`<input class="inp mono" type="number" id="q_${q.id}" value="${esc(def.answers?.[q.id]??'')}" style="width:120px">`;break;
+      case 'choice':f=`<select class="sel" id="q_${q.id}"><option value="">—</option>${(q.options||[]).map(o=>`<option ${def.answers?.[q.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;break;
+      default:f=`<input class="inp" id="q_${q.id}" value="${esc(def.answers?.[q.id]??'')}">`;
+    }
+    const grouped=['before','after','parallel','follow','power'].includes(q.kind);
+    body+=`<div class="q" data-q="${q.id}">${grouped?`<div class="ql">${esc(q.label)}</div>`:`<label class="ql" for="q_${q.id}">${esc(q.label)}</label>`}${f}</div>`;
+  });
+  openModal(`<div class="mh"><h2>New ${esc(T.name.toLowerCase())}</h2><p>Answer once. Tick “remember” and the next ${esc(T.name.toLowerCase())} starts with these answers.</p></div>
+  <form class="mb" id="cform">${body}<label class="row" style="font-size:13px"><input type="checkbox" id="c_remember" ${Store.d.templates?.[type]?.defaults?'':'checked'}> Remember these answers for every ${esc(T.name.toLowerCase())}</label></form>
+  <div class="mf"><button class="btn ghost" type="button" id="c_edq">Change these questions</button><div class="row"><button class="btn" type="button" id="c_cancel">Discard drawing</button><button class="btn primary" type="button" id="c_save">Add to plan</button></div></div>`,m=>{
+    wireNewVendor(m);
+    if($('#followRows')){(def.follow||T.follow||[]).forEach(r=>addFollowRow({...r}));$('#addFollow').onclick=()=>addFollowRow({title:'',days:1});}
+    $('#c_cancel').onclick=closeModal;
+    $('#c_edq').onclick=()=>openQuestions(type,()=>openCreate(geo));
+    $('#c_save').onclick=()=>saveCreate(geo,qs);
+    $('#cform').addEventListener('submit',e=>{e.preventDefault();saveCreate(geo,qs);});
+  });
+}
+function addFollowRow(r){
+  const box=$('#followRows');if(!box)return;const d=document.createElement('div');d.className='follow';const rid=uid();
+  d.innerHTML=`<input class="inp" placeholder="e.g. Paint stage" value="${esc(r.title)}" data-f="title" aria-label="Step name"><div><select class="sel" data-f="vendor" data-vendor id="fv_${rid}" style="width:100%" aria-label="Vendor">${vendorOptions(r.vendorId)}</select><div class="newv" hidden><input class="inp" id="fv_${rid}_new" placeholder="Vendor name" style="width:100%;margin-top:4px"></div></div><input class="inp mono" type="number" min="0.5" step="0.5" value="${r.days||1}" data-f="days" aria-label="Days"><button class="btn small ghost" type="button" aria-label="Remove step">✕</button><label class="muted" style="grid-column:1/-1;font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" data-f="withPrev" ${r.withPrev?'checked':''}> Same time as the step before</label>`;
+  d.querySelector('button').onclick=()=>d.remove();box.appendChild(d);wireNewVendor(d);
+}
+function saveCreate(geo,qs){
+  const type=geo.type,T=TYPES[type];const zid='z_'+uid();
+  const label=$('#c_label').value.trim()||T.name;
+  const get=id=>document.getElementById('q_'+id);
+  const z={type,geom:geo.geom,pts:geo.pts,label,after:T.after||'none',parallel:[],answers:{}};
+  let vendorId='',days=T.days||1,title=T.task||'Install',before=[],after=[],follow=[],power=false,notBefore='';
+  qs.forEach(q=>{
+    const el=get(q.id);
+    switch(q.kind){
+      case 'vendor':vendorId=resolveVendor(el,document.getElementById('q_'+q.id+'_new'));break;
+      case 'days':days=Math.max(0.5,parseFloat(el.value)||1);title=$('#q_taskTitle').value.trim()||title;break;
+      case 'before':before=[...document.querySelectorAll('input[name=before]:checked')].map(i=>i.value);notBefore=$('#q_notBefore')?.value||'';break;
+      case 'after':after=[...document.querySelectorAll('input[name=after]:checked')].map(i=>i.value);break;
+      case 'parallel':z.parallel=[...document.querySelectorAll('input[name=parallel]:checked')].map(i=>i.value);break;
+      case 'restrict':z.after=el.value;break;
+      case 'clear_by':z.clearBy=el.value||'';break;
+      case 'follow':follow=[...document.querySelectorAll('#followRows .follow')].map(r=>({title:r.querySelector('[data-f=title]').value.trim(),vendorId:resolveVendor(r.querySelector('[data-f=vendor]'),r.querySelector('.newv input')),days:Math.max(0.5,parseFloat(r.querySelector('[data-f=days]').value)||1),withPrev:r.querySelector('[data-f=withPrev]').checked})).filter(r=>r.title);break;
+      case 'power':power=!!el?.checked;break;
+      default:if(el&&el.value!=='')z.answers[q.id]=el.value;
+    }
+  });
+  if(T.drop&&!vendorId){toast('Choose whose items are stored here.');return;}
+  z.vendorId=vendorId;
+  Store.put('zones',zid,z);
+  if(!T.noTask&&!T.drop){
+    const tid='t_'+uid();
+    if(follow.length){
+      // a job with steps: the installation is step 1, the rest follow in order
+      Store.put('tasks',tid,{title:label,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore});
+      Store.put('tasks','t_'+uid(),{title,zoneId:zid,vendorId,days,deps:[],status:'todo',notBefore:'',parentId:tid,order:0,withPrev:false});
+      follow.forEach((f,i)=>Store.put('tasks','t_'+uid(),{title:f.title,zoneId:zid,vendorId:f.vendorId,days:f.days,deps:[],status:'todo',notBefore:'',parentId:tid,order:i+1,withPrev:!!f.withPrev}));
+    }else Store.put('tasks',tid,{title,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore});
+    after.forEach(a=>{const t=clone(TK()[a]);t.deps=[...new Set([...(t.deps||[]),tid])];Store.put('tasks',a,t);});
+  }
+  if($('#c_remember').checked){
+    const def={vendor:vendorId,days,title,restrict:z.after,parallel:z.parallel,follow,power,answers:z.answers,
+      beforeVendors:[...new Set(before.map(t=>TK()[t]?.vendorId).filter(Boolean))],
+      afterVendors:[...new Set(after.map(t=>TK()[t]?.vendorId).filter(Boolean))]};
+    const tpl={...(Store.d.templates?.[type]||{}),defaults:def};if(!tpl.questions)tpl.questions=defaultQuestions(type);
+    Store.put('templates',type,tpl);
+  }
+  closeModal();
+  if(power){ui.tool='cable';ui.sel=null;toast('Now draw where the electrical cables run.');}
+  else{ui.sel=zid;ui.tab='zone';}
+  renderAll();
+}
+
+/* ============ question editor ============ */
+function openQuestions(type,after){
+  type=type||'turf';
+  let qs=clone(questionsFor(type));
+  const draw=()=>{
+    $('#qlist').innerHTML=qs.map((q,i)=>`<div class="qed"><div style="display:flex;flex-direction:column;gap:2px"><button class="btn small ghost" data-up="${i}" type="button" aria-label="Move up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-dn="${i}" type="button" aria-label="Move down" ${i<qs.length-1?'':'disabled'}>▼</button></div><div class="field"><span class="kind">${esc(KINDS[q.kind]||q.kind)}</span><input class="inp" data-lbl="${i}" value="${esc(q.label)}" aria-label="Question wording">${q.kind==='choice'?`<input class="inp" data-opt="${i}" value="${esc((q.options||[]).join(', '))}" placeholder="Options, separated by commas" aria-label="Options">`:''}</div><button class="btn small ghost danger" data-rm="${i}" type="button" aria-label="Remove question">✕</button></div>`).join('')||`<div class="muted">No questions. Add one below.</div>`;
+    const builtIns=['vendor','days','before','after','parallel','restrict','clear_by','follow','power'].filter(k=>!qs.some(q=>q.kind===k));
+    $('#qadd').innerHTML=`<option value="">+ Add a question…</option>${builtIns.length?`<optgroup label="Planning questions">${builtIns.map(k=>`<option value="${k}">${esc(KINDS[k])}</option>`).join('')}</optgroup>`:''}<optgroup label="Your own question"><option value="text">Text answer</option><option value="yesno">Yes / no</option><option value="number">Number</option><option value="choice">Pick from options</option></optgroup>`;
+  };
+  const sync=()=>{document.querySelectorAll('[data-lbl]').forEach(i=>{qs[+i.dataset.lbl].label=i.value;});document.querySelectorAll('[data-opt]').forEach(i=>{qs[+i.dataset.opt].options=i.value.split(',').map(s=>s.trim()).filter(Boolean);});};
+  const done=()=>{closeModal();if(after)after();};
+  openModal(`<div class="mh"><h2>Questions the board asks</h2><p>Pick an item type, then reword, reorder, remove or add questions. They’re asked every time you draw one.</p></div>
+  <div class="mb"><div class="field"><label for="qtype">Item type</label><select class="sel" id="qtype">${Object.entries(TYPES).map(([k,t])=>`<option value="${k}" ${k===type?'selected':''}>${esc(t.name)}</option>`).join('')}</select></div>
+  <div id="qlist" style="display:flex;flex-direction:column;gap:6px"></div><select class="sel" id="qadd" aria-label="Add a question"></select></div>
+  <div class="mf"><button class="btn ghost" type="button" id="qreset">Reset to default</button><div class="row"><button class="btn" type="button" id="qcancel">${after?'Back':'Close'}</button><button class="btn primary" type="button" id="qsave">Save questions</button></div></div>`,m=>{
+    draw();
+    $('#qtype').onchange=e=>{type=e.target.value;qs=clone(questionsFor(type));draw();};
+    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+      if(b.dataset.up){sync();const i=+b.dataset.up;[qs[i-1],qs[i]]=[qs[i],qs[i-1]];draw();}
+      else if(b.dataset.dn){sync();const i=+b.dataset.dn;[qs[i+1],qs[i]]=[qs[i],qs[i+1]];draw();}
+      else if(b.dataset.rm){sync();qs.splice(+b.dataset.rm,1);draw();}});
+    $('#qadd').onchange=e=>{const k=e.target.value;if(!k)return;sync();const custom=['text','yesno','number','choice'].includes(k);const q={id:custom?'q'+uid():k,kind:k,label:custom?'New question':(defaultQuestions('area').concat(defaultQuestions('stage'),defaultQuestions('dropoff')).find(x=>x.kind===k)?.label||KINDS[k])};if(k==='choice')q.options=['Option A','Option B'];qs.push(q);draw();};
+    $('#qreset').onclick=()=>{qs=defaultQuestions(type);draw();};
+    $('#qcancel').onclick=done;
+    $('#qsave').onclick=()=>{sync();const tpl={...(Store.d.templates?.[type]||{}),questions:clone(qs)};Store.put('templates',type,tpl);toast(`Saved questions for ${TYPES[type].name}.`);done();};
+  });
+}
+
+/* ============ side panel ============ */
+let CONF=[];
+function renderTabs(){
+  const n=CONF.filter(c=>c.level!=='info').length;const vendorMode=ui.viewAs!=='planner';
+  const tabs=vendorMode?[['brief','Your brief'],['schedule','Schedule'],['zone','Area']]:[['schedule','Schedule'],['zone','Area'],['conflicts','Clashes'],['vendors','Vendors']];
+  if(!tabs.some(t=>t[0]===ui.tab))ui.tab=tabs[0][0];
+  $('#tabs').innerHTML=tabs.map(([k,l])=>`<button class="tab" role="tab" aria-selected="${ui.tab===k}" data-tab="${k}" type="button">${l}${k==='conflicts'&&n?`<span class="n">${n}</span>`:''}</button>`).join('');
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){ui.tab=b.dataset.tab;renderPanel();}});
+function renderPanel(){renderTabs();const p=$('#pbody');const f={schedule:panelSchedule,zone:panelZone,conflicts:panelConflicts,vendors:panelVendors,brief:panelBrief}[ui.tab];p.innerHTML=f();wirePanel(p);}
+function panelSchedule(){
+  const T=TK();const va=ui.viewAs;
+  const top=id=>!(T[id].parentId&&T[T[id].parentId]);
+  let leaves=Object.keys(T).filter(isLeaf);
+  if(va!=='planner'){const mine=new Set(leaves.filter(i=>T[i].vendorId===va));leaves=leaves.filter(i=>mine.has(i)||(EDEPS[i]||[]).some(d=>mine.has(d))||[...mine].some(m=>(EDEPS[m]||[]).includes(i)));}
+  const keep=new Set(leaves);leaves.forEach(i=>{if(T[i].parentId&&T[T[i].parentId])keep.add(T[i].parentId);});
+  const tops=Object.keys(T).filter(i=>top(i)&&keep.has(i)).sort((a,b)=>SCH[a].s-SCH[b].s||SCH[a].e-SCH[b].e);
+  const ids=[];tops.forEach(t=>{ids.push(t);(KIDS[t]||[]).forEach(k=>{if(keep.has(k))ids.push(k);});});
+  if(!ids.length)return `<div class="muted">No tasks yet. Pick an item on the left and draw it on the plan; the board asks who installs it and for how long.</div>`;
+  const span=Math.max(eventOff()+1,...ids.map(i=>Math.ceil(SCH[i].e)));
+  const pct=v=>(v/span*100).toFixed(2)+'%';
+  let h=`<div class="sec"><h4>Build-up sequence · ${fmtDay(0,false)} → event ${fmtDay(eventOff(),false)}</h4><div class="gantt"><div class="ghead"><div style="padding:4px 8px">Job / step</div><div class="gt">${Array.from({length:span},(_,i)=>`<div>${shortDay(i)}</div>`).join('')}</div></div>`;
+  ids.forEach(id=>{const t=T[id],s=SCH[id],st=taskState(id);const par=isParent(id);const child=!top(id);
+    const sub=par?`${KIDS[id].length} steps · ${esc(Z()[t.zoneId]?.label||'')}`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:7px;height:7px"></span> ${esc(vendorName(t.vendorId))}${child?'':' · '+esc(Z()[t.zoneId]?.label||'')}`;
+    const bar=par?`<div class="bar" style="left:${pct(s.s)};width:${pct(s.e-s.s)};top:13px;bottom:13px;background:var(--fg);opacity:.55"></div>`:`<div class="bar ${st==='done'?'done':''}" style="left:${pct(s.s)};width:${pct(s.e-s.s)};background:${esc(vendorColor(t.vendorId))}" title="${esc(fmtDay(s.s))} – ${esc(fmtDay(s.e))}"></div>`;
+    h+=`<div class="grow ${ui.selTask===id?'sel':''}" data-task="${id}"><div class="gl" style="${child?'padding-left:22px':''}"><b style="${par?'font-weight:600':''}">${child?'<span class="muted">↳ </span>':''}${esc(t.title)}</b><span>${sub}</span></div><div class="gt"><div class="ev" style="left:${pct(eventOff())}"></div>${bar}<div class="now" style="left:${pct(ui.day)}"></div></div></div>`;});
+  h+=`</div><div class="muted" style="font-size:11.5px;margin-top:4px">Orange line: the day shown on the map. Red dashed line: event day. Tap a row to jump to it.</div></div>`;
+  const today=ids.filter(i=>isLeaf(i)&&SCH[i].s<=ui.day&&ui.day<SCH[i].e);
+  h+=`<div class="sec"><h4>On site ${fmtDay(ui.day)}</h4>${today.length?today.map(i=>`<div class="row" style="font-size:13px"><span class="dot" style="background:${esc(vendorColor(T[i].vendorId))}"></span><b style="font-weight:500">${esc(vendorName(T[i].vendorId))}</b><span class="muted">${esc(taskLabel(i))} · ${esc(Z()[T[i].zoneId]?.label||'')}</span></div>`).join(''):'<div class="muted">Nobody scheduled.</div>'}</div>`;
+  return h;
+}
+function depLine(id,ed){
+  const t=TK()[id];const own=(t.deps||[]).filter(d=>TK()[d]);
+  const txt=own.length?`<span class="muted">Starts after:</span> ${esc(own.map(d=>`${taskLabel(d)} (${isParent(d)?'all steps':vendorName(TK()[d].vendorId)})`).join(', '))}`:'<span class="muted">No other jobs to wait for</span>';
+  return `<div style="font-size:12.5px">${txt} ${ed?`<button class="btn small" data-deps="${id}" type="button">Edit</button>`:''}</div>`;
+}
+function stepRow(id,i,n,ed){
+  const t=TK()[id],s=SCH[id],st=taskState(id);
+  if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div></div><span class="st ${st}">${STATE_LABEL[st]}</span></div>`;
+  return `<div data-tcard="${id}" style="display:flex;flex-direction:column;gap:5px;padding:7px 0;border-top:1px solid var(--line2)">
+    <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${STATE_LABEL[st]}</span></div>
+    <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
+    <div class="row" style="padding-left:22px;font-size:12px"><span class="mono muted">${fmtDay(s.s)} → ${fmtDay(s.e)}</span>${i>0?`<label class="muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tf="withPrev" ${t.withPrev?'checked':''}> same time as step ${i}</label>`:''}</div>
+    <div class="row" style="padding-left:22px"><select class="sel" data-tf="status" aria-label="Status" style="font-size:12.5px"><option value="todo" ${t.status==='todo'?'selected':''}>Not started</option><option value="started" ${t.status==='started'?'selected':''}>In progress</option><option value="done" ${t.status==='done'?'selected':''}>Done</option></select><button class="btn small ghost" data-sup="${id}" type="button" aria-label="Move step up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-sdn="${id}" type="button" aria-label="Move step down" ${i<n-1?'':'disabled'}>▼</button><button class="btn small ghost danger" data-sdel="${id}" type="button">Remove step</button></div>
+  </div>`;
+}
+function taskCard(id,ed){
+  const t=TK()[id],s=SCH[id],st=taskState(id);
+  if(isParent(id)){
+    const ks=KIDS[id];
+    return `<div class="task" data-tcard="${id}">
+      <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Job name" style="font-weight:600">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${STATE_LABEL[st]}</span></div>
+      <div class="mono muted" style="font-size:12px">${ks.length} steps · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
+      ${depLine(id,ed)}
+      ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>`:''}
+      <div>${ks.map((k,i)=>stepRow(k,i,ks.length,ed)).join('')}</div>
+      ${ed?`<div class="row"><button class="btn small" data-addstep="${id}" type="button">+ Add step</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete job and its steps</button></div>`:''}
+    </div>`;
+  }
+  return `<div class="task" data-tcard="${id}">
+    <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Task name">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${STATE_LABEL[st]}</span></div>
+    <div class="row" style="font-size:12.5px">${ed?`<select class="sel" data-tf="vendorId" data-vendor id="tv_${id}" style="flex:1" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:64px" aria-label="Days"><span class="muted">days</span>`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(vendorName(t.vendorId))} · ${t.days} day${t.days==1?'':'s'}`}</div>
+    <div class="mono muted" style="font-size:12px">${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
+    ${depLine(id,ed)}
+    ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>
+    <div class="row"><select class="sel" data-tf="status" aria-label="Status"><option value="todo" ${t.status==='todo'?'selected':''}>Not started</option><option value="started" ${t.status==='started'?'selected':''}>In progress</option><option value="done" ${t.status==='done'?'selected':''}>Done</option></select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
+  </div>`;
+}
+/* step editing */
+function addStep(id){
+  const T=TK();const t=T[id];
+  if(isParent(id)){const ks=KIDS[id];const last=T[ks[ks.length-1]];Store.put('tasks','t_'+uid(),{title:'New step',zoneId:t.zoneId,vendorId:'',days:1,deps:[],status:'todo',notBefore:'',parentId:id,order:(last?.order??ks.length-1)+1,withPrev:false});return;}
+  // turn a single task into a job: its work becomes step 1
+  Store.put('tasks','t_'+uid(),{title:t.title,zoneId:t.zoneId,vendorId:t.vendorId,days:t.days,deps:[],status:t.status||'todo',notBefore:'',parentId:id,order:0,withPrev:false});
+  Store.put('tasks','t_'+uid(),{title:'Next step',zoneId:t.zoneId,vendorId:'',days:1,deps:[],status:'todo',notBefore:'',parentId:id,order:1,withPrev:false});
+  const p=clone(t);p.title=Z()[t.zoneId]?.label?`${Z()[t.zoneId].label} works`:t.title;p.status='todo';Store.put('tasks',id,p);
+}
+function moveStep(id,dir){
+  const pid=TK()[id].parentId;const ks=[...KIDS[pid]];const i=ks.indexOf(id),j=i+dir;if(j<0||j>=ks.length)return;
+  [ks[i],ks[j]]=[ks[j],ks[i]];
+  ks.forEach((k,n)=>{const t=TK()[k];if(t.order!==n||(n===0&&t.withPrev)){const c=clone(t);c.order=n;if(n===0)c.withPrev=false;Store.put('tasks',k,c);}});
+}
+function removeTask(id){
+  const ids=new Set([id,...(KIDS[id]||[])]);const own=TK()[id].deps||[];
+  Object.entries(TK()).forEach(([o,t])=>{if(ids.has(o))return;if((t.deps||[]).some(d=>ids.has(d))){const c=clone(t);c.deps=[...new Set(c.deps.filter(d=>!ids.has(d)).concat(TK()[id].parentId?[]:own))].filter(d=>d!==o);Store.put('tasks',o,c);}});
+  const gone=clone(TK()[id]);const pid=gone.parentId;
+  ids.forEach(k=>Store.del('tasks',k));
+  // a job left with no steps becomes a plain task again, using the removed step's vendor and days
+  if(pid&&TK()[pid]&&!Object.values(TK()).some(t=>t.parentId===pid)){const p=clone(TK()[pid]);p.vendorId=gone.vendorId;p.days=gone.days;Store.put('tasks',pid,p);}
+}
+function panelZone(){
+  const id=ui.sel,z=Z()[id];
+  if(!z)return `<div class="muted">Select an area or line on the plan to see who works there, when it’s locked, and what’s not allowed.</div>`;
+  const T=TYPES[z.type]||TYPES.area;const ed=editable();
+  const w=zoneWindow(id);const ts=zoneTasks(id);
+  let h=`<div class="sec"><h4>${esc(T.name)}</h4>${ed?`<input class="inp" data-zf="label" value="${esc(z.label)}" aria-label="Name" style="width:100%;font-family:var(--f-display);font-size:20px;font-weight:600">`:`<div style="font-family:var(--f-display);font-size:22px;font-weight:600">${esc(z.label)}</div>`}</div>`;
+  h+=`<div class="sec meas">${z.geom==='poly'?`<div><b>${fmtArea(Math.abs(polyArea(z.pts)))}</b><span>Area</span></div><div><b>${fmtLen(lengthOf(z))}</b><span>Perimeter</span></div>`:`<div><b>${fmtLen(lengthOf(z))}</b><span>Length</span></div>`}<div><b>${z.geom==='poly'?z.pts.length:z.pts.length}</b><span>${z.geom==='poly'?'Corners':'Points'}</span></div></div>`;
+  if(!mPer()&&ed)h+=`<div class="muted" style="font-size:12px;margin-top:-6px">Use “Set scale” on the left to see real metres.</div>`;
+  h+=`<div class="sec"><h4>Access timeline</h4><div style="font-size:13px;display:flex;flex-direction:column;gap:3px">`;
+  if(T.drop){const c=clearByOff(id);h+=`<div>${esc(vendorName(z.vendorId))} may store items here ${c?`until <b>${fmtDay(c.off)}</b>${c.manual?'':' (set automatically: next vendor starts then)'}`:'with no deadline yet'}.</div>`;}
+  else if(w)h+=`<div><b style="color:var(--bad)">Locked</b> for installation ${fmtDay(w.s)} → ${fmtDay(w.e)}. Only the scheduled vendor works here.</div>`;
+  else if(!T.route)h+=`<div class="muted">No installation tasks.</div>`;
+  if(z.after&&z.after!=='none')h+=`<div><b style="color:var(--bad)">${esc(AFTER[z.after])}</b> from ${fmtDay(restrictFrom(id))} until the event.</div>`;
+  if((z.parallel||[]).length)h+=`<div class="muted">Allowed to work here in parallel: ${esc(z.parallel.map(vendorName).join(', '))}</div>`;
+  h+=`</div></div>`;
+  if(ed){
+    h+=`<div class="sec"><h4>Settings</h4><div style="display:flex;flex-direction:column;gap:8px">`;
+    if(!T.route&&z.type!=='nogo')h+=`<div class="field"><label for="zv">${T.drop?'Whose items':'Responsible vendor'}</label><select class="sel" id="zv" data-zf="vendorId" data-vendor>${vendorOptions(z.vendorId)}</select><div class="newv" hidden><input class="inp" id="zv_new" placeholder="Vendor name" style="width:100%"></div></div>`;
+    if(T.drop)h+=`<div class="field"><label for="zc">Items allowed until (blank = automatic)</label><input class="inp" type="date" id="zc" data-zf="clearBy" value="${esc(z.clearBy||'')}"></div>`;
+    h+=`<div class="field"><label for="za">Once installed</label><select class="sel" id="za" data-zf="after">${Object.entries(AFTER).map(([k,v])=>`<option value="${k}" ${z.after===k?'selected':''}>${v}</option>`).join('')}</select></div>`;
+    h+=`<div class="field"><label>Can work here in parallel</label>${vendorChecks('zpar',new Set(z.parallel||[]))}</div>`;
+    h+=`<div class="row"><button class="btn small" id="zstraight" type="button">Straighten lines</button><span class="muted" style="font-size:12px">Makes nearly-straight and nearly-square sides exact.</span></div>`;
+    h+=`</div></div>`;
+  }
+  const qs=questionsFor(z.type);
+  const ans=Object.entries(z.answers||{});if(ans.length)h+=`<div class="sec"><h4>Notes</h4>${ans.map(([k,v])=>`<div style="font-size:13px"><span class="muted">${esc(qs.find(q=>q.id===k)?.label||'Note')}</span><br>${esc(v)}</div>`).join('')}</div>`;
+  const jobs=zoneJobs(id);
+  if(!T.noTask&&!T.drop)h+=`<div class="sec"><h4>Work in this area · in order</h4><div style="display:flex;flex-direction:column;gap:8px">${jobs.map(t=>taskCard(t,ed)).join('')||'<div class="muted">No tasks.</div>'}${ed?`<button class="btn small" id="addTask" type="button" style="align-self:flex-start">+ Add another job here</button>`:''}</div></div>`;
+  if(ed)h+=`<div class="row"><button class="btn small danger" id="zdel" type="button">Delete ${esc(T.name.toLowerCase())}</button></div>`;
+  return h;
+}
+function panelConflicts(){
+  if(!CONF.length)return `<div class="row"><span class="pill ok">No clashes</span><span class="muted">Every area has one vendor at a time, and drop-offs clear before work starts.</span></div>`;
+  return CONF.map((c,i)=>`<div class="conf ${c.level}"><b>${esc(c.title)}</b><div style="font-size:13px">${esc(c.detail)}</div><div class="row">${(c.zones||[]).filter(Boolean).length?`<button class="btn small" data-cshow="${i}" type="button">Show on plan</button>`:''}${c.fix&&Store.canEdit?`<button class="btn small primary" data-cfix="${i}" type="button">${esc(c.fix.label)}</button>`:''}${c.fix2&&Store.canEdit?`<button class="btn small" data-cfix2="${i}" type="button">${esc(c.fix2.label)}</button>`:''}</div></div>`).join('');
+}
+function vendorLink(id){return location.origin+location.pathname+'?vendor='+encodeURIComponent(id);}
+function vendorSteps(vid){return Object.keys(TK()).filter(i=>isLeaf(i)&&TK()[i].vendorId===vid).sort((a,b)=>SCH[a].s-SCH[b].s);}
+function panelVendors(){
+  const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));const ed=Store.canEdit;const dis=ed?'':'disabled';
+  let h=`<div class="sec muted" style="font-size:12.5px">${Store.mode==='github'?'Your vendor directory. Send each vendor their own link: they see only their steps, deadlines and site rules, and can’t change anything.':'Your vendor directory. Publish the board on GitHub Pages to send live links to vendors.'}</div>`;
+  if(ed)h+=`<div class="sec"><h4>Add a vendor</h4><div style="display:flex;flex-direction:column;gap:6px"><input class="inp" id="newVendor" placeholder="Company name"><input class="inp" id="newTrade" placeholder="What they do, e.g. Stage structure and stairs"><button class="btn" id="addVendor" type="button" style="align-self:flex-start">Add vendor</button></div></div>`;
+  if(!vs.length)return h+`<div class="muted">No vendors yet.</div>`;
+  h+=vs.map(([id,v])=>{
+    const steps=vendorSteps(id);const first=steps.length?SCH[steps[0]].s:null,last=steps.length?Math.max(...steps.map(s=>SCH[s].e)):null;
+    const open=ui.openVendor===id;
+    const stepList=steps.map(s=>{const t=TK()[s];const st=taskState(s);return `<div class="row" style="font-size:12.5px;flex-wrap:nowrap;align-items:flex-start"><span class="st ${st}" style="font-size:9.5px">${STATE_LABEL[st]}</span><div style="min-width:0"><div>${esc(taskLabel(s))}</div><div class="muted mono" style="font-size:11px">${esc(Z()[t.zoneId]?.label||'')} · ${fmtDay(SCH[s].s)} → ${fmtDay(SCH[s].e)}</div></div></div>`;}).join('')||'<div class="muted" style="font-size:12.5px">No steps assigned yet. Assign them in an area’s job card.</div>';
+    const drops=Object.values(Z()).filter(z=>z.type==='dropoff'&&z.vendorId===id).length;
+    return `<details class="vrow" data-vrow="${id}" ${open?'open':''} style="display:block">
+      <summary style="cursor:pointer;display:flex;gap:10px;align-items:center;list-style:none"><span class="dot" style="background:${esc(v.color)};width:14px;height:14px"></span><span style="flex:1;min-width:0"><b style="font-weight:600">${esc(v.name)}</b><br><span class="muted" style="font-size:12.5px">${esc(v.trade||'What they do: not set')}</span></span><span class="mono muted" style="font-size:11px;text-align:right">${steps.length} step${steps.length===1?'':'s'}${first!=null?`<br>${shortDay(first)}–${shortDay(last)}`:''}</span></summary>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+        <div class="row" style="flex-wrap:nowrap"><input type="color" value="${esc(v.color)}" data-vf="color" aria-label="Colour on the plan" ${dis}><input class="inp" data-vf="name" value="${esc(v.name)}" aria-label="Company name" style="flex:1;min-width:0" ${dis}></div>
+        <div class="field"><label>What they do</label><input class="inp" data-vf="trade" value="${esc(v.trade||'')}" placeholder="e.g. Stage structure, stairs and backstage walls" ${dis}></div>
+        <div class="row"><div class="field" style="flex:1;min-width:130px"><label>Contact person</label><input class="inp" data-vf="contact" value="${esc(v.contact||'')}" ${dis}></div><div class="field" style="flex:1;min-width:130px"><label>Phone</label><input class="inp" type="tel" data-vf="phone" value="${esc(v.phone||'')}" ${dis}></div></div>
+        <div class="field"><label>Email</label><input class="inp" type="email" data-vf="email" value="${esc(v.email||'')}" ${dis}></div>
+        <div class="field"><label>Notes (access, vehicles, crew size…)</label><textarea class="inp" data-vf="notes" rows="2" ${dis}>${esc(v.notes||'')}</textarea></div>
+        <div class="sec"><h4>Their steps, in order${drops?` · ${drops} drop-off area${drops>1?'s':''}`:''}</h4><div style="display:flex;flex-direction:column;gap:6px">${stepList}</div></div>
+        <div class="row"><button class="btn small" data-viewas="${id}" type="button">View as</button><button class="btn small" data-copy="${id}" type="button">Copy brief</button>${Store.mode==='github'?`<button class="btn small" data-link="${id}" type="button">Copy vendor link</button>`:''}${ed&&!steps.length&&!drops?`<button class="btn small ghost danger" data-vdel="${id}" type="button">Remove vendor</button>`:''}</div>
+      </div></details>`;}).join('');
+  return h;
+}
+function contactLine(vid){const v=V()[vid];if(!v)return '';const bits=[v.contact,v.phone,v.email].filter(Boolean);return `${v.name}${v.trade?` (${v.trade})`:''}${bits.length?': '+bits.join(' · '):''}`;}
+function briefText(vid){
+  const T=TK(),zs=Z();const mine=vendorSteps(vid);
+  const L=[];L.push(`${S().name||'Event'} — brief for ${vendorName(vid)}`);L.push(`Build-up ${fmtDay(0,false)} → event ${fmtDay(eventOff(),false)}`);
+  if(Store.mode==='github')L.push(`Live plan: ${vendorLink(vid)}`);
+  const linked=new Set();
+  L.push('');L.push('YOUR WORK');
+  if(!mine.length)L.push('- No installation work assigned.');
+  mine.forEach(i=>{const t=T[i];const z=zs[t.zoneId];
+    const w=(EDEPS[i]||[]).map(d=>{const dv=isParent(d)?null:T[d].vendorId;if(dv&&dv!==vid)linked.add(dv);if(isParent(d))KIDS[d].forEach(k=>{if(T[k].vendorId!==vid)linked.add(T[k].vendorId);});return `${taskLabel(d)} (${isParent(d)?'all steps':vendorName(dv)})`;});
+    const nxt=successors(i);nxt.forEach(o=>{if(T[o].vendorId!==vid)linked.add(T[o].vendorId);});
+    const size=z&&mPer()&&!t.parentId?` (${z.geom==='poly'?fmtArea(Math.abs(polyArea(z.pts))):fmtLen(lengthOf(z))})`:'';
+    L.push(`- ${taskLabel(i)} at ${z?.label||'site'}${size}: ${fmtDay(SCH[i].s)} → ${fmtDay(SCH[i].e)} (${t.days} day${t.days==1?'':'s'}).`);
+    if(t.withPrev)L.push('    Runs at the same time as the step before it.');
+    if(w.length)L.push(`    Start only after: ${w.join('; ')}.`);
+    if(nxt.length)L.push(`    Finish on time: ${nxt.map(o=>`${vendorName(T[o].vendorId)} (${taskLabel(o)})`).join(', ')} starts right after you.`);});
+  const drops=Object.keys(zs).filter(id=>zs[id].type==='dropoff'&&zs[id].vendorId===vid);
+  if(drops.length){L.push('');L.push('WHERE YOU CAN LEAVE ITEMS');drops.forEach(id=>{const c=clearByOff(id);L.push(`- ${zs[id].label}: ${c?`remove everything before ${fmtDay(c.off)}`:'no deadline yet'}${c&&c.task?` — ${taskLabel(c.task)} starts there`:''}.`);});L.push('- Do not leave items anywhere else.');}
+  const rules=Object.keys(zs).filter(id=>zs[id].after&&zs[id].after!=='none');
+  if(rules.length){L.push('');L.push('SITE RULES');rules.forEach(id=>L.push(`- ${zs[id].label}: ${AFTER[zs[id].after].toLowerCase()} from ${fmtDay(restrictFrom(id))}.`));}
+  const locks=Object.keys(zs).map(id=>({id,w:zoneWindow(id)})).filter(x=>x.w&&zoneTasks(x.id).some(t=>T[t].vendorId!==vid));
+  if(locks.length){L.push('');L.push('LOCKED WHILE OTHERS WORK (stay out)');locks.sort((a,b)=>a.w.s-b.w.s).forEach(({id})=>{const parts=zoneTasks(id).filter(t=>T[t].vendorId!==vid);const s=Math.min(...parts.map(t=>SCH[t].s)),e=Math.max(...parts.map(t=>SCH[t].e));const others=[...new Set(parts.map(t=>vendorName(T[t].vendorId)))];L.push(`- ${zs[id].label}: ${fmtDay(s)} → ${fmtDay(e)} (${others.join(', ')}).`);});}
+  linked.delete(vid);linked.delete('');linked.delete(undefined);
+  if(linked.size){L.push('');L.push('VENDORS BEFORE AND AFTER YOU');[...linked].forEach(o=>L.push('- '+contactLine(o)));}
+  return L.join('\n');
+}
+function panelBrief(){const vid=ui.viewAs;if(!V()[vid])return `<div class="muted">Choose your company under “Viewing as”.</div>`;return `<div class="row"><button class="btn small primary" data-copy="${vid}" type="button">Copy brief</button><span class="muted" style="font-size:12px">Paste into WhatsApp or email.</span></div><div class="brief">${esc(briefText(vid))}</div>`;}
+function copyText(txt,msg){const done=()=>toast(msg||'Copied.');try{navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt));}catch(e){fallbackCopy(txt);}}
+function fallbackCopy(txt){openModal(`<div class="mh"><h2>Copy</h2><p>Select all and copy.</p></div><div class="mb"><textarea class="inp" id="cpy" rows="14" style="width:100%;font-family:var(--f-mono);font-size:12px">${esc(txt)}</textarea></div><div class="mf"><span></span><button class="btn" type="button" id="cpyc">Close</button></div>`,()=>{$('#cpyc').onclick=closeModal;const t=$('#cpy');t.focus();t.select();});}
+
+function wirePanel(p){
+  wireNewVendor(p);
+  p.querySelectorAll('[data-task]').forEach(r=>r.onclick=()=>{const t=TK()[r.dataset.task];ui.selTask=r.dataset.task;ui.sel=t.zoneId;ui.day=SCH[r.dataset.task].s;renderAll();});
+  p.querySelectorAll('[data-zf]').forEach(el=>el.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);const k=el.dataset.zf;
+    if(k==='vendorId'){if(el.value==='__new')return;z.vendorId=el.value;}else z[k]=el.value;Store.put('zones',ui.sel,z);}));
+  const zvn=p.querySelector('#zv_new');if(zvn)zvn.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.vendorId=resolveVendor($('#zv'),zvn);Store.put('zones',ui.sel,z);});
+  p.querySelectorAll('input[name=zpar]').forEach(c=>c.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.parallel=[...p.querySelectorAll('input[name=zpar]:checked')].map(i=>i.value);Store.put('zones',ui.sel,z);}));
+  const zs=p.querySelector('#zstraight');if(zs)zs.onclick=()=>{const z=clone(Z()[ui.sel]);z.pts=straighten(z);Store.put('zones',ui.sel,z);toast('Straightened.');};
+  p.querySelectorAll('[data-tcard]').forEach(card=>{const id=card.dataset.tcard;const own=el=>el.closest('[data-tcard]')===card;
+    card.querySelectorAll('[data-tf]').forEach(el=>{if(!own(el))return;el.addEventListener('change',()=>{const t=clone(TK()[id]);const k=el.dataset.tf;
+      if(k==='vendorId'){if(el.value==='__new')return;t.vendorId=el.value;}
+      else if(k==='days')t.days=Math.max(0.5,parseFloat(el.value)||1);
+      else if(el.type==='checkbox')t[k]=el.checked;else t[k]=el.value;Store.put('tasks',id,t);});});
+    card.querySelectorAll('.newv input').forEach(i=>{if(!own(i))return;i.addEventListener('change',()=>{const t=clone(TK()[id]);t.vendorId=resolveVendor([...card.querySelectorAll('[data-tf=vendorId]')].find(own),i);Store.put('tasks',id,t);});});});
+  p.querySelectorAll('[data-deps]').forEach(b=>b.onclick=()=>openDeps(b.dataset.deps));
+  p.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.tdel)));
+  p.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.sdel)));
+  p.querySelectorAll('[data-addstep]').forEach(b=>b.onclick=()=>addStep(b.dataset.addstep));
+  p.querySelectorAll('[data-sup]').forEach(b=>b.onclick=()=>moveStep(b.dataset.sup,-1));
+  p.querySelectorAll('[data-sdn]').forEach(b=>b.onclick=()=>moveStep(b.dataset.sdn,1));
+  const at=p.querySelector('#addTask');if(at)at.onclick=()=>{const js=zoneJobs(ui.sel);const last=js[js.length-1];Store.put('tasks','t_'+uid(),{title:'New job',zoneId:ui.sel,vendorId:'',days:1,deps:last?[last]:[],status:'todo',notBefore:''});};
+  const zd=p.querySelector('#zdel');if(zd)zd.onclick=()=>confirmBtn(zd,()=>{const id=ui.sel;zoneJobs(id).forEach(t=>{if(TK()[t])removeTask(t);});Store.del('zones',id);ui.sel=null;renderAll();});
+  p.querySelectorAll('[data-cshow]').forEach(b=>b.onclick=()=>{const c=CONF[+b.dataset.cshow];const zid=c.zones.find(Boolean);ui.sel=zid;const w=zoneWindow(zid);if(w)ui.day=w.s;focusZone(zid);renderAll();});
+  p.querySelectorAll('[data-cfix]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix].fix.run();toast('Fixed.');});
+  p.querySelectorAll('[data-cfix2]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix2].fix2.run();toast('Marked as parallel.');});
+  p.querySelectorAll('[data-vrow]').forEach(r=>{const id=r.dataset.vrow;r.querySelectorAll('[data-vf]').forEach(el=>el.addEventListener('change',()=>{const v=clone(V()[id]);v[el.dataset.vf]=el.value;Store.put('vendors',id,v);}));});
+  p.querySelectorAll('[data-viewas]').forEach(b=>b.onclick=()=>setViewAs(b.dataset.viewas));
+  p.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(briefText(b.dataset.copy),'Brief copied.'));
+  p.querySelectorAll('[data-link]').forEach(b=>b.onclick=()=>copyText(vendorLink(b.dataset.link),'Vendor link copied.'));
+  p.querySelectorAll('[data-vdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>Store.del('vendors',b.dataset.vdel)));
+  const av=p.querySelector('#addVendor');if(av){const add=()=>{const n=$('#newVendor').value.trim();if(!n){toast('Enter the company name.');return;}const id='v_'+uid();ui.openVendor=id;Store.put('vendors',id,{name:n,trade:$('#newTrade').value.trim(),color:nextColor(),contact:'',phone:'',email:'',notes:''});};av.onclick=add;['#newVendor','#newTrade'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')add();}));}
+  p.querySelectorAll('details[data-vrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)ui.openVendor=d.dataset.vrow;else if(ui.openVendor===d.dataset.vrow)ui.openVendor=null;}));
+}
+function confirmBtn(b,fn){if(b.dataset.armed){fn();return;}b.dataset.armed='1';const t=b.textContent;b.textContent='Click again to confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t;}},3000);}
+function focusZone(zid){const z=Z()[zid];if(!z)return;const b=bbox(z);const cx=b.x+b.w/2,cy=b.y+b.h/2;const w=Math.max(ui.vb.w*0.6,b.w*2.2,300);const k=w/ui.vb.w;ui.vb={x:cx-w/2,y:cy-ui.vb.h*k/2,w,h:ui.vb.h*k};}
+function openDeps(id){
+  const t=TK()[id];
+  // can't wait for itself, its own steps, its own job, or anything that already waits for it
+  const desc=new Set([id,...(KIDS[id]||[])]);if(t.parentId)desc.add(t.parentId);
+  let grew=true;while(grew){grew=false;Object.entries(TK()).forEach(([o,x])=>{if(!desc.has(o)&&((x.deps||[]).some(d=>desc.has(d))||desc.has(x.parentId))){desc.add(o);grew=true;}});}
+  const here=new Set(Object.keys(Z()).filter(zid=>overlap(Z()[t.zoneId],Z()[zid])));
+  openModal(`<div class="mh"><h2>${esc(taskLabel(id))} starts after…</h2><p>Tick everything that must be finished first. Pick a whole job to wait for all of its steps.</p></div><div class="mb">${taskChecks('dep',new Set(t.deps||[]),desc,here)}</div><div class="mf"><span></span><div class="row"><button class="btn" id="dc" type="button">Cancel</button><button class="btn primary" id="ds" type="button">Save</button></div></div>`,()=>{
+    $('#dc').onclick=closeModal;$('#ds').onclick=()=>{const c=clone(t);c.deps=[...document.querySelectorAll('input[name=dep]:checked')].map(i=>i.value);Store.put('tasks',id,c);closeModal();};});
+}
+
+/* ============ settings, sign-in, backup ============ */
+$('#btnSettings').onclick=openSettings;
+function openSettings(){
+  const s=S();const ed=Store.canEdit;const dis=ed?'':'disabled';
+  openModal(`<div class="mh"><h2>Event settings</h2><p>${Store.mode==='github'?'Saved to your GitHub repository for everyone with the link.':'Saved in this browser only.'}</p></div>
+  <div class="mb">
+    <div class="field"><label for="sn">Event name</label><input class="inp" id="sn" value="${esc(s.name||'')}" ${dis}></div>
+    <div class="row"><div class="field" style="flex:1"><label for="ss">First build-up day</label><input class="inp" type="date" id="ss" value="${esc(s.setupStart||'')}" ${dis}></div><div class="field" style="flex:1"><label for="se">Event day</label><input class="inp" type="date" id="se" value="${esc(s.eventDate||'')}" ${dis}></div></div>
+    <div class="field"><label for="sb">Floor plan image</label><input type="file" id="sb" accept="image/png,image/jpeg,image/webp" ${dis}><span class="muted" style="font-size:12px">Export your AutoCAD drawing as PNG or JPG (PDF → image works too). You draw on top of it at its real proportions.${s.bgUrl?' A plan is loaded.':''}</span></div>
+    ${s.bgUrl?`<div class="field"><label for="so">Plan visibility</label><input type="range" id="so" min="0.15" max="1" step="0.05" value="${s.bgOpacity??0.8}" ${dis}></div>`:''}
+    <div class="field"><label>Scale</label><div class="row"><span class="mono">${mPer()?`1 m = ${r1(1/mPer())} drawing units`:'Not set'}</span>${ed?'<button class="btn small" id="sscale" type="button">Set scale on the plan</button>':''}</div></div>
+    ${ed?`<div class="sec"><h4>Backup and reuse</h4><div class="row"><button class="btn small" id="sexp" type="button">Download backup (.json)</button><button class="btn small" id="simp" type="button">Load from backup…</button></div><div class="muted" style="font-size:12px;margin-top:4px">Keep a backup of every event. For the next event, load it and clear the areas: vendors and your questions stay.</div></div>
+    <div class="sec"><h4>Start over</h4><div class="row"><button class="btn small danger" id="sclear" type="button">Clear all areas and tasks</button></div></div>`:''}
+    ${Store.mode==='github'&&ed?'<div class="row"><button class="btn small" id="slogout" type="button">Sign out on this device</button></div>':''}
+  </div>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="scl" type="button">Close</button>${ed?'<button class="btn primary" id="ssv" type="button">Save</button>':''}</div></div>`,()=>{
+    $('#scl').onclick=closeModal;
+    if(!ed)return;
+    $('#ssv').onclick=()=>{Store.setSettings({name:$('#sn').value.trim(),setupStart:$('#ss').value,eventDate:$('#se').value,bgOpacity:$('#so')?parseFloat($('#so').value):(s.bgOpacity??0.8)});closeModal();};
+    $('#sscale').onclick=()=>{closeModal();ui.tool='scale';ui.draft=null;ui.sel=null;renderAll();};
+    $('#sb').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+      const dims=await new Promise(r=>{const u=URL.createObjectURL(f);const im=new Image();im.onload=()=>{r({w:im.naturalWidth||1000,h:im.naturalHeight||640});URL.revokeObjectURL(u);};im.onerror=()=>r(null);im.src=u;});
+      if(!dims){toast('That file isn’t an image this browser can read. Use PNG or JPG.');return;}
+      if(Store.mode==='github'){try{toast('Uploading floor plan to GitHub…');const r=await Store.upload(f);Store.setSettings({bgUrl:r.url,bgW:dims.w,bgH:dims.h});toast('Floor plan added.');closeModal();fit();}catch(err){toast('Upload failed: '+err.message);}}
+      else{const fr=new FileReader();fr.onload=()=>{Store.setSettings({bgUrl:fr.result,bgW:dims.w,bgH:dims.h});closeModal();fit();};fr.readAsDataURL(f);}
+    };
+    $('#sexp').onclick=()=>{const blob=new Blob([JSON.stringify(Store.d,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(S().name||'site-plan').replace(/[^\w-]+/g,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);};
+    $('#simp').onclick=()=>$('#importFile').click();
+    const sc=$('#sclear');sc.onclick=()=>confirmBtn(sc,()=>{Store.d.tasks={};Store.d.zones={};ui.sel=null;Store.touch();closeModal();toast('Plan cleared. Vendors and questions kept.');});
+    const lo=$('#slogout');if(lo)lo.onclick=async()=>{await Store.flush();ls.del('siteboard.ghtoken');Store.token='';Store.canEdit=false;closeModal();setSave();renderAll();toast('Signed out on this device.');};
+  });
+}
+$('#importFile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d||!d.zones||!d.settings)throw 0;
+  openModal(`<div class="mh"><h2>Replace the current plan?</h2><p>“${esc(d.settings.name||'Backup')}” has ${Object.keys(d.zones).length} items and ${Object.keys(d.tasks||{}).length} tasks. The plan on screen will be replaced.</p></div><div class="mf"><span></span><div class="row"><button class="btn" id="ic" type="button">Cancel</button><button class="btn primary" id="iy" type="button">Replace plan</button></div></div>`,()=>{$('#ic').onclick=closeModal;$('#iy').onclick=()=>{Store.replaceAll(d);ui.sel=null;closeModal();fit();toast('Backup loaded.');};});
+}catch(err){toast('That file is not a site board backup.');}};fr.readAsText(f);});
+$('#btnLogin').onclick=()=>{
+  const r=repoInfo()||{owner:'?',repo:'?'};
+  openModal(`<div class="mh"><h2>Planner sign-in</h2><p>Paste a GitHub access token that can write to <b>${esc(r.owner)}/${esc(r.repo)}</b>. It stays in this browser only and is never saved to the repository.</p></div>
+  <form class="mb" id="lf"><input class="inp mono" type="password" id="lk" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+  <details style="font-size:12.5px"><summary style="cursor:pointer">How to make a token (2 minutes)</summary><ol style="padding-left:18px;margin:6px 0;display:flex;flex-direction:column;gap:3px">
+  <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
+  <li>Name it “Site board”. Pick an expiry (for example 1 year).</li>
+  <li>Repository access: <b>Only select repositories</b> → ${esc(r.repo)}.</li>
+  <li>Permissions → Repository permissions → <b>Contents: Read and write</b>. Nothing else.</li>
+  <li>Generate, copy the token, paste it here.</li></ol></details></form>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="lc" type="button">Cancel</button><button class="btn primary" id="ly" type="button">Sign in</button></div></div>`,()=>{
+    const go=async()=>{const k=$('#lk').value.trim();if(!k)return;$('#ly').disabled=true;$('#ly').textContent='Checking…';
+      if(await Store.check(k)){Store.token=k;ls.set('siteboard.ghtoken',k);Store.canEdit=true;try{await Store.load();}catch(e){}closeModal();setViewAs('planner');setSave();toast('Signed in. Changes now save to GitHub.');}
+      else{$('#ly').disabled=false;$('#ly').textContent='Sign in';}};
+    $('#lc').onclick=closeModal;$('#ly').onclick=go;$('#lf').addEventListener('submit',e=>{e.preventDefault();go();});});
+};
+
+/* ============ view as ============ */
+function setViewAs(v){ui.viewAs=v;ls.set('siteboard.viewAs',v);ui.tool='select';ui.draft=null;ui.tab=v==='planner'?'schedule':'brief';renderAll();}
+$('#viewAs').onchange=e=>setViewAs(e.target.value);
+
+/* ============ top-level render ============ */
+function renderHeader(){
+  const s=S();$('#planName').textContent=s.name||'Untitled event';document.title=(s.name?s.name+' · ':'')+'Build-Up Site Board';
+  $('#dates').textContent=s.setupStart?`Build-up ${fmtDay(0,false)} · Event ${fmtDay(eventOff(),false)}`:'Build-up board';
+  const lv=Store.lockedVendor&&!Store.canEdit?Store.lockedVendor:null;
+  if(lv&&V()[lv])ui.viewAs=lv;
+  if(ui.viewAs!=='planner'&&!V()[ui.viewAs]&&Store.mode!=='loading')ui.viewAs='planner';
+  const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  const sel=$('#viewAs');
+  sel.innerHTML=(lv?'':`<option value="planner">${Store.canEdit?'Planner (everything)':'Everyone'}</option>`)+vs.filter(([id])=>!lv||id===lv).map(([id,v])=>`<option value="${id}">${esc(v.name)}</option>`).join('');
+  sel.value=ui.viewAs;sel.disabled=!!lv;
+  $('#btnLogin').hidden=!(Store.mode==='github'&&!Store.canEdit&&!Store.lockedVendor);
+  setSave();
+}
+function renderScrub(){
+  const max=Math.max(eventOff(),1);const r=$('#day');r.max=max;if(ui.day>max)ui.day=max;r.value=ui.day;
+  $('#dayLabel').innerHTML=`<small>${ui.day>=eventOff()?'Event day':'Build-up day '+(Math.floor(ui.day)+1)}</small>${fmtDay(ui.day)}`;
+  const n=Math.min(max,10);$('#ticks').innerHTML=Array.from({length:n+1},(_,i)=>`<span>${shortDay(Math.round(i*max/n))}</span>`).join('');
+}
+$('#day').addEventListener('input',e=>{ui.day=parseFloat(e.target.value);renderScrub();renderMap();if(ui.tab==='schedule')renderPanel();});
+function renderEmpty(){
+  const em=$('#empty'),bn=$('#banner');
+  if(Store.mode==='loading'){em.hidden=false;em.innerHTML=`<div class="box"><h2>Loading the plan…</h2></div>`;bn.hidden=true;return;}
+  const localWeb=Store.mode==='local'&&location.protocol!=='file:';
+  bn.hidden=!(localWeb||Store.problem);
+  if(Store.problem)bn.textContent=Store.problem;
+  else if(localWeb)bn.textContent='No GitHub repository set, so this plan is saved in this browser only. Fill in owner and repo at the top of index.html, or open it from your github.io address.';
+  if(!Object.keys(Z()).length&&!isDrawing()){
+    em.hidden=false;
+    em.innerHTML=Store.canEdit?`<div class="box"><h2>Start your site plan</h2><p class="muted">Upload your floor plan in Event settings, set the scale, then pick an item on the left and click each corner. The board asks who installs it, how long it takes and who goes before and after.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eSettings" type="button">Event settings</button><button class="btn" id="eSample" type="button">Load example event</button></div></div>`:`<div class="box"><h2>No plan yet</h2><p class="muted">The planner hasn’t drawn anything yet. This page updates on its own.</p></div>`;
+    const a=$('#eSettings');if(a)a.onclick=openSettings;
+    const b=$('#eSample');if(b)b.onclick=()=>{Store.replaceAll(makeSample());fit();};
+  }else em.hidden=true;
+}
+let raf=0,dataStamp=0,schedStamp=-1;
+function changed(){dataStamp++;if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderAll();});}
+// recalculate dates and clashes whenever the plan has changed since the last calculation
+function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;computeSchedule();CONF=conflicts();}
+function renderAll(){
+  ensureSchedule();
+  renderHeader();renderRail();renderScrub();renderMap();
+  const ae=document.activeElement;
+  if(!ae||!$('#pbody').contains(ae)||ae.tagName==='BUTTON')renderPanel();else renderTabs();
+  renderEmpty();
+}
+window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(fit,150);});
+window.addEventListener('beforeunload',e=>{if(Store.mode==='github'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
+renderAll();fit();
+Store.init().then(()=>{dataStamp++;if(Store.lockedVendor&&!Store.canEdit){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();});
+window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea};
+})();
+</script>
+</body>
+</html>
