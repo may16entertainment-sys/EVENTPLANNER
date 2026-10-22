@@ -40,6 +40,11 @@ header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .brand h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.01em;line-height:1.05;text-wrap:balance;overflow-wrap:anywhere}
 .top .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .save{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.evpick{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}
+.choice{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.choice:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.choice b{font-weight:600}
+.danger-zone{border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line));border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn:hover{border-color:var(--muted)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
@@ -162,8 +167,11 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
     <div class="brand"><small id="dates">Build-up board</small><h1 id="planName">Site board</h1></div>
     <div class="ctl">
       <span class="save" id="saveState"></span>
+      <span class="evpick" id="evPick"><label class="muted" for="eventSel" style="font-size:12px">Event</label>
+      <select id="eventSel" class="sel" style="max-width:220px" data-list="event"></select>
+      <button class="btn" id="btnNewEvent" type="button" hidden>+ New event</button></span>
       <label class="muted" for="viewAs" style="font-size:12px">Viewing as</label>
-      <select id="viewAs" class="sel"></select>
+      <select id="viewAs" class="sel" data-list="vendor"></select>
       <button class="btn" id="btnLogin" type="button" hidden>Planner sign-in</button>
       <button class="btn" id="btnSettings" type="button">Event settings</button>
     </div>
@@ -228,7 +236,9 @@ const CONFIG={
   owner:'',
   repo:'',
   branch:'main',              // the branch GitHub Pages publishes from
-  planPath:'data/plan.json',  // where the plan is saved in the repository
+  planPath:'data/plan.json',  // where the first event is saved in the repository
+  eventsDir:'data/events',    // where every other event is saved
+  indexPath:'data/events.json', // the list of events
   pollSeconds:60,             // how often vendor pages check for updates
   saveDelaySeconds:3,         // wait this long after your last change before saving (each save is one commit)
   maxImageMB:20,              // largest floor plan image
@@ -241,7 +251,7 @@ if(window.SITEBOARD_CONFIG)Object.assign(CONFIG,window.SITEBOARD_CONFIG);
 
 /* ============ constants ============ */
 const W=1000;
-const TYPES={
+const BASE_TYPES={
   structure:{name:'Caravan / structure',geom:'poly',task:'Place',days:1},
   stage:{name:'Stage',geom:'poly',task:'Build stage',days:2,follow:[{title:'Stairs',days:1},{title:'Paint stage',days:1},{title:'Furniture',days:1},{title:'Numbering',days:0.5}],power:true},
   turf:{name:'Turf',geom:'poly',task:'Install turf',days:2,after:'no_walking'},
@@ -255,9 +265,8 @@ const TYPES={
   cable:{name:'Electrical cables',geom:'line',task:'Lay cables',days:1,after:'no_vehicles'},
   route:{name:'Vehicle route',geom:'line',noTask:true,route:true}
 };
-const TYPE_GROUPS=[['Areas · click each corner',['structure','stage','turf','furniture','area','dropoff','nogo']],['Lines · click each point',['wall','fence_high','fence_low','cable','route']]];
-const AFTER={none:'No restriction',no_vehicles:'No vehicles',no_walking:'Keep off: no foot traffic',no_items:'Keep clear: no items',closed:'Closed to everyone'};
-const AFTER_SHORT={no_vehicles:'NO VEHICLES',no_walking:'KEEP OFF',no_items:'KEEP CLEAR',closed:'CLOSED'};
+const TYPES={};          // built-in types plus your own, rebuilt from the plan (see rebuildTypes)
+const TYPE_GROUPS=[];
 const PALETTE=['#d9480f','#1971c2','#2b8a3e','#9c36b5','#e67700','#0c8599','#c2255c','#5c940d','#3b5bdb','#862e9c','#a61e4d','#495057'];
 const KINDS={vendor:'Who does it',days:'Install days',before:'Must finish before',after:'Starts after this',parallel:'Can work in parallel',restrict:'Restriction after install',clear_by:'Clear-by date',follow:'Steps (subtasks)',power:'Needs power',text:'Your question: text',yesno:'Your question: yes / no',number:'Your question: number',choice:'Your question: options'};
 function defaultQuestions(type){
@@ -350,6 +359,10 @@ function normalize(d){
     z.pts=Array.isArray(z.pts)?z.pts:[];z.parallel=z.parallel||[];z.answers=z.answers||{};
   });
   Object.values(d.tasks).forEach(t=>{t.deps=Array.isArray(t.deps)?t.deps:[];});
+  d.lists=d.lists&&typeof d.lists==='object'?d.lists:{};
+  if(!Array.isArray(d.lists.restrictions))d.lists.restrictions=clone(DEFAULT_RESTRICTIONS);
+  if(!Array.isArray(d.lists.statuses))d.lists.statuses=clone(DEFAULT_STATUSES);
+  if(!d.types||typeof d.types!=='object')d.types={};
   Object.values(d.vendors).forEach(v=>{['trade','contact','phone','email','notes'].forEach(k=>{if(typeof v[k]!=='string')v[k]='';});});
   return d;
 }
@@ -373,17 +386,17 @@ const GH={
   url(path){const r=repoInfo();return `${CONFIG.apiBase}/repos/${r.owner}/${r.repo}${path||''}`;},
   headers(token,accept){const h={Accept:accept||'application/vnd.github+json'};if(token)h.Authorization='Bearer '+token;return h;},
   err(r,j){const e=new Error((j&&j.message)||('GitHub error '+r.status));e.status=r.status;e.limited=r.status===403&&r.headers.get('x-ratelimit-remaining')==='0'||r.status===429;return e;},
-  // returns {sha, wrap} — wrap is null when the plan file doesn't exist yet
-  async readPlan(token){
-    const u=this.url('/contents/'+CONFIG.planPath)+'?ref='+encodeURIComponent(CONFIG.branch);
+  // returns {sha, json}; throws with e.missing when the file doesn't exist
+  async readJson(token,path){
+    const u=this.url('/contents/'+path)+'?ref='+encodeURIComponent(CONFIG.branch);
     const r=await fetch(u,{headers:this.headers(token),cache:'no-cache'});
     if(r.status===404){const e=this.err(r,await r.json().catch(()=>null));e.missing=true;throw e;}
     if(!r.ok)throw this.err(r,await r.json().catch(()=>null));
     const j=await r.json();let text;
     if(j.encoding==='base64'&&j.content)text=b64dec(j.content);
     else{const r2=await fetch(u,{headers:this.headers(token,'application/vnd.github.raw+json'),cache:'no-cache'});if(!r2.ok)throw this.err(r2,null);text=await r2.text();}
-    let wrap=null;try{wrap=JSON.parse(text);}catch(e){}
-    return {sha:j.sha,wrap};
+    let json=null;try{json=JSON.parse(text);}catch(e){}
+    return {sha:j.sha,json};
   },
   async repoExists(token){const r=await fetch(this.url(''),{headers:this.headers(token),cache:'no-cache'});if(r.ok)return await r.json();if(r.status===404)return null;throw this.err(r,await r.json().catch(()=>null));},
   async put(token,path,b64,sha,message){
@@ -392,39 +405,94 @@ const GH={
     if(!r.ok){const e=this.err(r,j);e.conflict=r.status===409||(r.status===422&&/sha/i.test(e.message));throw e;}
     return j.content.sha;
   },
+  async remove(token,path,sha,message){
+    const r=await fetch(this.url('/contents/'+path),{method:'DELETE',headers:{...this.headers(token),'Content-Type':'application/json'},body:JSON.stringify({message,sha,branch:CONFIG.branch})});
+    if(!r.ok&&r.status!==404){const e=this.err(r,await r.json().catch(()=>null));e.conflict=r.status===409||r.status===422;throw e;}
+  },
   // fallback for viewers when GitHub's hourly limit for signed-out visitors is used up: the copy GitHub Pages serves
-  async readPages(){const r=await fetch(CONFIG.planPath+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Pages '+r.status);return {sha:null,wrap:await r.json()};}
+  async readPages(path){const r=await fetch(path+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Pages '+r.status);return {sha:null,json:await r.json()};}
 };
-const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token:'',dirty:false,saving:false,again:false,lockedVendor:null,lastSaved:null,problem:'',
+/* Each event is its own file. The very first event ("plan") keeps the original data/plan.json path,
+   so a board set up before multiple events existed keeps working. */
+function evPath(id){return id==='plan'?CONFIG.planPath:`${CONFIG.eventsDir}/${id}.json`;}
+function localKey(id){return id==='plan'?'siteboard.v2':'siteboard.v2.'+id;}
+function evEntry(id,d){const s=(d&&d.settings)||{};return {id,name:s.name||'Untitled event',setupStart:s.setupStart||'',eventDate:s.eventDate||''};}
+function slugify(s){return (String(s||'event').toLowerCase().normalize('NFKD').replace(/[^\w]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'event');}
+function shiftISO(iso,days){if(!iso)return iso;const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;d.setDate(d.getDate()+days);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function setUrlEvent(id){try{const u=new URL(location.href);if(id)u.searchParams.set('event',id);else u.searchParams.delete('event');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}}
+
+const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token:'',dirty:false,saving:false,again:false,lockedVendor:null,lastSaved:null,problem:'',events:[],eventId:null,
   async init(){
     const qs=new URLSearchParams(location.search);this.lockedVendor=qs.get('vendor');
+    const wanted=qs.get('event');
     this.token=this.lockedVendor?'':(ls.get('siteboard.ghtoken')||'');
     const info=location.protocol==='file:'?null:repoInfo();
     if(info){
       this.mode='github';
-      try{await this.load();}
-      catch(e){
-        if(e.missing){
-          // no plan saved yet — check the repository itself is reachable
-          try{const repo=await GH.repoExists(this.token);if(!repo)this.problem=`Can’t find the repository ${info.owner}/${info.repo}. Check owner and repo at the top of index.html.`;}catch(e2){}
-          this.d=emptyPlan();this.sha=null;this.version=0;
-        }else if(e.limited){try{const p=await GH.readPages();this.apply(p);}catch(e2){this.problem='GitHub is busy. The plan will load in a minute.';}}
-        else this.problem='Could not load the plan from GitHub ('+e.message+').';
-      }
+      try{await this.loadIndex();}catch(e){this.problem='Could not load the event list from GitHub ('+e.message+').';}
+      const id=this.pickEvent(wanted);
+      if(id){this.eventId=id;await this.loadSafe();}
+      if(!this.problem&&!this.events.length){try{const repo=await GH.repoExists(this.token);if(!repo)this.problem=`Can’t find the repository ${info.owner}/${info.repo}. Check owner and repo at the top of index.html.`;}catch(e){}}
       if(this.token)this.canEdit=await this.check(this.token,true);
       const every=(this.canEdit?Math.min(20,CONFIG.pollSeconds):CONFIG.pollSeconds)*1000;
       setInterval(()=>this.poll(),every);
       document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.poll();else if(this.dirty)this.flush();});
     }else{
       this.mode='local';
-      let saved=null;try{saved=JSON.parse(ls.get('siteboard.v2')||'null');}catch(e){}
-      this.d=normalize(saved&&saved.zones?saved:makeSample());
+      let evs=null;try{evs=JSON.parse(ls.get('siteboard.events')||'null');}catch(e){}
+      if(!Array.isArray(evs)||!evs.length){
+        let saved=null;try{saved=JSON.parse(ls.get('siteboard.v2')||'null');}catch(e){}
+        const d=normalize(saved&&saved.zones?saved:makeSample());ls.set('siteboard.v2',JSON.stringify(d));
+        evs=[evEntry('plan',d)];ls.set('siteboard.events',JSON.stringify(evs));
+      }
+      this.events=evs;this.eventId=this.pickEvent(wanted);this.loadLocal();
       this.canEdit=!this.lockedVendor;
     }
+    if(this.eventId)setUrlEvent(this.eventId);
     setSave();
   },
-  apply(res){this.sha=res.sha;const w=res.wrap;this.version=w&&w.version||0;this.d=normalize(w&&w.data?w.data:emptyPlan());},
-  async load(){const res=await GH.readPlan(this.token);this.apply(res);},
+  pickEvent(wanted){
+    const has=id=>id&&this.events.some(e=>e.id===id);
+    if(has(wanted))return wanted;
+    if(wanted&&this.mode==='github')return wanted; // a link to an event not in the list yet: try it anyway
+    const last=ls.get('siteboard.lastEvent');if(has(last))return last;
+    return this.events[0]?.id||null;
+  },
+  async loadIndex(){
+    try{const r=await GH.readJson(this.token,CONFIG.indexPath);this.events=Array.isArray(r.json)?r.json:[];}
+    catch(e){
+      if(e.missing){
+        // no event list yet: use the single original plan file if there is one
+        try{const p=await GH.readJson(this.token,CONFIG.planPath);this.events=[evEntry('plan',p.json&&p.json.data)];}
+        catch(e2){if(e2.missing)this.events=[];else throw e2;}
+      }else if(e.limited){try{const p=await GH.readPages(CONFIG.indexPath);this.events=Array.isArray(p.json)?p.json:[];}catch(e3){this.events=[];}}
+      else throw e;
+    }
+  },
+  // read-modify-write of the event list, retrying if someone else changed it meanwhile
+  async saveIndex(mutate,message){
+    if(this.mode==='local'){this.events=mutate(clone(this.events));ls.set('siteboard.events',JSON.stringify(this.events));return;}
+    for(let i=0;i<3;i++){
+      let cur,sha=null;
+      try{const r=await GH.readJson(this.token,CONFIG.indexPath);cur=Array.isArray(r.json)?r.json:[];sha=r.sha;}
+      catch(e){if(!e.missing)throw e;cur=clone(this.events);}
+      const next=mutate(cur);
+      try{await GH.put(this.token,CONFIG.indexPath,b64enc(JSON.stringify(next,null,1)),sha,message||'Update event list');this.events=next;return;}
+      catch(e){if(!e.conflict||i===2)throw e;await sleep(400);}
+    }
+  },
+  apply(res){this.sha=res.sha;const w=res.json;this.version=w&&w.version||0;this.d=normalize(w&&w.data?w.data:emptyPlan());},
+  async load(){const res=await GH.readJson(this.token,evPath(this.eventId));this.apply(res);},
+  async loadSafe(){
+    try{await this.load();this.problem='';}
+    catch(e){
+      if(e.missing){this.d=emptyPlan();this.sha=null;this.version=0;if(!this.events.some(x=>x.id===this.eventId))this.problem='That event was not found. It may have been deleted.';}
+      else if(e.limited){try{this.apply(await GH.readPages(evPath(this.eventId)));}catch(e2){this.problem='GitHub is busy. The plan will load in a minute.';}}
+      else this.problem='Could not load the plan from GitHub ('+e.message+').';
+    }
+  },
+  loadLocal(){let saved=null;try{saved=JSON.parse(ls.get(localKey(this.eventId))||'null');}catch(e){}this.d=normalize(saved&&saved.settings?saved:emptyPlan());},
   // checks the token can write to this repository
   async check(token,quiet){
     try{const repo=await GH.repoExists(token);
@@ -434,7 +502,8 @@ const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token
     }catch(e){if(!quiet)toast(e.status===401?'GitHub didn’t accept that token. Check it was copied in full and hasn’t expired.':'Could not reach GitHub: '+e.message);return false;}
   },
   touch(){changed();
-    if(this.mode==='local'){if(!ls.set('siteboard.v2',JSON.stringify(this.d)))toast('This browser is out of space. Use a smaller floor plan image or download a backup.');this.lastSaved=new Date();setSave();return;}
+    if(!this.eventId)return;
+    if(this.mode==='local'){if(!ls.set(localKey(this.eventId),JSON.stringify(this.d)))toast('This browser is out of space. Use a smaller floor plan image or download a backup.');this.lastSaved=new Date();this.syncEntry();setSave();return;}
     if(!this.canEdit)return;
     // every save is a commit, so wait for a short pause in editing
     this.dirty=true;setSave();clearTimeout(this.tm);this.tm=setTimeout(()=>this.flush(),CONFIG.saveDelaySeconds*1000);},
@@ -442,15 +511,26 @@ const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token
   del(col,id){const c={...this.d[col]};delete c[id];this.d[col]=c;this.touch();},
   setSettings(patch){this.d.settings={...this.d.settings,...patch};this.touch();},
   replaceAll(d){this.d=normalize(d);this.touch();},
+  // keep the event list's name and dates in step with the plan's settings
+  syncEntry(){
+    const e=evEntry(this.eventId,this.d);const cur=this.events.find(x=>x.id===this.eventId);
+    if(cur&&cur.name===e.name&&cur.setupStart===e.setupStart&&cur.eventDate===e.eventDate)return;
+    const mut=list=>{const i=list.findIndex(x=>x.id===e.id);if(i>=0)list[i]=e;else list.push(e);return list;};
+    if(this.mode==='local'){this.saveIndex(mut);renderHeader();return;}
+    this.events=mut(clone(this.events));renderHeader();
+    this.saveIndex(mut,`Update event list: ${e.name}`).catch(()=>{});
+  },
+  async idle(){while(this.saving)await sleep(150);},
   async flush(){
     clearTimeout(this.tm);
-    if(this.mode!=='github'||!this.canEdit||!this.dirty)return;
+    if(this.mode!=='github'||!this.canEdit||!this.dirty||!this.eventId)return;
     if(this.saving){this.again=true;return;}
     this.saving=true;this.dirty=false;setSave();
+    const id=this.eventId;
     const wrap={version:this.version+1,savedAt:new Date().toISOString(),data:this.d};
     try{
-      this.sha=await GH.put(this.token,CONFIG.planPath,b64enc(JSON.stringify(wrap)),this.sha,`Update site plan: ${S().name||'event'}`);
-      this.version=wrap.version;this.lastSaved=new Date();
+      const sha=await GH.put(this.token,evPath(id),b64enc(JSON.stringify(wrap)),this.sha,`Update site plan: ${S().name||'event'}`);
+      if(this.eventId===id){this.sha=sha;this.version=wrap.version;this.lastSaved=new Date();this.syncEntry();}
     }catch(e){
       if(e.conflict){
         try{await this.load();}catch(e2){}
@@ -459,18 +539,67 @@ const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token
       else{this.dirty=true;toast('Could not save to GitHub ('+(e.message||'connection lost')+'). Retrying…');setTimeout(()=>this.flush(),8000);}
     }finally{this.saving=false;setSave();if(this.again){this.again=false;if(this.dirty)this.flush();}}
   },
+  pollCount:0,
   async poll(){
     if(this.mode!=='github'||document.hidden||this.dirty||this.saving||ui.ptr||$('#modalRoot').firstChild)return;
-    try{const res=await GH.readPlan(this.token);if(res.sha!==this.sha&&!this.dirty&&!this.saving){this.apply(res);this.problem='';changed();}}
-    catch(e){if(e.limited&&!this.canEdit){try{const p=await GH.readPages();if(p.wrap&&p.wrap.version>this.version){this.apply(p);changed();}}catch(e2){}}}
+    this.pollCount++;
+    if(this.pollCount%3===0||!this.eventId){try{const before=JSON.stringify(this.events);await this.loadIndex();if(JSON.stringify(this.events)!==before){if(!this.eventId&&this.events.length){this.eventId=this.pickEvent(null);await this.loadSafe();dataStamp++;}renderAll();}}catch(e){}}
+    if(!this.eventId)return;
+    const id=this.eventId;
+    try{const res=await GH.readJson(this.token,evPath(id));if(id===this.eventId&&res.sha!==this.sha&&!this.dirty&&!this.saving){this.apply(res);this.problem='';changed();}}
+    catch(e){if(e.limited&&!this.canEdit){try{const p=await GH.readPages(evPath(id));if(p.json&&p.json.version>this.version){this.apply(p);changed();}}catch(e2){}}}
+  },
+  async switchEvent(id){
+    if(id===this.eventId)return;
+    await this.idle();await this.flush();await this.idle();
+    this.eventId=id;ls.set('siteboard.lastEvent',id);setUrlEvent(id);
+    ui.sel=null;ui.selTask=null;ui.draft=null;ui.day=0;ui.tool='select';
+    if(this.mode==='github'){this.sha=null;this.version=0;await this.loadSafe();}else this.loadLocal();
+    this.lastSaved=null;dataStamp++;renderAll();fit();
+  },
+  // from: 'blank' | 'team' (vendors + questions) | 'copy' (whole plan, dates shifted)
+  async createEvent({name,setupStart,eventDate,from}){
+    await this.idle();await this.flush();await this.idle();
+    const id=slugify(name)+'-'+uid().slice(0,4);
+    let d=emptyPlan();
+    if(from==='team'){d.vendors=clone(this.d.vendors);d.templates=clone(this.d.templates);d.types=clone(this.d.types||{});d.lists=clone(this.d.lists||{});}
+    if(from==='copy'){
+      d=clone(this.d);
+      const oldStart=this.d.settings.setupStart,shift=oldStart&&setupStart?Math.round((new Date(setupStart+'T00:00:00')-new Date(oldStart+'T00:00:00'))/864e5):0;
+      Object.values(d.tasks).forEach(t=>{t.status='todo';if(shift)t.notBefore=shiftISO(t.notBefore,shift);});
+      Object.values(d.zones).forEach(z=>{if(shift&&z.clearBy)z.clearBy=shiftISO(z.clearBy,shift);});
+    }
+    d.settings={...d.settings,name,setupStart,eventDate};
+    if(this.mode==='github'){
+      await GH.put(this.token,evPath(id),b64enc(JSON.stringify({version:1,savedAt:new Date().toISOString(),data:d})),null,`Create event: ${name}`);
+      await this.saveIndex(list=>[...list.filter(e=>e.id!==id),evEntry(id,d)],`Add event: ${name}`);
+    }else{
+      ls.set(localKey(id),JSON.stringify(d));
+      await this.saveIndex(list=>[...list.filter(e=>e.id!==id),evEntry(id,d)]);
+    }
+    await this.switchEvent(id);
+  },
+  async deleteEvent(id){
+    await this.idle();
+    if(id===this.eventId){clearTimeout(this.tm);this.dirty=false;}
+    const name=this.events.find(e=>e.id===id)?.name||'event';
+    if(this.mode==='github'){
+      try{const r=await GH.readJson(this.token,evPath(id));await GH.remove(this.token,evPath(id),r.sha,`Delete event: ${name}`);}catch(e){if(!e.missing)throw e;}
+      await this.saveIndex(list=>list.filter(e=>e.id!==id),`Remove event: ${name}`);
+    }else{ls.del(localKey(id));await this.saveIndex(list=>list.filter(e=>e.id!==id));}
+    if(id===this.eventId){
+      const next=this.events[0]?.id||null;this.eventId=null;
+      if(next)await this.switchEvent(next);
+      else{this.d=emptyPlan();this.sha=null;this.version=0;setUrlEvent(null);ls.del('siteboard.lastEvent');dataStamp++;renderAll();}
+    }else renderAll();
   },
   async upload(file){
     const ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type]||'png';
     if(file.size>CONFIG.maxImageMB*1024*1024)throw new Error(`the image is over ${CONFIG.maxImageMB} MB. Export it smaller.`);
     const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.onerror=()=>rej(new Error('could not read the file'));fr.readAsDataURL(file);});
     const d=new Date();const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
-    const path=`uploads/plan-${stamp}.${ext}`;
-    await GH.put(this.token,path,b64,null,'Add floor plan');
+    const path=`uploads/${this.eventId||'plan'}-${stamp}.${ext}`;
+    await GH.put(this.token,path,b64,null,`Add floor plan: ${S().name||'event'}`);
     const r=repoInfo();
     // served straight from the repository, so it shows immediately without waiting for Pages
     return {url:`${CONFIG.rawBase}/${r.owner}/${r.repo}/${CONFIG.branch}/${path}`};
@@ -488,7 +617,7 @@ function setSave(){
 }
 const S=()=>Store.d.settings||{};
 const Z=()=>Store.d.zones||{}, TK=()=>Store.d.tasks||{}, V=()=>Store.d.vendors||{};
-const editable=()=>Store.canEdit&&ui.viewAs==='planner';
+const editable=()=>Store.canEdit&&ui.viewAs==='planner'&&!!Store.eventId;
 
 /* ============ UI state ============ */
 const ui={tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
@@ -530,12 +659,14 @@ function taskState(id){
   STATE[id]='…';const t=TK()[id];let r='wait';
   if(t){
     if(isParent(id)){const st=KIDS[id].map(taskState);r=st.every(x=>x==='done')?'done':st.some(x=>x==='done'||x==='started')?'started':st.some(x=>x==='ready')?'ready':'wait';}
-    else if(t.status==='done')r='done';else if(t.status==='started')r='started';
+    else if(statusBase(t.status)==='done')r='done';else if(statusBase(t.status)==='started')r='started';
     else r=(EDEPS[id]||[]).every(d=>taskState(d)==='done')?'ready':'wait';
   }
   STATE[id]=r;return r;
 }
 const STATE_LABEL={done:'Done',started:'In progress',ready:'Ready to start',wait:'Waiting'};
+// a task set to one of your own statuses shows that status instead of the general state
+function pillText(id,st){const t=TK()[id];if(t&&isLeaf(id)){const x=statuses().find(v=>v.id===t.status);if(x&&!x.core)return x.label;}return STATE_LABEL[st];}
 // the actual pieces of work in an area (steps, or tasks without steps)
 function zoneTasks(zid){return Object.keys(TK()).filter(id=>TK()[id].zoneId===zid&&isLeaf(id)).sort((a,b)=>(SCH[a]?.s??0)-(SCH[b]?.s??0));}
 // top-level jobs in an area
@@ -683,20 +814,21 @@ function conflicts(){
       }
     }));
   }
-  zids.filter(id=>zs[id].type==='dropoff').forEach(id=>{
+  zids.filter(id=>TYPES[zs[id].type]?.drop).forEach(id=>{
     const z=zs[id];const a=autoClearBy(id);const man=offOf(z.clearBy);
     if(a&&man!=null&&man>a.off)out.push({level:'critical',title:'Items still stored where work starts',detail:`${vendorName(z.vendorId)} may leave items in ${z.label} until ${fmtDay(man)}, but ${taskLabel(a.task)} (${vendorName(T[a.task].vendorId)}) starts there ${fmtDay(a.off)}.`,zones:[id,T[a.task].zoneId],fix:{label:`Clear by ${fmtDay(a.off)}`,run:()=>{const c=clone(z);c.clearBy=isoOf(a.off);Store.put('zones',id,c);}}});
     else if(a&&man==null)out.push({level:'info',title:'Drop-off deadline set automatically',detail:`${vendorName(z.vendorId)} must clear ${z.label} by ${fmtDay(a.off)} so ${taskLabel(a.task)} can start.`,zones:[id]});
   });
   zids.filter(id=>TYPES[zs[id].type]?.route).forEach(rid=>{
-    zids.forEach(o=>{const oz=zs[o];if(o===rid)return;const r=oz.after||'none';if(!['no_vehicles','closed','no_walking'].includes(r))return;if(!overlap(zs[rid],oz))return;
-      out.push({level:oz.type==='cable'?'critical':'warn',title:oz.type==='cable'?'Vehicle route crosses live cables':'Vehicle route crosses a restricted area',detail:`${zs[rid].label} crosses ${oz.label} (${AFTER[r].toLowerCase()} from ${fmtDay(restrictFrom(o))}). Reroute, add a cable ramp, or brief the drivers.`,zones:[rid,o]});});
+    zids.forEach(o=>{const oz=zs[o];if(o===rid)return;const r=oz.after||'none';if(!blocksVehicles(r))return;if(!overlap(zs[rid],oz))return;
+      out.push({level:lookOf(oz.type)==='cable'?'critical':'warn',title:lookOf(oz.type)==='cable'?'Vehicle route crosses live cables':'Vehicle route crosses a restricted area',detail:`${zs[rid].label} crosses ${oz.label} (${restrictLabel(r).toLowerCase()} from ${fmtDay(restrictFrom(o))}). Reroute, add a cable ramp, or brief the drivers.`,zones:[rid,o]});});
   });
   const ord={critical:0,warn:1,info:2};return out.sort((a,b)=>ord[a.level]-ord[b.level]);
 }
 
 /* ============ render: tool rail ============ */
 function swatch(type){
+  if(!BASE_LOOK[type])type=lookOf(type);
   const s='style="stroke:var(--fg)"';
   const m={structure:`<path d="M3 4h10v3h6v6H3z" fill="none" ${s} stroke-width="1.5"/>`,
     stage:`<path d="M2 4h18v6h-5v3H7v-3H2z" fill="none" ${s} stroke-width="1.5"/>`,
@@ -719,6 +851,8 @@ function renderRail(){
   if(ed){
     TYPE_GROUPS.forEach(([g,ts])=>{h+=`<h3>${g}</h3>`;ts.forEach(t=>{h+=`<button class="tool" data-tool="${t}" aria-pressed="${ui.tool===t}" type="button">${swatch(t)}${esc(TYPES[t].name)}</button>`;});});
     h+=`<h3>Setup</h3><button class="tool" data-tool="scale" aria-pressed="${ui.tool==='scale'}" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M2 11h18M2 8v6M20 8v6M8 10v2M14 10v2" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/></svg>Set scale</button>`;
+    h+=`<button class="tool" data-act="types" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="13" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="2" y="9" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M16.5 9v5M14 11.5h5" style="stroke:var(--accent)" stroke-width="1.8"/></svg>Item types</button>`;
+    h+=`<button class="tool" data-act="lists" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M3 4h2M3 8h2M3 12h2M8 4h11M8 8h11M8 12h8" style="stroke:var(--fg)" stroke-width="1.6"/></svg>Lists</button>`;
     h+=`<button class="tool" data-act="questions" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><circle cx="11" cy="8" r="6.5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M9 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.6.6-.6 1.1M11 11.5v.3" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-linecap="round"/></svg>Edit questions</button>`;
   }
   r.innerHTML=h;
@@ -735,7 +869,7 @@ function zoneVisual(id,z,D){
   if(T.drop){const c=clearByOff(id);sub=c&&D>=c.off?'MUST BE CLEAR':c?`Drop-off OK until ${shortDay(c.off)}`:'Drop-off open';}
   else if(active)sub=`LOCKED · ${vendorName(TK()[activeTask].vendorId)}`;
   else if(upcoming)sub=`${vendorName(TK()[ts[0]].vendorId)} starts ${shortDay(w.s)}`;
-  else if(restr)sub=AFTER_SHORT[z.after]||'';
+  else if(restr)sub=restrictShort(z.after);
   else if(done)sub='Installed';
   return {T,col,active,upcoming,done,restr,sub,dropBad:T.drop&&sub==='MUST BE CLEAR'};
 }
@@ -750,16 +884,16 @@ function renderMap(){
   const order=Object.keys(zs).filter(id=>(zs[id].pts||[]).length>=2).sort((a,b)=>{const ga=zs[a].geom==='poly'?0:1,gb=zs[b].geom==='poly'?0:1;if(ga!==gb)return ga-gb;return Math.abs(polyArea(zs[b].pts))-Math.abs(polyArea(zs[a].pts));});
   const fsBase=clamp(ui.vb.w/70,9,22);
   order.forEach(id=>{
-    const z=zs[id];const v=zoneVisual(id,z,D);const sel=ui.sel===id;
+    const z=zs[id];const v=zoneVisual(id,z,D);const sel=ui.sel===id;const look=lookOf(z.type);
     const mine=va==='planner'||z.vendorId===va||zoneTasks(id).some(t=>TK()[t].vendorId===va);
     const dim=!mine&&!v.restr&&!v.active&&!TYPES[z.type]?.route&&!v.dropBad;
     const pts=polyPts(z.pts);
     let g=`<g data-zone="${id}" style="cursor:pointer" opacity="${dim?0.35:1}">`;
     if(z.geom==='poly'){
-      const fill=z.type==='turf'?'url(#turfp)':v.T.drop?(v.dropBad?'url(#dropbad)':'url(#dropp)'):'';
-      g+=`<polygon points="${pts}" style="fill:${z.type==='nogo'?'var(--bad)':v.col}" fill-opacity="${z.type==='nogo'?.12:v.done?.3:.13}"/>`;
+      const fill=look==='turf'?'url(#turfp)':v.T.drop?(v.dropBad?'url(#dropbad)':'url(#dropp)'):'';
+      g+=`<polygon points="${pts}" style="fill:${look==='nogo'?'var(--bad)':v.col}" fill-opacity="${look==='nogo'?.12:v.done?.3:.13}"/>`;
       if(fill)g+=`<polygon points="${pts}" fill="${fill}"/>`;
-      if(v.active||z.type==='nogo')g+=`<polygon points="${pts}" fill="url(#hz)" opacity="${z.type==='nogo'?.35:.55}"/>`;
+      if(v.active||look==='nogo')g+=`<polygon points="${pts}" fill="url(#hz)" opacity="${look==='nogo'?.35:.55}"/>`;
       const stroke=v.restr||v.dropBad?'var(--bad)':v.T.drop?'var(--ok)':v.col;
       g+=`<polygon points="${pts}" fill="none" style="stroke:${stroke}" stroke-width="${sel?3:v.restr?2.5:1.6}" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="7 5"':''} vector-effect="non-scaling-stroke"/>`;
       if(sel)g+=`<polygon points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
@@ -767,7 +901,7 @@ function renderMap(){
       g+=`<text class="zl" x="${c.x}" y="${c.y}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px">${esc(z.label)}</text>`;
       if(v.sub&&b.h>fs*2)g+=`<text class="zs" x="${c.x}" y="${c.y+fs*0.95}" text-anchor="middle" style="fill:${v.active||v.restr||v.dropBad?'var(--bad)':'var(--muted)'};font-weight:${v.active?600:400};font-size:${fs*0.65}px">${esc(v.sub)}</text>`;
     }else{
-      const t=z.type;
+      const t=look;
       g+=`<polyline points="${pts}" fill="none" stroke="transparent" stroke-width="${pxUnits(18)}"/>`;
       if(v.active)g+=`<polyline points="${pts}" fill="none" style="stroke:var(--hazard)" stroke-width="16" opacity=".55" stroke-linejoin="round"/>`;
       if(t==='route')g+=`<polyline points="${pts}" fill="none" style="stroke:var(--muted)" stroke-width="18" opacity=".28" stroke-linejoin="round"/><polyline points="${pts}" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-dasharray="10 8" opacity=".6"/>`;
@@ -932,8 +1066,8 @@ function addScalePoint(p){
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='Shift'&&!ui.shift){ui.shift=true;}
+  if($('#modalRoot').firstChild){if(e.key==='Escape'){e.preventDefault();closeModal();}return;}
   if(e.target.closest('input,textarea,select'))return;
-  if($('#modalRoot').firstChild){if(e.key==='Escape')closeModal();return;}
   if(e.key==='Enter'&&ui.draft&&ui.tool!=='scale')finishDraft();
   else if((e.key==='Backspace'||e.key==='Delete')&&ui.draft&&ui.draft.pts.length){e.preventDefault();ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
   else if(e.key==='Escape'){if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
@@ -949,12 +1083,14 @@ document.addEventListener('click',e=>{
   else if(id==='snapToggle')toggleSnap();
 });
 $('#zin').onclick=()=>zoom(1/1.25);$('#zout').onclick=()=>zoom(1.25);$('#zfit').onclick=fit;
-$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b){ui.tool=b.dataset.tool;ui.draft=null;ui.hover=null;if(ui.tool!=='select')ui.sel=null;renderAll();}if(e.target.closest('[data-act="questions"]'))openQuestions();});
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b){ui.tool=b.dataset.tool;ui.draft=null;ui.hover=null;if(ui.tool!=='select')ui.sel=null;renderAll();}if(e.target.closest('[data-act="questions"]'))openQuestions();if(e.target.closest('[data-act="types"]'))openTypeManager();if(e.target.closest('[data-act="lists"]'))openListsHub();});
 
 /* ============ modal helpers ============ */
-function openModal(html,onMount){$('#modalRoot').innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="card">${html}</div></div>`;const m=$('#modalRoot .modal');m.addEventListener('pointerdown',e=>{m.dataset.down=e.target===m?'1':'';});m.addEventListener('click',e=>{if(e.target===m&&m.dataset.down)closeModal();});onMount&&onMount(m);const f=m.querySelector('input:not([type=checkbox]),select,textarea');f&&f.focus();}
-function closeModal(){$('#modalRoot').innerHTML='';}
-function vendorOptions(sel,allowNone=true){let h=allowNone?`<option value="">— Choose —</option>`:'';Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name)).forEach(([id,v])=>{h+=`<option value="${id}" ${id===sel?'selected':''}>${esc(v.name)}</option>`;});return h+`<option value="__new">+ New vendor…</option>`;}
+// dialogs stack: a list editor opened from a form sits on top of it, and closing it returns to the form
+function openModal(html,onMount){const m=document.createElement('div');m.className='modal';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.innerHTML=`<div class="card">${html}</div>`;$('#modalRoot').appendChild(m);m.addEventListener('pointerdown',e=>{m.dataset.down=e.target===m?'1':'';});m.addEventListener('click',e=>{if(e.target===m&&m.dataset.down)closeModal();});onMount&&onMount(m);const f=m.querySelector('input:not([type=checkbox]),select,textarea');f&&f.focus();}
+function closeModal(){const r=$('#modalRoot');if(r.lastElementChild)r.lastElementChild.remove();}
+function closeAllModals(){$('#modalRoot').innerHTML='';}
+function vendorOptions(sel,allowNone=true){let h=allowNone?`<option value="">— Choose —</option>`:'';Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name)).forEach(([id,v])=>{h+=`<option value="${id}" ${id===sel?'selected':''}>${esc(v.name)}</option>`;});return h+`<option value="__new">+ New vendor…</option>`+(canManage()?`<option value="__edit">✎ Edit vendors…</option>`:'');}
 function taskChecks(name,checked,exclude,pri){
   const byZone={};Object.entries(TK()).forEach(([id,t])=>{if(exclude&&exclude.has(id))return;const zl=Z()[t.zoneId]?.label||'No area';const here=pri&&pri.has(t.zoneId);const key=(here?'0':'1')+zl;(byZone[key]=byZone[key]||{label:zl+(here?' · overlaps this spot':''),items:[]}).items.push([id,t]);});
   const keys=Object.keys(byZone).sort();if(!keys.length)return `<div class="muted" style="font-size:12.5px">No other tasks yet.</div>`;
@@ -965,7 +1101,7 @@ function vendorChecks(name,checked){const vs=Object.entries(V());if(!vs.length)r
 function nextColor(){const used=new Set(Object.values(V()).map(v=>v.color));return PALETTE.find(c=>!used.has(c))||PALETTE[Object.keys(V()).length%PALETTE.length];}
 function wireNewVendor(root){root.querySelectorAll('select[data-vendor]').forEach(s=>{s.addEventListener('change',()=>{if(s.value!=='__new')return;const box=s.parentElement.querySelector('.newv');if(box){box.hidden=false;box.querySelector('input').focus();}});});}
 function resolveVendor(sel,nameInput){if(!sel)return '';if(sel.value!=='__new')return sel.value||'';const n=(nameInput?.value||'').trim();if(!n)return '';const ex=Object.entries(V()).find(([,v])=>v.name.toLowerCase()===n.toLowerCase());if(ex)return ex[0];const id='v_'+uid();Store.put('vendors',id,{name:n,color:nextColor(),contact:''});return id;}
-function vendorField(id,sel){return `<select class="sel" id="${id}" data-vendor>${vendorOptions(sel)}</select><div class="newv" hidden><input class="inp" id="${id}_new" placeholder="Vendor name, e.g. GreenLay turf" style="width:100%;margin-top:4px"></div>`;}
+function vendorField(id,sel){return `<select class="sel" id="${id}" data-vendor data-list="vendor">${vendorOptions(sel)}</select><div class="newv" hidden><input class="inp" id="${id}_new" placeholder="Vendor name, e.g. GreenLay turf" style="width:100%;margin-top:4px"></div>`;}
 
 /* ============ create item: guided questions ============ */
 function questionsFor(type){return Store.d.templates?.[type]?.questions||defaultQuestions(type);}
@@ -986,13 +1122,13 @@ function openCreate(geo){
       case 'before':f=taskChecks('before',preBefore,null,overlapping)+`<div class="row"><label class="muted" for="q_notBefore" style="font-size:12px">Not before</label><input class="inp" type="date" id="q_notBefore"></div>`;break;
       case 'after':f=taskChecks('after',preAfter,null,overlapping)+`<div class="help">Those tasks will wait until this one is finished.</div>`;break;
       case 'parallel':f=vendorChecks('parallel',new Set(def.parallel||[]))+`<div class="help">Clash warnings are skipped for these vendors in this area.</div>`;break;
-      case 'restrict':f=`<select class="sel" id="q_${q.id}">${Object.entries(AFTER).map(([k,v])=>`<option value="${k}" ${(def.restrict??T.after??'none')===k?'selected':''}>${v}</option>`).join('')}</select>`;break;
+      case 'restrict':f=`<select class="sel" id="q_${q.id}" data-list="restrict">${restrictOptions(def.restrict??T.after??'none')}</select>`;break;
       case 'clear_by':f=`<input class="inp" type="date" id="q_${q.id}"><div class="help">Leave blank and the board sets it to the day the next vendor starts in this spot.</div>`;break;
       case 'follow':f=`<div class="help">The first step is the installation above. Add the steps that follow it; each becomes a subtask with its own vendor and days.</div><div id="followRows" style="display:flex;flex-direction:column;gap:6px"></div><button class="btn small" type="button" id="addFollow" style="align-self:flex-start">+ Add step</button><div class="help">Steps run in order. Tick “same time” to run a step alongside the one before it.</div>`;break;
       case 'power':f=`<label class="row" style="font-size:13px"><input type="checkbox" id="q_${q.id}" ${def.power?'checked':''}> Yes, let me draw the electrical cable route next</label>`;break;
       case 'yesno':f=`<select class="sel" id="q_${q.id}"><option value="">—</option><option ${def.answers?.[q.id]==='Yes'?'selected':''}>Yes</option><option ${def.answers?.[q.id]==='No'?'selected':''}>No</option></select>`;break;
       case 'number':f=`<input class="inp mono" type="number" id="q_${q.id}" value="${esc(def.answers?.[q.id]??'')}" style="width:120px">`;break;
-      case 'choice':f=`<select class="sel" id="q_${q.id}"><option value="">—</option>${(q.options||[]).map(o=>`<option ${def.answers?.[q.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;break;
+      case 'choice':f=`<select class="sel" id="q_${q.id}" data-list="opt" data-type="${esc(type)}" data-qid="${esc(q.id)}"><option value="">—</option>${(q.options||[]).map(o=>`<option ${def.answers?.[q.id]===o?'selected':''}>${esc(o)}</option>`).join('')}${listTail('opt')}</select>`;break;
       default:f=`<input class="inp" id="q_${q.id}" value="${esc(def.answers?.[q.id]??'')}">`;
     }
     const grouped=['before','after','parallel','follow','power'].includes(q.kind);
@@ -1004,14 +1140,14 @@ function openCreate(geo){
     wireNewVendor(m);
     if($('#followRows')){(def.follow||T.follow||[]).forEach(r=>addFollowRow({...r}));$('#addFollow').onclick=()=>addFollowRow({title:'',days:1});}
     $('#c_cancel').onclick=closeModal;
-    $('#c_edq').onclick=()=>openQuestions(type,()=>openCreate(geo));
+    $('#c_edq').onclick=()=>{closeModal();openQuestions(type,()=>openCreate(geo));};
     $('#c_save').onclick=()=>saveCreate(geo,qs);
     $('#cform').addEventListener('submit',e=>{e.preventDefault();saveCreate(geo,qs);});
   });
 }
 function addFollowRow(r){
   const box=$('#followRows');if(!box)return;const d=document.createElement('div');d.className='follow';const rid=uid();
-  d.innerHTML=`<input class="inp" placeholder="e.g. Paint stage" value="${esc(r.title)}" data-f="title" aria-label="Step name"><div><select class="sel" data-f="vendor" data-vendor id="fv_${rid}" style="width:100%" aria-label="Vendor">${vendorOptions(r.vendorId)}</select><div class="newv" hidden><input class="inp" id="fv_${rid}_new" placeholder="Vendor name" style="width:100%;margin-top:4px"></div></div><input class="inp mono" type="number" min="0.5" step="0.5" value="${r.days||1}" data-f="days" aria-label="Days"><button class="btn small ghost" type="button" aria-label="Remove step">✕</button><label class="muted" style="grid-column:1/-1;font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" data-f="withPrev" ${r.withPrev?'checked':''}> Same time as the step before</label>`;
+  d.innerHTML=`<input class="inp" placeholder="e.g. Paint stage" value="${esc(r.title)}" data-f="title" aria-label="Step name"><div><select class="sel" data-f="vendor" data-vendor data-list="vendor" id="fv_${rid}" style="width:100%" aria-label="Vendor">${vendorOptions(r.vendorId)}</select><div class="newv" hidden><input class="inp" id="fv_${rid}_new" placeholder="Vendor name" style="width:100%;margin-top:4px"></div></div><input class="inp mono" type="number" min="0.5" step="0.5" value="${r.days||1}" data-f="days" aria-label="Days"><button class="btn small ghost" type="button" aria-label="Remove step">✕</button><label class="muted" style="grid-column:1/-1;font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" data-f="withPrev" ${r.withPrev?'checked':''}> Same time as the step before</label>`;
   d.querySelector('button').onclick=()=>d.remove();box.appendChild(d);wireNewVendor(d);
 }
 function saveCreate(geo,qs){
@@ -1073,7 +1209,7 @@ function openQuestions(type,after){
   const sync=()=>{document.querySelectorAll('[data-lbl]').forEach(i=>{qs[+i.dataset.lbl].label=i.value;});document.querySelectorAll('[data-opt]').forEach(i=>{qs[+i.dataset.opt].options=i.value.split(',').map(s=>s.trim()).filter(Boolean);});};
   const done=()=>{closeModal();if(after)after();};
   openModal(`<div class="mh"><h2>Questions the board asks</h2><p>Pick an item type, then reword, reorder, remove or add questions. They’re asked every time you draw one.</p></div>
-  <div class="mb"><div class="field"><label for="qtype">Item type</label><select class="sel" id="qtype">${Object.entries(TYPES).map(([k,t])=>`<option value="${k}" ${k===type?'selected':''}>${esc(t.name)}</option>`).join('')}</select></div>
+  <div class="mb"><div class="field"><label for="qtype">Item type</label><select class="sel" id="qtype" data-list="type">${typeOptions(type)}</select></div>
   <div id="qlist" style="display:flex;flex-direction:column;gap:6px"></div><select class="sel" id="qadd" aria-label="Add a question"></select></div>
   <div class="mf"><button class="btn ghost" type="button" id="qreset">Reset to default</button><div class="row"><button class="btn" type="button" id="qcancel">${after?'Back':'Close'}</button><button class="btn primary" type="button" id="qsave">Save questions</button></div></div>`,m=>{
     draw();
@@ -1127,12 +1263,12 @@ function depLine(id,ed){
 }
 function stepRow(id,i,n,ed){
   const t=TK()[id],s=SCH[id],st=taskState(id);
-  if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div></div><span class="st ${st}">${STATE_LABEL[st]}</span></div>`;
+  if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div></div><span class="st ${st}">${pillText(id,st)}</span></div>`;
   return `<div data-tcard="${id}" style="display:flex;flex-direction:column;gap:5px;padding:7px 0;border-top:1px solid var(--line2)">
-    <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${STATE_LABEL[st]}</span></div>
-    <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
+    <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${pillText(id,st)}</span></div>
+    <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
     <div class="row" style="padding-left:22px;font-size:12px"><span class="mono muted">${fmtDay(s.s)} → ${fmtDay(s.e)}</span>${i>0?`<label class="muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tf="withPrev" ${t.withPrev?'checked':''}> same time as step ${i}</label>`:''}</div>
-    <div class="row" style="padding-left:22px"><select class="sel" data-tf="status" aria-label="Status" style="font-size:12.5px"><option value="todo" ${t.status==='todo'?'selected':''}>Not started</option><option value="started" ${t.status==='started'?'selected':''}>In progress</option><option value="done" ${t.status==='done'?'selected':''}>Done</option></select><button class="btn small ghost" data-sup="${id}" type="button" aria-label="Move step up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-sdn="${id}" type="button" aria-label="Move step down" ${i<n-1?'':'disabled'}>▼</button><button class="btn small ghost danger" data-sdel="${id}" type="button">Remove step</button></div>
+    <div class="row" style="padding-left:22px"><select class="sel" data-tf="status" data-list="status" aria-label="Status" style="font-size:12.5px">${statusOptions(t.status)}</select><button class="btn small ghost" data-sup="${id}" type="button" aria-label="Move step up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-sdn="${id}" type="button" aria-label="Move step down" ${i<n-1?'':'disabled'}>▼</button><button class="btn small ghost danger" data-sdel="${id}" type="button">Remove step</button></div>
   </div>`;
 }
 function taskCard(id,ed){
@@ -1140,7 +1276,7 @@ function taskCard(id,ed){
   if(isParent(id)){
     const ks=KIDS[id];
     return `<div class="task" data-tcard="${id}">
-      <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Job name" style="font-weight:600">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${STATE_LABEL[st]}</span></div>
+      <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Job name" style="font-weight:600">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
       <div class="mono muted" style="font-size:12px">${ks.length} steps · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
       ${depLine(id,ed)}
       ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>`:''}
@@ -1149,12 +1285,12 @@ function taskCard(id,ed){
     </div>`;
   }
   return `<div class="task" data-tcard="${id}">
-    <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Task name">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${STATE_LABEL[st]}</span></div>
-    <div class="row" style="font-size:12.5px">${ed?`<select class="sel" data-tf="vendorId" data-vendor id="tv_${id}" style="flex:1" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:64px" aria-label="Days"><span class="muted">days</span>`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(vendorName(t.vendorId))} · ${t.days} day${t.days==1?'':'s'}`}</div>
+    <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Task name">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
+    <div class="row" style="font-size:12.5px">${ed?`<select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:64px" aria-label="Days"><span class="muted">days</span>`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(vendorName(t.vendorId))} · ${t.days} day${t.days==1?'':'s'}`}</div>
     <div class="mono muted" style="font-size:12px">${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
     ${depLine(id,ed)}
     ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>
-    <div class="row"><select class="sel" data-tf="status" aria-label="Status"><option value="todo" ${t.status==='todo'?'selected':''}>Not started</option><option value="started" ${t.status==='started'?'selected':''}>In progress</option><option value="done" ${t.status==='done'?'selected':''}>Done</option></select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
+    <div class="row"><select class="sel" data-tf="status" data-list="status" aria-label="Status">${statusOptions(t.status)}</select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
   </div>`;
 }
 /* step editing */
@@ -1191,14 +1327,14 @@ function panelZone(){
   if(T.drop){const c=clearByOff(id);h+=`<div>${esc(vendorName(z.vendorId))} may store items here ${c?`until <b>${fmtDay(c.off)}</b>${c.manual?'':' (set automatically: next vendor starts then)'}`:'with no deadline yet'}.</div>`;}
   else if(w)h+=`<div><b style="color:var(--bad)">Locked</b> for installation ${fmtDay(w.s)} → ${fmtDay(w.e)}. Only the scheduled vendor works here.</div>`;
   else if(!T.route)h+=`<div class="muted">No installation tasks.</div>`;
-  if(z.after&&z.after!=='none')h+=`<div><b style="color:var(--bad)">${esc(AFTER[z.after])}</b> from ${fmtDay(restrictFrom(id))} until the event.</div>`;
+  if(z.after&&z.after!=='none')h+=`<div><b style="color:var(--bad)">${esc(restrictLabel(z.after))}</b> from ${fmtDay(restrictFrom(id))} until the event.</div>`;
   if((z.parallel||[]).length)h+=`<div class="muted">Allowed to work here in parallel: ${esc(z.parallel.map(vendorName).join(', '))}</div>`;
   h+=`</div></div>`;
   if(ed){
     h+=`<div class="sec"><h4>Settings</h4><div style="display:flex;flex-direction:column;gap:8px">`;
-    if(!T.route&&z.type!=='nogo')h+=`<div class="field"><label for="zv">${T.drop?'Whose items':'Responsible vendor'}</label><select class="sel" id="zv" data-zf="vendorId" data-vendor>${vendorOptions(z.vendorId)}</select><div class="newv" hidden><input class="inp" id="zv_new" placeholder="Vendor name" style="width:100%"></div></div>`;
+    if(!T.route&&lookOf(z.type)!=='nogo')h+=`<div class="field"><label for="zv">${T.drop?'Whose items':'Responsible vendor'}</label><select class="sel" id="zv" data-zf="vendorId" data-vendor data-list="vendor">${vendorOptions(z.vendorId)}</select><div class="newv" hidden><input class="inp" id="zv_new" placeholder="Vendor name" style="width:100%"></div></div>`;
     if(T.drop)h+=`<div class="field"><label for="zc">Items allowed until (blank = automatic)</label><input class="inp" type="date" id="zc" data-zf="clearBy" value="${esc(z.clearBy||'')}"></div>`;
-    h+=`<div class="field"><label for="za">Once installed</label><select class="sel" id="za" data-zf="after">${Object.entries(AFTER).map(([k,v])=>`<option value="${k}" ${z.after===k?'selected':''}>${v}</option>`).join('')}</select></div>`;
+    h+=`<div class="field"><label for="za">Once installed</label><select class="sel" id="za" data-zf="after" data-list="restrict">${restrictOptions(z.after)}</select></div>`;
     h+=`<div class="field"><label>Can work here in parallel</label>${vendorChecks('zpar',new Set(z.parallel||[]))}</div>`;
     h+=`<div class="row"><button class="btn small" id="zstraight" type="button">Straighten lines</button><span class="muted" style="font-size:12px">Makes nearly-straight and nearly-square sides exact.</span></div>`;
     h+=`</div></div>`;
@@ -1214,7 +1350,7 @@ function panelConflicts(){
   if(!CONF.length)return `<div class="row"><span class="pill ok">No clashes</span><span class="muted">Every area has one vendor at a time, and drop-offs clear before work starts.</span></div>`;
   return CONF.map((c,i)=>`<div class="conf ${c.level}"><b>${esc(c.title)}</b><div style="font-size:13px">${esc(c.detail)}</div><div class="row">${(c.zones||[]).filter(Boolean).length?`<button class="btn small" data-cshow="${i}" type="button">Show on plan</button>`:''}${c.fix&&Store.canEdit?`<button class="btn small primary" data-cfix="${i}" type="button">${esc(c.fix.label)}</button>`:''}${c.fix2&&Store.canEdit?`<button class="btn small" data-cfix2="${i}" type="button">${esc(c.fix2.label)}</button>`:''}</div></div>`).join('');
 }
-function vendorLink(id){return location.origin+location.pathname+'?vendor='+encodeURIComponent(id);}
+function vendorLink(id){return location.origin+location.pathname+'?'+(Store.eventId?'event='+encodeURIComponent(Store.eventId)+'&':'')+'vendor='+encodeURIComponent(id);}
 function vendorSteps(vid){return Object.keys(TK()).filter(i=>isLeaf(i)&&TK()[i].vendorId===vid).sort((a,b)=>SCH[a].s-SCH[b].s);}
 function panelVendors(){
   const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));const ed=Store.canEdit;const dis=ed?'':'disabled';
@@ -1224,8 +1360,8 @@ function panelVendors(){
   h+=vs.map(([id,v])=>{
     const steps=vendorSteps(id);const first=steps.length?SCH[steps[0]].s:null,last=steps.length?Math.max(...steps.map(s=>SCH[s].e)):null;
     const open=ui.openVendor===id;
-    const stepList=steps.map(s=>{const t=TK()[s];const st=taskState(s);return `<div class="row" style="font-size:12.5px;flex-wrap:nowrap;align-items:flex-start"><span class="st ${st}" style="font-size:9.5px">${STATE_LABEL[st]}</span><div style="min-width:0"><div>${esc(taskLabel(s))}</div><div class="muted mono" style="font-size:11px">${esc(Z()[t.zoneId]?.label||'')} · ${fmtDay(SCH[s].s)} → ${fmtDay(SCH[s].e)}</div></div></div>`;}).join('')||'<div class="muted" style="font-size:12.5px">No steps assigned yet. Assign them in an area’s job card.</div>';
-    const drops=Object.values(Z()).filter(z=>z.type==='dropoff'&&z.vendorId===id).length;
+    const stepList=steps.map(s=>{const t=TK()[s];const st=taskState(s);return `<div class="row" style="font-size:12.5px;flex-wrap:nowrap;align-items:flex-start"><span class="st ${st}" style="font-size:9.5px">${pillText(s,st)}</span><div style="min-width:0"><div>${esc(taskLabel(s))}</div><div class="muted mono" style="font-size:11px">${esc(Z()[t.zoneId]?.label||'')} · ${fmtDay(SCH[s].s)} → ${fmtDay(SCH[s].e)}</div></div></div>`;}).join('')||'<div class="muted" style="font-size:12.5px">No steps assigned yet. Assign them in an area’s job card.</div>';
+    const drops=Object.values(Z()).filter(z=>TYPES[z.type]?.drop&&z.vendorId===id).length;
     return `<details class="vrow" data-vrow="${id}" ${open?'open':''} style="display:block">
       <summary style="cursor:pointer;display:flex;gap:10px;align-items:center;list-style:none"><span class="dot" style="background:${esc(v.color)};width:14px;height:14px"></span><span style="flex:1;min-width:0"><b style="font-weight:600">${esc(v.name)}</b><br><span class="muted" style="font-size:12.5px">${esc(v.trade||'What they do: not set')}</span></span><span class="mono muted" style="font-size:11px;text-align:right">${steps.length} step${steps.length===1?'':'s'}${first!=null?`<br>${shortDay(first)}–${shortDay(last)}`:''}</span></summary>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
@@ -1255,10 +1391,10 @@ function briefText(vid){
     if(t.withPrev)L.push('    Runs at the same time as the step before it.');
     if(w.length)L.push(`    Start only after: ${w.join('; ')}.`);
     if(nxt.length)L.push(`    Finish on time: ${nxt.map(o=>`${vendorName(T[o].vendorId)} (${taskLabel(o)})`).join(', ')} starts right after you.`);});
-  const drops=Object.keys(zs).filter(id=>zs[id].type==='dropoff'&&zs[id].vendorId===vid);
+  const drops=Object.keys(zs).filter(id=>TYPES[zs[id].type]?.drop&&zs[id].vendorId===vid);
   if(drops.length){L.push('');L.push('WHERE YOU CAN LEAVE ITEMS');drops.forEach(id=>{const c=clearByOff(id);L.push(`- ${zs[id].label}: ${c?`remove everything before ${fmtDay(c.off)}`:'no deadline yet'}${c&&c.task?` — ${taskLabel(c.task)} starts there`:''}.`);});L.push('- Do not leave items anywhere else.');}
   const rules=Object.keys(zs).filter(id=>zs[id].after&&zs[id].after!=='none');
-  if(rules.length){L.push('');L.push('SITE RULES');rules.forEach(id=>L.push(`- ${zs[id].label}: ${AFTER[zs[id].after].toLowerCase()} from ${fmtDay(restrictFrom(id))}.`));}
+  if(rules.length){L.push('');L.push('SITE RULES');rules.forEach(id=>L.push(`- ${zs[id].label}: ${restrictLabel(zs[id].after).toLowerCase()} from ${fmtDay(restrictFrom(id))}.`));}
   const locks=Object.keys(zs).map(id=>({id,w:zoneWindow(id)})).filter(x=>x.w&&zoneTasks(x.id).some(t=>T[t].vendorId!==vid));
   if(locks.length){L.push('');L.push('LOCKED WHILE OTHERS WORK (stay out)');locks.sort((a,b)=>a.w.s-b.w.s).forEach(({id})=>{const parts=zoneTasks(id).filter(t=>T[t].vendorId!==vid);const s=Math.min(...parts.map(t=>SCH[t].s)),e=Math.max(...parts.map(t=>SCH[t].e));const others=[...new Set(parts.map(t=>vendorName(T[t].vendorId)))];L.push(`- ${zs[id].label}: ${fmtDay(s)} → ${fmtDay(e)} (${others.join(', ')}).`);});}
   linked.delete(vid);linked.delete('');linked.delete(undefined);
@@ -1325,8 +1461,12 @@ function openSettings(){
     <div class="field"><label for="sb">Floor plan image</label><input type="file" id="sb" accept="image/png,image/jpeg,image/webp" ${dis}><span class="muted" style="font-size:12px">Export your AutoCAD drawing as PNG or JPG (PDF → image works too). You draw on top of it at its real proportions.${s.bgUrl?' A plan is loaded.':''}</span></div>
     ${s.bgUrl?`<div class="field"><label for="so">Plan visibility</label><input type="range" id="so" min="0.15" max="1" step="0.05" value="${s.bgOpacity??0.8}" ${dis}></div>`:''}
     <div class="field"><label>Scale</label><div class="row"><span class="mono">${mPer()?`1 m = ${r1(1/mPer())} drawing units`:'Not set'}</span>${ed?'<button class="btn small" id="sscale" type="button">Set scale on the plan</button>':''}</div></div>
-    ${ed?`<div class="sec"><h4>Backup and reuse</h4><div class="row"><button class="btn small" id="sexp" type="button">Download backup (.json)</button><button class="btn small" id="simp" type="button">Load from backup…</button></div><div class="muted" style="font-size:12px;margin-top:4px">Keep a backup of every event. For the next event, load it and clear the areas: vendors and your questions stay.</div></div>
-    <div class="sec"><h4>Start over</h4><div class="row"><button class="btn small danger" id="sclear" type="button">Clear all areas and tasks</button></div></div>`:''}
+    ${ed?`<div class="sec"><h4>Backup and reuse</h4><div class="row"><button class="btn small" id="sexp" type="button">Download backup (.json)</button><button class="btn small" id="simp" type="button">Load from backup…</button></div><div class="muted" style="font-size:12px;margin-top:4px">Downloads this event as a file you can keep or load into any event later.</div></div>
+    <div class="sec"><h4>Clear or delete</h4><div class="danger-zone">
+      <div class="row"><button class="btn small danger" id="sclearall" type="button">Clear everything</button><span class="muted" style="font-size:12px;flex:1;min-width:180px">Empty plan: removes all areas, lines, tasks, vendors, questions, floor plan and scale. Keeps the event name and dates.</span></div>
+      <div class="row"><button class="btn small danger" id="sclear" type="button">Clear areas and tasks only</button><span class="muted" style="font-size:12px;flex:1;min-width:180px">Keeps vendors, your questions and the floor plan.</span></div>
+      <div class="row"><button class="btn small danger" id="sdelev" type="button">Delete this event</button><span class="muted" style="font-size:12px;flex:1;min-width:180px">Removes the event and its vendor links. Other events aren’t affected.</span></div>
+    </div></div>`:''}
     ${Store.mode==='github'&&ed?'<div class="row"><button class="btn small" id="slogout" type="button">Sign out on this device</button></div>':''}
   </div>
   <div class="mf"><span></span><div class="row"><button class="btn" id="scl" type="button">Close</button>${ed?'<button class="btn primary" id="ssv" type="button">Save</button>':''}</div></div>`,()=>{
@@ -1342,12 +1482,14 @@ function openSettings(){
     };
     $('#sexp').onclick=()=>{const blob=new Blob([JSON.stringify(Store.d,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(S().name||'site-plan').replace(/[^\w-]+/g,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);};
     $('#simp').onclick=()=>$('#importFile').click();
-    const sc=$('#sclear');sc.onclick=()=>confirmBtn(sc,()=>{Store.d.tasks={};Store.d.zones={};ui.sel=null;Store.touch();closeModal();toast('Plan cleared. Vendors and questions kept.');});
+    const sc=$('#sclear');sc.onclick=()=>confirmBtn(sc,()=>{Store.d.tasks={};Store.d.zones={};ui.sel=null;ui.selTask=null;Store.touch();closeModal();toast('Areas and tasks cleared. Vendors and questions kept.');});
+    const sa=$('#sclearall');sa.onclick=()=>confirmBtn(sa,()=>{const keep=S();const d=emptyPlan();d.settings={...d.settings,name:keep.name||d.settings.name,setupStart:keep.setupStart||d.settings.setupStart,eventDate:keep.eventDate||d.settings.eventDate};ui.sel=null;ui.selTask=null;ui.draft=null;ui.day=0;Store.replaceAll(d);closeModal();fit();toast('Plan cleared. Everything removed.');});
+    const sdv=$('#sdelev');sdv.onclick=()=>confirmBtn(sdv,async()=>{const name=S().name||'This event';sdv.disabled=true;sdv.textContent='Deleting…';try{await Store.deleteEvent(Store.eventId);closeModal();toast(`Deleted “${name}”.`);}catch(e){sdv.disabled=false;sdv.textContent='Delete this event';toast('Could not delete: '+e.message);}});
     const lo=$('#slogout');if(lo)lo.onclick=async()=>{await Store.flush();ls.del('siteboard.ghtoken');Store.token='';Store.canEdit=false;closeModal();setSave();renderAll();toast('Signed out on this device.');};
   });
 }
 $('#importFile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d||!d.zones||!d.settings)throw 0;
-  openModal(`<div class="mh"><h2>Replace the current plan?</h2><p>“${esc(d.settings.name||'Backup')}” has ${Object.keys(d.zones).length} items and ${Object.keys(d.tasks||{}).length} tasks. The plan on screen will be replaced.</p></div><div class="mf"><span></span><div class="row"><button class="btn" id="ic" type="button">Cancel</button><button class="btn primary" id="iy" type="button">Replace plan</button></div></div>`,()=>{$('#ic').onclick=closeModal;$('#iy').onclick=()=>{Store.replaceAll(d);ui.sel=null;closeModal();fit();toast('Backup loaded.');};});
+  openModal(`<div class="mh"><h2>Replace the current plan?</h2><p>“${esc(d.settings.name||'Backup')}” has ${Object.keys(d.zones).length} items and ${Object.keys(d.tasks||{}).length} tasks. The plan on screen will be replaced.</p></div><div class="mf"><span></span><div class="row"><button class="btn" id="ic" type="button">Cancel</button><button class="btn primary" id="iy" type="button">Replace plan</button></div></div>`,()=>{$('#ic').onclick=closeModal;$('#iy').onclick=()=>{Store.replaceAll(d);ui.sel=null;closeAllModals();fit();toast('Backup loaded.');};});
 }catch(err){toast('That file is not a site board backup.');}};fr.readAsText(f);});
 $('#btnLogin').onclick=()=>{
   const r=repoInfo()||{owner:'?',repo:'?'};
@@ -1361,10 +1503,246 @@ $('#btnLogin').onclick=()=>{
   <li>Generate, copy the token, paste it here.</li></ol></details></form>
   <div class="mf"><span></span><div class="row"><button class="btn" id="lc" type="button">Cancel</button><button class="btn primary" id="ly" type="button">Sign in</button></div></div>`,()=>{
     const go=async()=>{const k=$('#lk').value.trim();if(!k)return;$('#ly').disabled=true;$('#ly').textContent='Checking…';
-      if(await Store.check(k)){Store.token=k;ls.set('siteboard.ghtoken',k);Store.canEdit=true;try{await Store.load();}catch(e){}closeModal();setViewAs('planner');setSave();toast('Signed in. Changes now save to GitHub.');}
+      if(await Store.check(k)){Store.token=k;ls.set('siteboard.ghtoken',k);Store.canEdit=true;try{await Store.loadIndex();if(!Store.eventId)Store.eventId=Store.pickEvent(null);if(Store.eventId)await Store.loadSafe();dataStamp++;}catch(e){}closeModal();setViewAs('planner');setSave();toast('Signed in. Changes now save to GitHub.');}
       else{$('#ly').disabled=false;$('#ly').textContent='Sign in';}};
     $('#lc').onclick=closeModal;$('#ly').onclick=go;$('#lf').addEventListener('submit',e=>{e.preventDefault();go();});});
 };
+
+/* ============ your own lists: item types, restrictions, statuses ============
+   Everything here is stored in the plan, so it can be added to and edited from any dropdown. */
+const DEFAULT_RESTRICTIONS=[
+  {id:'no_vehicles',label:'No vehicles',short:'NO VEHICLES',blocksVehicles:true},
+  {id:'no_walking',label:'Keep off: no foot traffic',short:'KEEP OFF',blocksVehicles:true},
+  {id:'no_items',label:'Keep clear: no items',short:'KEEP CLEAR',blocksVehicles:false},
+  {id:'closed',label:'Closed to everyone',short:'CLOSED',blocksVehicles:true}];
+const DEFAULT_STATUSES=[
+  {id:'todo',label:'Not started',base:'todo',core:true},
+  {id:'started',label:'In progress',base:'started',core:true},
+  {id:'done',label:'Done',base:'done',core:true}];
+const BASE_LABEL={todo:'Not started',started:'In progress',done:'Done'};
+// how each kind of item is drawn; your own item types pick one of these looks
+const LOOKS={
+  area:{geom:'poly',label:'Plain area in the vendor’s colour'},
+  turf:{geom:'poly',label:'Grass pattern (turf)'},
+  dropoff:{geom:'poly',label:'Drop-off / storage (items allowed until a date)'},
+  nogo:{geom:'poly',label:'No-go zone (hazard stripes, no work)'},
+  wall:{geom:'line',label:'Thick solid line (wall)'},
+  fence_high:{geom:'line',label:'Line with posts (high fence)'},
+  fence_low:{geom:'line',label:'Dotted line (low fence)'},
+  cable:{geom:'line',label:'Orange dashed line (cables)'},
+  route:{geom:'line',label:'Wide grey band (vehicle route)'}};
+const BASE_LOOK={structure:'area',stage:'area',furniture:'area',area:'area',turf:'turf',dropoff:'dropoff',nogo:'nogo',wall:'wall',fence_high:'fence_high',fence_low:'fence_low',cable:'cable',route:'route'};
+function restrictions(){return (Store.d.lists&&Store.d.lists.restrictions)||DEFAULT_RESTRICTIONS;}
+function restrictLabel(id){if(!id||id==='none')return 'No restriction';return restrictions().find(r=>r.id===id)?.label||'Restricted';}
+function restrictShort(id){const r=restrictions().find(x=>x.id===id);return r?(r.short||r.label).toUpperCase():'';}
+function blocksVehicles(id){return !!restrictions().find(r=>r.id===id)?.blocksVehicles;}
+function statuses(){return (Store.d.lists&&Store.d.lists.statuses)||DEFAULT_STATUSES;}
+function statusBase(id){return statuses().find(s=>s.id===id)?.base||(BASE_LABEL[id]?id:'todo');}
+function statusLabel(id){return statuses().find(s=>s.id===id)?.label||BASE_LABEL[statusBase(id)];}
+const canManage=()=>Store.canEdit&&!!Store.eventId;
+function listTail(kind){
+  if(!canManage())return '';
+  const add={restrict:'+ Add restriction…',status:'+ Add status…',type:'+ Add item type…',vendor:'+ Add vendor…',event:'+ New event…',opt:'+ Add option…'}[kind];
+  const edit={restrict:'✎ Edit restrictions…',status:'✎ Edit statuses…',type:'✎ Edit item types…',vendor:'✎ Edit vendors…',event:'✎ Edit this event…',opt:'✎ Edit options…'}[kind];
+  return `<option disabled>──────────</option>${add?`<option value="__add">${add}</option>`:''}<option value="__edit">${edit}</option>`;
+}
+function restrictOptions(sel){sel=sel||'none';return `<option value="none" ${sel==='none'?'selected':''}>No restriction</option>`+restrictions().map(r=>`<option value="${esc(r.id)}" ${r.id===sel?'selected':''}>${esc(r.label)}</option>`).join('')+(sel!=='none'&&!restrictions().some(r=>r.id===sel)?`<option value="${esc(sel)}" selected>(removed restriction)</option>`:'')+listTail('restrict');}
+function statusOptions(sel){sel=sel||'todo';const list=statuses();return list.map(s=>`<option value="${esc(s.id)}" ${s.id===sel?'selected':''}>${esc(s.label)}</option>`).join('')+(!list.some(s=>s.id===sel)?`<option value="${esc(sel)}" selected>${esc(statusLabel(sel))}</option>`:'')+listTail('status');}
+function typeOptions(sel){return Object.entries(TYPES).map(([k,t])=>`<option value="${esc(k)}" ${k===sel?'selected':''}>${esc(t.name)}${t.hidden?' (hidden)':''}</option>`).join('')+listTail('type');}
+function rebuildTypes(){
+  Object.keys(TYPES).forEach(k=>delete TYPES[k]);
+  const ov=(Store.d&&Store.d.types)||{};
+  Object.entries(BASE_TYPES).forEach(([k,t])=>{const o=ov[k]||{};const T={...t,look:BASE_LOOK[k],builtin:true};['name','task','days','after','hidden'].forEach(f=>{if(o[f]!==undefined&&o[f]!=='')T[f]=o[f];});TYPES[k]=T;});
+  Object.entries(ov).forEach(([k,o])=>{
+    if(!o||!o.custom||BASE_TYPES[k])return;
+    const look=LOOKS[o.look]?o.look:'area';
+    TYPES[k]={name:o.name||'New item',geom:LOOKS[look].geom,look,task:o.task||'Install',days:Number(o.days)||1,after:o.after||'none',hidden:!!o.hidden,custom:true,
+      drop:look==='dropoff',route:look==='route',noTask:look==='route'||look==='nogo'||!!o.noTask};
+  });
+  TYPE_GROUPS.length=0;
+  const vis=g=>Object.keys(TYPES).filter(k=>TYPES[k].geom===g&&!TYPES[k].hidden);
+  TYPE_GROUPS.push(['Areas · click each corner',vis('poly')],['Lines · click each point',vis('line')]);
+}
+const lookOf=type=>TYPES[type]?.look||'area';
+function usageOfType(k){return Object.values(Z()).filter(z=>z.type===k).length;}
+
+/* ----- a dialog to add one entry ----- */
+function openAddItem({title,intro,fields,onSave}){
+  openModal(`<div class="mh"><h2>${esc(title)}</h2>${intro?`<p>${esc(intro)}</p>`:''}</div>
+  <form class="mb" id="ai_f">${fields.map(f=>fieldHtml('ai_'+f.key,f,f.value)).join('')}</form>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="ai_c" type="button">Cancel</button><button class="btn primary" id="ai_s" type="button">Add</button></div></div>`,m=>{
+    const save=()=>{const v={};for(const f of fields){const el=m.querySelector('#ai_'+f.key);v[f.key]=f.type==='check'?el.checked:el.value.trim();if(f.required&&!v[f.key]){toast(`Fill in “${f.label}”.`);el.focus();return;}}closeModal();onSave(v);};
+    m.querySelector('#ai_c').onclick=closeModal;m.querySelector('#ai_s').onclick=save;m.querySelector('#ai_f').addEventListener('submit',e=>{e.preventDefault();save();});
+  });
+}
+function fieldHtml(id,f,val){
+  if(f.type==='check')return `<label class="row" style="font-size:13px"><input type="checkbox" id="${id}" ${val?'checked':''}> ${esc(f.label)}</label>`;
+  if(f.type==='select')return `<div class="field"><label for="${id}">${esc(f.label)}</label><select class="sel" id="${id}">${f.options.map(([v,l])=>`<option value="${esc(v)}" ${v===val?'selected':''}>${esc(l)}</option>`).join('')}</select>${f.help?`<span class="muted" style="font-size:12px">${esc(f.help)}</span>`:''}</div>`;
+  return `<div class="field"><label for="${id}">${esc(f.label)}</label><input class="inp" id="${id}" type="${f.type==='number'?'number':'text'}" ${f.type==='number'?'min="0.5" step="0.5"':''} value="${esc(val??'')}" placeholder="${esc(f.placeholder||'')}">${f.help?`<span class="muted" style="font-size:12px">${esc(f.help)}</span>`:''}</div>`;
+}
+
+/* ----- a dialog to edit a whole list: rename, reorder, add, remove ----- */
+function openListEditor({title,intro,items,columns,newItem,locked,inUse,onSave}){
+  let rows=clone(items);const removed=[];
+  const draw=m=>{
+    m.querySelector('#le_rows').innerHTML=rows.map((r,i)=>{
+      const lock=locked&&locked(r);const used=inUse?inUse(r):0;
+      return `<div class="qed" data-i="${i}"><div style="display:flex;flex-direction:column;gap:2px"><button class="btn small ghost" data-up="${i}" type="button" aria-label="Move up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-dn="${i}" type="button" aria-label="Move down" ${i<rows.length-1?'':'disabled'}>▼</button></div>
+      <div class="field" style="gap:5px">${columns.map(c=>{const id=`le_${i}_${c.key}`;const v=r[c.key];
+        if(c.type==='check')return `<label class="row muted" style="font-size:12.5px"><input type="checkbox" id="${id}" data-k="${c.key}" ${v?'checked':''} ${c.lockable&&lock?'disabled':''}> ${esc(c.label)}</label>`;
+        if(c.type==='color')return `<label class="row muted" style="font-size:12.5px"><input type="color" id="${id}" data-k="${c.key}" value="${esc(v||'#868e96')}" style="width:28px;height:24px;border:none;background:none;padding:0"> ${esc(c.label)}</label>`;
+        if(c.type==='select')return `<label class="row muted" style="font-size:12.5px;flex-wrap:nowrap">${esc(c.label)} <select class="sel" id="${id}" data-k="${c.key}" ${c.lockable&&lock?'disabled':''} style="flex:1;min-width:0">${c.options.map(([ov,ol])=>`<option value="${esc(ov)}" ${ov===v?'selected':''}>${esc(ol)}</option>`).join('')}</select></label>`;
+        return `<input class="inp" id="${id}" data-k="${c.key}" value="${esc(v??'')}" placeholder="${esc(c.label)}" aria-label="${esc(c.label)}" ${c.mono?'style="font-family:var(--f-mono);font-size:12.5px"':''}>`;}).join('')}
+        ${used?`<span class="muted" style="font-size:11.5px">Used by ${used} item${used===1?'':'s'}</span>`:''}</div>
+      ${lock?`<span class="muted" style="font-size:11px" title="Built in: you can rename it but not remove it">built in</span>`:`<button class="btn small ghost danger" data-rm="${i}" type="button" aria-label="Remove">✕</button>`}</div>`;}).join('')||'<div class="muted">The list is empty. Add an entry below.</div>';
+  };
+  const sync=m=>{m.querySelectorAll('#le_rows [data-k]').forEach(el=>{const i=+el.closest('[data-i]').dataset.i;rows[i][el.dataset.k]=el.type==='checkbox'?el.checked:el.value;});};
+  openModal(`<div class="mh"><h2>${esc(title)}</h2>${intro?`<p>${esc(intro)}</p>`:''}</div>
+  <div class="mb"><div id="le_rows" style="display:flex;flex-direction:column;gap:6px"></div><button class="btn small" id="le_add" type="button" style="align-self:flex-start">+ Add</button></div>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="le_c" type="button">Cancel</button><button class="btn primary" id="le_s" type="button">Save list</button></div></div>`,m=>{
+    draw(m);
+    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!m.querySelector('#le_rows').contains(b))return;sync(m);
+      if(b.dataset.up){const i=+b.dataset.up;[rows[i-1],rows[i]]=[rows[i],rows[i-1]];draw(m);}
+      else if(b.dataset.dn){const i=+b.dataset.dn;[rows[i+1],rows[i]]=[rows[i],rows[i+1]];draw(m);}
+      else if(b.dataset.rm){const i=+b.dataset.rm;const used=inUse?inUse(rows[i]):0;
+        if(used&&!b.dataset.armed){b.dataset.armed='1';b.textContent='Remove?';b.title=`Used by ${used} item${used===1?'':'s'}. Click again to remove.`;return;}
+        removed.push(rows[i]);rows.splice(i,1);draw(m);}});
+    m.querySelector('#le_add').onclick=()=>{sync(m);rows.push(newItem());draw(m);const ins=m.querySelectorAll('#le_rows input.inp');const last=ins[ins.length-1];last&&last.focus();};
+    m.querySelector('#le_c').onclick=closeModal;
+    m.querySelector('#le_s').onclick=()=>{sync(m);const first=columns.find(c=>!c.type||c.type==='text');if(first&&rows.some(r=>!String(r[first.key]||'').trim())){toast(`Every entry needs a ${first.label.toLowerCase()}.`);return;}closeModal();onSave(rows,removed);};
+  });
+}
+
+/* ----- one item type: name, look, default work ----- */
+function openTypeEditor(key,onDone){
+  const isNew=!key;const T=key?TYPES[key]:{name:'',geom:'poly',look:'area',task:'Install',days:1,after:'none',custom:true};
+  const used=key?usageOfType(key):0;const lockShape=!isNew&&(T.builtin||used>0);
+  const looks=Object.entries(LOOKS).filter(([k,l])=>!lockShape||l.geom===T.geom);
+  openModal(`<div class="mh"><h2>${isNew?'New item type':'Edit “'+esc(T.name)+'”'}</h2><p>${isNew?'It appears in the toolbar on the left. When you draw one, the board asks your questions for it.':T.builtin?'A built-in type: you can rename it and change its defaults.':'Your own item type.'}</p></div>
+  <form class="mb" id="te_f">
+    ${fieldHtml('te_name',{label:'Name',placeholder:'e.g. Tent, Barrier, Signage, Toilets'},T.name)}
+    ${T.builtin?'':fieldHtml('te_look',{type:'select',label:'How it looks on the map',options:looks.map(([k,l])=>[k,(l.geom==='poly'?'Area — ':'Line — ')+l.label]),help:lockShape?'Already drawn on the plan, so it stays an '+(T.geom==='poly'?'area':'line')+'.':'Areas are drawn corner by corner, lines point by point.'},T.look)}
+    ${fieldHtml('te_task',{label:'Default work name',placeholder:'e.g. Pitch tent'},T.task)}
+    ${fieldHtml('te_days',{type:'number',label:'Default days to install'},T.days)}
+    <div class="field"><label for="te_after">Once installed (default)</label><select class="sel" id="te_after" data-list="restrict">${restrictOptions(T.after||'none')}</select></div>
+    ${fieldHtml('te_hidden',{type:'check',label:'Hide from the toolbar'},T.hidden)}
+  </form>
+  <div class="mf">${!isNew&&!T.builtin&&!used?'<button class="btn ghost danger" id="te_del" type="button">Delete type</button>':'<span></span>'}<div class="row"><button class="btn" id="te_c" type="button">Cancel</button><button class="btn primary" id="te_s" type="button">${isNew?'Add item type':'Save'}</button></div></div>`,m=>{
+    m.querySelector('#te_c').onclick=closeModal;
+    const del=m.querySelector('#te_del');if(del)del.onclick=()=>confirmBtn(del,()=>{const t={...Store.d.types};delete t[key];Store.d.types=t;closeModal();Store.touch();rebuildTypes();refreshLists('type');onDone&&onDone(null);});
+    m.querySelector('#te_s').onclick=()=>{
+      const name=m.querySelector('#te_name').value.trim();if(!name){toast('Give the item type a name.');return;}
+      const o={name,task:m.querySelector('#te_task').value.trim()||'Install',days:Math.max(0.5,parseFloat(m.querySelector('#te_days').value)||1),after:m.querySelector('#te_after').value,hidden:m.querySelector('#te_hidden').checked};
+      if(o.after==='__add'||o.after==='__edit')o.after='none';
+      let k=key;
+      if(T.builtin)Store.d.types={...Store.d.types,[k]:o};
+      else{if(isNew)k='c_'+slugify(name).slice(0,20)+'_'+uid().slice(0,4);Store.d.types={...Store.d.types,[k]:{...(Store.d.types[k]||{}),...o,custom:true,look:m.querySelector('#te_look').value}};}
+      closeModal();rebuildTypes();Store.touch();refreshLists('type');toast(isNew?`Added “${name}”. It’s in the toolbar.`:'Saved.');onDone&&onDone(k);
+    };
+  });
+}
+function openTypeManager(){
+  const draw=m=>{m.querySelector('#tm_rows').innerHTML=Object.entries(TYPES).map(([k,t])=>{const n=usageOfType(k);return `<div class="row" style="flex-wrap:nowrap;border:1px solid var(--line2);border-radius:6px;padding:6px 8px">${swatch(k)}<div style="flex:1;min-width:0"><b style="font-weight:500">${esc(t.name)}</b> <span class="muted" style="font-size:12px">· ${t.geom==='poly'?'area':'line'}${t.builtin?' · built in':''}${t.hidden?' · hidden':''}${n?` · ${n} on plan`:''}</span><div class="muted" style="font-size:12px">${t.noTask&&!t.custom?'No installation work':esc(t.task)+' · '+t.days+' day'+(t.days==1?'':'s')}</div></div><button class="btn small" data-te="${esc(k)}" type="button">Edit</button></div>`;}).join('');};
+  openModal(`<div class="mh"><h2>Item types</h2><p>The things you can draw. Add your own, rename them or change their defaults.</p></div>
+  <div class="mb"><div id="tm_rows" style="display:flex;flex-direction:column;gap:6px"></div><button class="btn small" id="tm_add" type="button" style="align-self:flex-start">+ Add item type</button></div>
+  <div class="mf"><span></span><button class="btn" id="tm_c" type="button">Done</button></div>`,m=>{
+    draw(m);
+    m.addEventListener('click',e=>{const b=e.target.closest('[data-te]');if(b)openTypeEditor(b.dataset.te,()=>draw(m));});
+    m.querySelector('#tm_add').onclick=()=>openTypeEditor(null,()=>draw(m));
+    m.querySelector('#tm_c').onclick=closeModal;
+  });
+}
+
+/* ----- what "+ Add…" and "✎ Edit…" do for each list ----- */
+const LISTS={
+  restrict:{
+    add(done){openAddItem({title:'New restriction',intro:'What isn’t allowed in an area once its work is finished.',fields:[{key:'label',label:'Restriction',placeholder:'e.g. No forklifts',required:true},{key:'short',label:'Short label on the map',placeholder:'e.g. NO FORKLIFTS'},{key:'blocksVehicles',type:'check',label:'Warn me if a vehicle route crosses it',value:true}],
+      onSave(v){const id='r_'+uid().slice(0,6);Store.d.lists={...Store.d.lists,restrictions:[...restrictions(),{id,label:v.label,short:v.short||v.label,blocksVehicles:v.blocksVehicles}]};Store.touch();done(id);}});},
+    edit(){openListEditor({title:'Restrictions',intro:'Rename, reorder, add or remove. Areas using a removed restriction go back to “No restriction”.',items:restrictions(),
+      columns:[{key:'label',label:'Restriction'},{key:'short',label:'Short label on the map',mono:true},{key:'blocksVehicles',type:'check',label:'Warn if a vehicle route crosses it'}],
+      newItem:()=>({id:'r_'+uid().slice(0,6),label:'',short:'',blocksVehicles:false}),
+      inUse:r=>Object.values(Z()).filter(z=>z.after===r.id).length,
+      onSave(rows,removed){const gone=new Set(removed.map(r=>r.id));Store.d.lists={...Store.d.lists,restrictions:rows.map(r=>({...r,label:r.label.trim(),short:(r.short||r.label).trim()}))};
+        if(gone.size)Object.entries(Z()).forEach(([id,z])=>{if(gone.has(z.after))Store.d.zones[id]={...z,after:'none'};});Store.touch();refreshLists('restrict');}});}
+  },
+  status:{
+    add(done){openAddItem({title:'New status',intro:'For example “Waiting for materials” or “Delayed”. Pick what it counts as, so the schedule knows whether the next vendor can start.',fields:[{key:'label',label:'Status',placeholder:'e.g. Waiting for materials',required:true},{key:'base',type:'select',label:'Counts as',options:[['todo','Not started'],['started','In progress'],['done','Done (next vendor can start)']],value:'started'}],
+      onSave(v){const id='s_'+uid().slice(0,6);Store.d.lists={...Store.d.lists,statuses:[...statuses(),{id,label:v.label,base:v.base}]};Store.touch();done(id);}});},
+    edit(){openListEditor({title:'Task statuses',intro:'Rename, reorder or add. The three built-in statuses can be renamed but not removed.',items:statuses(),
+      columns:[{key:'label',label:'Status'},{key:'base',type:'select',label:'Counts as',lockable:true,options:[['todo','Not started'],['started','In progress'],['done','Done']]}],
+      locked:s=>!!s.core,newItem:()=>({id:'s_'+uid().slice(0,6),label:'',base:'started'}),
+      inUse:s=>Object.values(TK()).filter(t=>t.status===s.id).length,
+      onSave(rows,removed){const gone=new Map(removed.map(s=>[s.id,s.base]));Store.d.lists={...Store.d.lists,statuses:rows.map(s=>({...s,label:s.label.trim()}))};
+        if(gone.size)Object.entries(TK()).forEach(([id,t])=>{if(gone.has(t.status))Store.d.tasks[id]={...t,status:gone.get(t.status)||'todo'};});Store.touch();refreshLists('status');}});}
+  },
+  vendor:{
+    add(done){openAddItem({title:'New vendor',fields:[{key:'name',label:'Company name',required:true},{key:'trade',label:'What they do',placeholder:'e.g. Stage structure and stairs'},{key:'contact',label:'Contact person'},{key:'phone',label:'Phone'}],
+      onSave(v){const id='v_'+uid();Store.put('vendors',id,{name:v.name,trade:v.trade,contact:v.contact,phone:v.phone,email:'',notes:'',color:nextColor()});refreshLists('vendor');done(id);}});},
+    edit(){const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name)).map(([id,v])=>({id,...v}));
+      openListEditor({title:'Vendors',intro:'Rename, recolour or add vendors. Contact details and notes are in the Vendors tab. A vendor with work assigned can’t be removed.',items:vs,
+        columns:[{key:'name',label:'Company name'},{key:'trade',label:'What they do'},{key:'color',type:'color',label:'Colour on the map'}],
+        newItem:()=>({id:'v_'+uid(),name:'',trade:'',color:nextColor(),contact:'',phone:'',email:'',notes:''}),
+        inUse:v=>Object.values(TK()).filter(t=>t.vendorId===v.id).length+Object.values(Z()).filter(z=>z.vendorId===v.id).length,
+        onSave(rows,removed){const blocked=removed.filter(v=>Object.values(TK()).some(t=>t.vendorId===v.id)||Object.values(Z()).some(z=>z.vendorId===v.id));
+          const vend={};rows.forEach(r=>{const {id,...rest}=r;vend[id]={...(V()[id]||{}),...rest,name:rest.name.trim()};});
+          blocked.forEach(r=>{const {id,...rest}=r;vend[id]=V()[id]||rest;});
+          Store.d.vendors=vend;Store.touch();refreshLists('vendor');
+          if(blocked.length)toast(`Kept ${blocked.map(v=>v.name).join(', ')}: still assigned to work. Reassign it first.`);}});}
+  },
+  type:{add(done){openTypeEditor(null,k=>k&&done(k));},edit(){openTypeManager();}},
+  event:{add(){openNewEvent();},edit(){openSettings();}},
+  opt:{
+    add(done,sel){const type=sel.dataset.type,qid=sel.dataset.qid;openAddItem({title:'New option',fields:[{key:'label',label:'Option',required:true}],onSave(v){
+      const qs=clone(questionsFor(type));const q=qs.find(x=>x.id===qid);if(!q)return;q.options=[...(q.options||[]),v.label];
+      Store.put('templates',type,{...(Store.d.templates?.[type]||{}),questions:qs});refreshLists('opt');done(v.label);}});},
+    edit(sel){openQuestions(sel.dataset.type,()=>refreshLists('opt'));}
+  }
+};
+// rebuild one dropdown's options from its list, keeping its value
+function rebuildSelect(s,keep){
+  const kind=s.dataset.list,v=keep??s.value;
+  if(kind==='restrict')s.innerHTML=restrictOptions(v);
+  else if(kind==='status')s.innerHTML=statusOptions(v);
+  else if(kind==='type')s.innerHTML=typeOptions(v);
+  else if(kind==='vendor'){if(s.id==='viewAs')return;s.innerHTML=vendorOptions(v);}
+  else if(kind==='opt'){const q=questionsFor(s.dataset.type).find(x=>x.id===s.dataset.qid);s.innerHTML=`<option value="">—</option>${(q?.options||[]).map(o=>`<option>${esc(o)}</option>`).join('')}${listTail('opt')}`;}
+  else return;
+  s.value=v;
+}
+// after a list changed: rebuild dropdowns inside open dialogs (the side panel re-renders on its own)
+function refreshLists(kind){document.querySelectorAll(`#modalRoot select[data-list="${kind}"]`).forEach(s=>rebuildSelect(s));changed();}
+// catch "+ Add…" / "✎ Edit…" in any dropdown before its normal change handler runs
+document.addEventListener('change',e=>{
+  const s=e.target;if(!(s instanceof HTMLSelectElement)||!s.dataset.list)return;
+  const v=s.value;if(v!=='__add'&&v!=='__edit')return;
+  e.stopImmediatePropagation();e.stopPropagation();
+  const prev=s.dataset.prev??([...s.options].find(o=>o.defaultSelected&&!o.value.startsWith('__'))||s.options[0]).value;
+  s.value=prev;
+  const L=LISTS[s.dataset.list];if(!L)return;
+  if(v==='__add')L.add(id=>{
+      if(!s.isConnected||id==null)return;
+      rebuildSelect(s,prev);
+      // pick the new entry and let the dropdown's own handler save it
+      if([...s.options].some(o=>o.value===id)){s.value=id;s.dataset.prev=id;s.dispatchEvent(new Event('change',{bubbles:true}));}
+    },s);
+  else L.edit(s);
+},true);
+document.addEventListener('focusin',e=>{const s=e.target;if(s instanceof HTMLSelectElement&&s.dataset.list&&!s.value.startsWith('__'))s.dataset.prev=s.value;});
+
+function openListsHub(){
+  openModal(`<div class="mh"><h2>Lists</h2><p>The options in the board’s dropdowns. You can also add or edit from the bottom of any dropdown.</p></div>
+  <div class="mb" style="gap:8px">
+    <button class="btn" data-hub="types" type="button" style="justify-content:space-between"><span>Item types</span><span class="muted">${Object.keys(TYPES).length}</span></button>
+    <button class="btn" data-hub="restrict" type="button" style="justify-content:space-between"><span>Restrictions after install</span><span class="muted">${restrictions().length}</span></button>
+    <button class="btn" data-hub="status" type="button" style="justify-content:space-between"><span>Task statuses</span><span class="muted">${statuses().length}</span></button>
+    <button class="btn" data-hub="vendor" type="button" style="justify-content:space-between"><span>Vendors</span><span class="muted">${Object.keys(V()).length}</span></button>
+    <button class="btn" data-hub="questions" type="button" style="justify-content:space-between"><span>Questions and their options</span><span class="muted">per item type</span></button>
+  </div><div class="mf"><span></span><button class="btn" id="lh_c" type="button">Done</button></div>`,m=>{
+    m.querySelector('#lh_c').onclick=closeModal;
+    m.addEventListener('click',e=>{const b=e.target.closest('[data-hub]');if(!b)return;const k=b.dataset.hub;
+      if(k==='types')openTypeManager();else if(k==='questions')openQuestions();else LISTS[k].edit();});
+  });
+}
 
 /* ============ view as ============ */
 function setViewAs(v){ui.viewAs=v;ls.set('siteboard.viewAs',v);ui.tool='select';ui.draft=null;ui.tab=v==='planner'?'schedule':'brief';renderAll();}
@@ -1379,10 +1757,47 @@ function renderHeader(){
   if(ui.viewAs!=='planner'&&!V()[ui.viewAs]&&Store.mode!=='loading')ui.viewAs='planner';
   const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));
   const sel=$('#viewAs');
-  sel.innerHTML=(lv?'':`<option value="planner">${Store.canEdit?'Planner (everything)':'Everyone'}</option>`)+vs.filter(([id])=>!lv||id===lv).map(([id,v])=>`<option value="${id}">${esc(v.name)}</option>`).join('');
+  sel.innerHTML=(lv?'':`<option value="planner">${Store.canEdit?'Planner (everything)':'Everyone'}</option>`)+vs.filter(([id])=>!lv||id===lv).map(([id,v])=>`<option value="${id}">${esc(v.name)}</option>`).join('')+(lv?'':listTail('vendor'));
   sel.value=ui.viewAs;sel.disabled=!!lv;
   $('#btnLogin').hidden=!(Store.mode==='github'&&!Store.canEdit&&!Store.lockedVendor);
+  // event switcher: hidden on vendor links, so a vendor stays on their own event
+  const es=$('#eventSel');const evs=[...Store.events].sort((a,b)=>(a.setupStart||'').localeCompare(b.setupStart||'')||a.name.localeCompare(b.name));
+  const showPick=!Store.lockedVendor&&Store.mode!=='loading'&&(evs.length>0||Store.canEdit);
+  $('#evPick').hidden=!showPick;
+  es.hidden=!evs.length;
+  es.innerHTML=evs.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}${e.setupStart?' · '+esc(e.setupStart.slice(5).split('-').reverse().join('/')):''}</option>`).join('')+(Store.eventId&&!evs.some(e=>e.id===Store.eventId)?`<option value="${esc(Store.eventId)}">${esc(S().name||'This event')}</option>`:'')+(Store.canEdit?`<option disabled>──────────</option><option value="__add">+ New event…</option>`+(Store.eventId?`<option value="__edit">✎ Edit this event…</option>`:''):'');
+  if(Store.eventId)es.value=Store.eventId;
+  $('#btnNewEvent').hidden=!Store.canEdit;
+  $('#btnSettings').hidden=!Store.eventId;
   setSave();
+}
+$('#eventSel').addEventListener('change',async e=>{const id=e.target.value;e.target.disabled=true;try{await Store.switchEvent(id);}finally{e.target.disabled=false;renderHeader();}});
+$('#btnNewEvent').onclick=()=>openNewEvent();
+function openNewEvent(){
+  const has=!!Store.eventId;const cur=S();
+  const nVend=Object.keys(V()).length,nZones=Object.keys(Z()).length;
+  openModal(`<div class="mh"><h2>New event</h2><p>Each event has its own plan, floor plan, schedule and vendor links.</p></div>
+  <form class="mb" id="nef">
+    <div class="field"><label for="ne_name">Event name</label><input class="inp" id="ne_name" required placeholder="e.g. Winter Market 2026"></div>
+    <div class="row"><div class="field" style="flex:1"><label for="ne_s">First build-up day</label><input class="inp" type="date" id="ne_s" value="${isoOf0(7)}"></div><div class="field" style="flex:1"><label for="ne_e">Event day</label><input class="inp" type="date" id="ne_e" value="${isoOf0(14)}"></div></div>
+    <div class="field"><label>Start from</label>
+      <label class="choice"><input type="radio" name="ne_from" value="blank" checked><span><b>Empty plan</b><br><span class="muted" style="font-size:12.5px">Nothing on it. Add vendors and draw from scratch.</span></span></label>
+      ${has?`<label class="choice"><input type="radio" name="ne_from" value="team"><span><b>Same vendors and questions</b><br><span class="muted" style="font-size:12.5px">Copies the ${nVend} vendor${nVend===1?'':'s'} and your saved questions from “${esc(cur.name||'this event')}”. The map starts empty.</span></span></label>
+      <label class="choice"><input type="radio" name="ne_from" value="copy"><span><b>Copy of “${esc(cur.name||'this event')}”</b><br><span class="muted" style="font-size:12.5px">Everything: ${nZones} area${nZones===1?'':'s'} and lines, jobs, vendors, floor plan. Dates move with the new build-up day and every task is set back to not started.</span></span></label>`:''}
+    </div>
+  </form>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="ne_c" type="button">Cancel</button><button class="btn primary" id="ne_go" type="button">Create event</button></div></div>`,()=>{
+    const go=async()=>{
+      const name=$('#ne_name').value.trim();if(!name){toast('Give the event a name.');$('#ne_name').focus();return;}
+      const setupStart=$('#ne_s').value,eventDate=$('#ne_e').value;
+      if(setupStart&&eventDate&&eventDate<setupStart){toast('The event day is before the first build-up day.');return;}
+      const from=(document.querySelector('input[name=ne_from]:checked')||{}).value||'blank';
+      const b=$('#ne_go');b.disabled=true;b.textContent='Creating…';
+      try{await Store.createEvent({name,setupStart,eventDate,from});closeModal();toast(`Created “${name}”.`);}
+      catch(e){b.disabled=false;b.textContent='Create event';toast('Could not create the event: '+e.message);}
+    };
+    $('#ne_c').onclick=closeModal;$('#ne_go').onclick=go;$('#nef').addEventListener('submit',e=>{e.preventDefault();go();});
+  });
 }
 function renderScrub(){
   const max=Math.max(eventOff(),1);const r=$('#day');r.max=max;if(ui.day>max)ui.day=max;r.value=ui.day;
@@ -1397,6 +1812,12 @@ function renderEmpty(){
   bn.hidden=!(localWeb||Store.problem);
   if(Store.problem)bn.textContent=Store.problem;
   else if(localWeb)bn.textContent='No GitHub repository set, so this plan is saved in this browser only. Fill in owner and repo at the top of index.html, or open it from your github.io address.';
+  if(!Store.eventId){
+    em.hidden=false;
+    em.innerHTML=Store.canEdit?`<div class="box"><h2>No events yet</h2><p class="muted">Create your first event. Each event gets its own plan, floor plan and vendor links.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eNew" type="button">+ New event</button></div></div>`:`<div class="box"><h2>No events yet</h2><p class="muted">${Store.mode==='github'?'Planners: use Planner sign-in at the top to create one.':'Nothing has been planned yet.'}</p></div>`;
+    const n=$('#eNew');if(n)n.onclick=()=>openNewEvent();
+    return;
+  }
   if(!Object.keys(Z()).length&&!isDrawing()){
     em.hidden=false;
     em.innerHTML=Store.canEdit?`<div class="box"><h2>Start your site plan</h2><p class="muted">Upload your floor plan in Event settings, set the scale, then pick an item on the left and click each corner. The board asks who installs it, how long it takes and who goes before and after.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eSettings" type="button">Event settings</button><button class="btn" id="eSample" type="button">Load example event</button></div></div>`:`<div class="box"><h2>No plan yet</h2><p class="muted">The planner hasn’t drawn anything yet. This page updates on its own.</p></div>`;
@@ -1407,7 +1828,7 @@ function renderEmpty(){
 let raf=0,dataStamp=0,schedStamp=-1;
 function changed(){dataStamp++;if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderAll();});}
 // recalculate dates and clashes whenever the plan has changed since the last calculation
-function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;computeSchedule();CONF=conflicts();}
+function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;rebuildTypes();computeSchedule();CONF=conflicts();}
 function renderAll(){
   ensureSchedule();
   renderHeader();renderRail();renderScrub();renderMap();

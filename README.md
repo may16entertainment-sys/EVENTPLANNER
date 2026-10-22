@@ -2,7 +2,7 @@
 
 A site map for event build-up. Draw every area and line on your floor plan, say who installs it and in what order, and the board works out start dates, locks areas while each vendor works, flags clashes, and gives every vendor their own brief and link.
 
-It runs entirely on GitHub, with no server and nothing to pay. The plan is saved as a file in this repository (`data/plan.json`), and every save is a commit, so you get a full history of every change.
+It runs entirely on GitHub, with no server and nothing to pay. Each event is saved as a file in this repository (`data/plan.json` for the first event, `data/events/…` for the rest, listed in `data/events.json`). Every save is a commit, so you get a full history of every change.
 
 ## Files
 
@@ -12,7 +12,7 @@ It runs entirely on GitHub, with no server and nothing to pay. The plan is saved
 | `.nojekyll` | Tells GitHub Pages to publish the files as they are. Keep it. |
 | `README.md` | This guide. |
 
-`data/plan.json` and the `uploads/` folder are created automatically the first time you save or upload a floor plan.
+The `data/` and `uploads/` folders are created automatically the first time you create an event or upload a floor plan.
 
 ## Set it up (about 10 minutes, once)
 
@@ -44,6 +44,33 @@ This is your password for editing. It stays in your browser and is never saved i
 Open your board, click **Planner sign-in** and paste the token. That browser stays signed in. Do the same on any other computer or phone you plan from.
 
 When the token expires, make a new one and sign in again.
+
+## Events
+
+Use the **Event** dropdown at the top to switch between events. Each one has its own plan, floor plan, schedule and vendor links.
+
+**+ New event** (button, or at the bottom of the Event dropdown) asks how to start:
+- **Empty plan**: nothing on it.
+- **Same vendors and questions**: copies your vendors, saved questions, item types and lists. The map starts empty.
+- **Copy of this event**: everything, with dates moved to the new build-up day and every task set back to not started.
+
+**Event settings → Clear or delete:**
+- **Clear everything**: empties this plan completely (areas, lines, tasks, vendors, questions, lists, floor plan, scale). Keeps the event name and dates.
+- **Clear areas and tasks only**: keeps vendors, questions and the floor plan.
+- **Delete this event**: removes the event and its vendor links. Other events aren't touched.
+
+## Your own dropdown options
+
+Every dropdown that lists something you might need more of ends with **+ Add…** and **✎ Edit list…**:
+
+- **Item types** (the toolbar): add things like Tent, Toilets or Signage. Choose whether each is an area or a line and how it looks, then set its default work, days and restriction. Built-in types can be renamed or hidden.
+- **Restrictions** (“Once installed”): add your own, such as *No forklifts*, and choose whether a vehicle route crossing it should be flagged.
+- **Task statuses**: add statuses such as *Waiting for materials* or *Signed off*, and say what each counts as (not started / in progress / done). A status counted as done lets the next vendor start.
+- **Vendors**: add, rename and recolour.
+- **Your own option questions**: add options straight from the question while you answer it.
+- **Events**: new event, or edit this one.
+
+Adding from a dropdown opens a small window on top of what you're doing, so the form you were filling in stays as it was. **Lists** in the toolbar shows all of them in one place.
 
 ## Sharing with vendors
 
