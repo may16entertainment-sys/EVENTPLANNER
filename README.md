@@ -99,6 +99,13 @@ Every task, step and job has a **Start** and **Finish** date box (Area tab, and 
 - **When you draw something new**, you can type a start and finish right in the form.
 - **If you fix a start before the work it waits for is finished**, Clashes shows it, with one-click fixes: *Start on the first possible day*, or *Start automatically*.
 
+## Changing the order of work later
+Every task, job and step in the Area tab has an order box with two rows:
+- **Must finish first** (*Also waits for* on a step): what has to be done before this can start. **+ Add** / **Change** opens a list of all work, grouped by area, where you tick what it waits for.
+- **Comes after this**: the work that can only start once this is finished. Ticking something here makes it wait for this one.
+
+Dates update straight away. Work that would loop back on itself (a task waiting for something that already waits for it) isn't offered, and Undo works on order changes too.
+
 ## Select, edit and undo
 - **Select** (top of the toolbar, or press **V**): click anything to see its details, and drag to move around the map. Nothing can move by accident.
 - **Edit shapes** (press **E**): drag a shape to move it and drag corners to reshape it. Click **Done editing** to go back to Select.

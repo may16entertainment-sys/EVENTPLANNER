@@ -97,6 +97,12 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .mtog{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;white-space:nowrap}
 .pbar{height:8px;border-radius:99px;background:var(--line2);overflow:hidden;margin-bottom:4px}
 .pbar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.order{display:flex;flex-direction:column;gap:5px;border:1px solid var(--line2);border-radius:7px;padding:6px 8px;font-size:12.5px}
+.orow{display:grid;grid-template-columns:118px 1fr auto;gap:6px;align-items:start}
+.olbl{color:var(--muted);font-size:12px;padding-top:2px}
+.ochips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.dchip{display:inline-flex;align-items:center;gap:5px;background:var(--line2);border-radius:999px;padding:1px 8px;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:720px){.orow{grid-template-columns:1fr auto}.olbl{grid-column:1/-1}}
 .fillctl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);white-space:nowrap}
 .fillctl input{width:110px;accent-color:var(--accent)}
 .opctl{display:flex;align-items:center;gap:8px}
@@ -1491,10 +1497,22 @@ function panelSchedule(){
   h+=`<div class="sec"><h4>On site ${fmtDay(ui.day)}</h4>${today.length?today.map(i=>`<div class="row" style="font-size:13px"><span class="dot" style="background:${esc(vendorColor(T[i].vendorId))}"></span><b style="font-weight:500">${esc(vendorName(T[i].vendorId))}</b><span class="muted">${esc(taskLabel(i))} · ${esc(Z()[T[i].zoneId]?.label||'')}</span></div>`).join(''):'<div class="muted">Nobody scheduled.</div>'}</div>`;
   return h;
 }
+// the order of work: who must finish before this, and who comes after it — both editable at any time
 function depLine(id,ed){
-  const t=TK()[id];const own=(t.deps||[]).filter(d=>TK()[d]);
-  const txt=own.length?`<span class="muted">Starts after:</span> ${esc(own.map(d=>`${taskLabel(d)} (${isParent(d)?'all steps':vendorName(TK()[d].vendorId)})`).join(', '))}`:'<span class="muted">No other jobs to wait for</span>';
-  return `<div style="font-size:12.5px">${txt} ${ed?`<button class="btn small" data-deps="${id}" type="button">Edit</button>`:''}</div>`;
+  const T=TK(),t=T[id];
+  const chip=d=>`<span class="dchip" title="${esc(taskLabel(d))} · ${esc(isParent(d)?'all steps':vendorName(T[d].vendorId))}"><span class="dot" style="background:${esc(isParent(d)?'var(--muted)':vendorColor(T[d].vendorId))}"></span>${esc(taskLabel(d))}<span class="muted"> · ${esc(isParent(d)?'all steps':vendorName(T[d].vendorId))}</span></span>`;
+  const plain=x=>`<span class="dchip" title="${esc(x)}">${esc(x)}</span>`;
+  let before,after;
+  if(t.waitsOn){before=t.waitsOn.map(plain);after=(t.nextUp||[]).map(plain);}   // supplier copy
+  else{
+    before=(t.deps||[]).filter(d=>T[d]).map(chip);
+    after=Object.keys(T).filter(o=>o!==id&&(T[o].deps||[]).includes(id)).map(chip);
+  }
+  const step=t.parentId&&T[t.parentId];
+  return `<div class="order">
+    <div class="orow"><span class="olbl">${step?'Also waits for':'Must finish first'}</span><div class="ochips">${before.join('')||`<span class="muted">${step?'Only the step before it':'Nothing: starts on its own'}</span>`}</div>${ed?`<button class="btn small" data-deps="${id}" type="button">${before.length?'Change':'+ Add'}</button>`:''}</div>
+    <div class="orow"><span class="olbl">Comes after this</span><div class="ochips">${after.join('')||'<span class="muted">Nothing yet</span>'}</div>${ed?`<button class="btn small" data-nexts="${id}" type="button">${after.length?'Change':'+ Add'}</button>`:''}</div>
+  </div>`;
 }
 function startISO(id){return isoOf(Math.floor(SCH[id].s+1e-6));}
 function finishISO(id){const x=SCH[id];return isoOf(Math.max(Math.floor(x.s+1e-6),Math.ceil(x.e-1e-6)-1));}
@@ -1510,6 +1528,7 @@ function stepRow(id,i,n,ed){
     <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${pillText(id,st)}</span></div>
     <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
     ${dateRow(id,false,true)}
+    <div style="padding-left:22px">${depLine(id,ed)}</div>
     ${i>0?`<div class="row" style="padding-left:22px;font-size:12px"><label class="muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tf="withPrev" ${t.withPrev?'checked':''}> same time as step ${i}</label></div>`:''}
     <div class="row" style="padding-left:22px"><select class="sel" data-tf="status" data-list="status" aria-label="Status" style="font-size:12.5px">${statusOptions(t.status)}</select><button class="btn small ghost" data-sup="${id}" type="button" aria-label="Move step up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-sdn="${id}" type="button" aria-label="Move step down" ${i<n-1?'':'disabled'}>▼</button><button class="btn small ghost danger" data-sdel="${id}" type="button">Remove step</button></div>
   </div>`;
@@ -1687,6 +1706,7 @@ function wirePanel(p){
   p.querySelectorAll('[data-addpiece]').forEach(b=>b.onclick=()=>{const id=PZ,z=Z()[id];if(!z)return;ui.tool=z.type;ui.hover=null;ui.draft={type:z.type,geom:z.geom,pts:[],done:[],addTo:id};renderAll();});
   p.querySelectorAll('[data-rmpiece]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[PZ]);removePiece(z,+b.dataset.rmpiece);Store.put('zones',PZ,z);toast('Piece removed.');}));
   p.querySelectorAll('[data-deps]').forEach(b=>b.onclick=()=>openDeps(b.dataset.deps));
+  p.querySelectorAll('[data-nexts]').forEach(b=>b.onclick=()=>openNexts(b.dataset.nexts));
   p.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.tdel)));
   p.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.sdel)));
   p.querySelectorAll('[data-addstep]').forEach(b=>b.onclick=()=>addStep(b.dataset.addstep));
@@ -1715,8 +1735,27 @@ function openDeps(id){
   const desc=new Set([id,...(KIDS[id]||[])]);if(t.parentId)desc.add(t.parentId);
   let grew=true;while(grew){grew=false;Object.entries(TK()).forEach(([o,x])=>{if(!desc.has(o)&&((x.deps||[]).some(d=>desc.has(d))||desc.has(x.parentId))){desc.add(o);grew=true;}});}
   const here=new Set(Object.keys(Z()).filter(zid=>overlap(Z()[t.zoneId],Z()[zid])));
-  openModal(`<div class="mh"><h2>${esc(taskLabel(id))} starts after…</h2><p>Tick everything that must be finished first. Pick a whole job to wait for all of its steps.</p></div><div class="mb">${taskChecks('dep',new Set(t.deps||[]),desc,here)}</div><div class="mf"><span></span><div class="row"><button class="btn" id="dc" type="button">Cancel</button><button class="btn primary" id="ds" type="button">Save</button></div></div>`,()=>{
+  openModal(`<div class="mh"><h2>What must finish before ${esc(taskLabel(id))}?</h2><p>Tick everything that must be finished first. Picking a whole job waits for all of its steps.${t.parentId&&TK()[t.parentId]?' It already waits for the step before it.':''}</p></div><div class="mb">${taskChecks('dep',new Set(t.deps||[]),desc,here)}</div><div class="mf"><span></span><div class="row"><button class="btn" id="dc" type="button">Cancel</button><button class="btn primary" id="ds" type="button">Save</button></div></div>`,()=>{
     $('#dc').onclick=closeModal;$('#ds').onclick=()=>{const c=clone(t);c.deps=[...document.querySelectorAll('input[name=dep]:checked')].map(i=>i.value);Store.put('tasks',id,c);closeModal();};});
+}
+
+function openNexts(id){
+  const T=TK(),t=T[id];
+  // can't be followed by itself, its own job or steps, or anything it already waits for (directly or further back)
+  const up=new Set([id,...(KIDS[id]||[])]);if(t.parentId)up.add(t.parentId);
+  const stack=[id,...(KIDS[id]||[])];
+  while(stack.length){const x=stack.pop();(EDEPS[x]||[]).concat(T[x]?.deps||[]).forEach(d=>{if(T[d]&&!up.has(d)){up.add(d);stack.push(d);(KIDS[d]||[]).forEach(k=>{if(!up.has(k)){up.add(k);stack.push(k);}});}});const p=T[x]?.parentId;if(p&&T[p]&&!up.has(p)){up.add(p);stack.push(p);}}
+  // steps follow their job's order already; offer whole jobs and single tasks
+  const cur=new Set(Object.keys(T).filter(o=>(T[o].deps||[]).includes(id)));
+  const here=new Set(Object.keys(Z()).filter(zid=>overlap(Z()[t.zoneId],Z()[zid])));
+  openModal(`<div class="mh"><h2>What comes after ${esc(taskLabel(id))}?</h2><p>Tick the work that can only start once this is finished. Picking a whole job makes its first step wait.</p></div><div class="mb">${taskChecks('nxt',cur,up,here)}</div><div class="mf"><span></span><div class="row"><button class="btn" id="nc" type="button">Cancel</button><button class="btn primary" id="ns" type="button">Save</button></div></div>`,m=>{
+    m.querySelector('#nc').onclick=closeModal;
+    m.querySelector('#ns').onclick=()=>{const want=new Set([...m.querySelectorAll('input[name=nxt]:checked')].map(i=>i.value));
+      Object.keys(T).forEach(o=>{const has=(T[o].deps||[]).includes(id);
+        if(want.has(o)&&!has){const c=clone(T[o]);c.deps=[...(c.deps||[]),id];Store.put('tasks',o,c);}
+        else if(!want.has(o)&&has){const c=clone(T[o]);c.deps=c.deps.filter(d=>d!==id);Store.put('tasks',o,c);}});
+      closeModal();};
+  });
 }
 
 /* ============ settings, sign-in, backup ============ */
