@@ -44,6 +44,15 @@ header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .choice{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
 .choice:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .choice b{font-weight:600}
+.gate{position:fixed;inset:0;z-index:15;background:var(--bg);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.gate .gcard{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.gate h2{margin:0;font-family:var(--f-display);font-size:28px}
+.gate p{margin:0;color:var(--muted)}
+.gate .gbrand{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.gate .gform{display:flex;flex-direction:column;gap:8px}
+.gate .gerr{color:var(--bad)}
+body.gated .app{visibility:hidden}
+.access{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .danger-zone{border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line));border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn:hover{border-color:var(--muted)}
@@ -58,7 +67,38 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .pill.ok{color:var(--ok);border-color:currentColor}
 .main{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(320px,400px);gap:12px;min-height:0}
 .rail{display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;overflow-y:auto;width:180px}
-.rail h3{margin:6px 4px 2px;font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rail h3{margin:6px 4px 2px;font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.railadd{font-family:var(--f-body);font-size:11.5px;letter-spacing:0;text-transform:none;border:1px solid var(--line);background:var(--panel);color:var(--accent);border-radius:5px;padding:1px 7px;white-space:nowrap;flex:none}
+.railadd:hover{border-color:var(--accent)}
+.toolrow{display:flex;align-items:center;gap:2px}
+.toolrow .tool{flex:1;min-width:0}
+.tooledit{flex:none;border:none;background:none;color:var(--muted);border-radius:5px;width:26px;height:26px;display:grid;place-items:center;opacity:0}
+.toolrow:hover .tooledit,.tooledit:focus-visible{opacity:1}
+.tooledit:hover{background:var(--line2);color:var(--fg)}
+@media (hover:none){.tooledit{opacity:.7}}
+.tool small{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+.sheet.editing [data-zone]{cursor:move!important}
+.viewbar{position:absolute;top:8px;left:8px;right:56px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;pointer-events:none}
+.viewbar>*{pointer-events:auto}
+.viewbar .btn{background:color-mix(in srgb,var(--panel) 94%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.viewbar .pill.hid{font-size:10.5px;padding:0 6px;background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip{display:inline-flex;align-items:center;gap:2px;font-size:12px;background:color-mix(in srgb,var(--accent) 14%,var(--panel));border:1px solid var(--accent);border-radius:999px;padding:1px 2px 1px 10px}
+.showpanel{position:absolute;top:44px;left:8px;width:min(320px,calc(100% - 70px));max-height:calc(100% - 60px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:10px;z-index:5;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.showpanel .sp-h{display:flex;justify-content:space-between;align-items:center}
+.showpanel .sp-sec{display:flex;flex-direction:column;gap:3px}
+.showpanel .sp-t{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.showpanel label{display:flex;align-items:center;gap:7px}
+.shprev{border:1px solid var(--line);border-radius:8px;min-height:120px;display:grid;place-items:center;overflow:hidden;background:#fff}
+.shprev img{display:block;width:100%;height:auto}
+.daterow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px}
+.daterow label{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+.daterow input{padding:4px 6px;font-family:var(--f-mono);font-size:12.5px}
+.dstate{font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.mtog{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;white-space:nowrap}
+.fillctl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);white-space:nowrap}
+.fillctl input{width:110px;accent-color:var(--accent)}
+.opctl{display:flex;align-items:center;gap:8px}
+.opctl input{flex:1;accent-color:var(--accent)}
 .tool{display:flex;align-items:center;gap:8px;border:1px solid transparent;background:none;border-radius:6px;padding:5px 6px;text-align:left;font-size:13px}
 .tool:hover{background:var(--line2)}
 .tool[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
@@ -71,7 +111,7 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .mapbar .btn{padding:4px 8px;justify-content:center;min-width:32px}
 .hint{position:absolute;left:8px;bottom:8px;right:60px;font-size:12.5px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:6px;padding:5px 9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .hint kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
-.banner{position:absolute;top:8px;left:8px;right:56px;font-size:12.5px;background:var(--panel);border:1px solid var(--warn);border-radius:6px;padding:6px 10px}
+.banner{position:absolute;top:44px;left:8px;right:56px;font-size:12.5px;background:var(--panel);border:1px solid var(--warn);border-radius:6px;padding:6px 10px}
 .empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;pointer-events:none}
 .empty .box{pointer-events:auto;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;box-shadow:var(--shadow)}
 .empty h2{font-family:var(--f-display);margin:0 0 6px;font-size:24px}
@@ -153,7 +193,7 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
   html,body{height:auto}.app{height:auto}
   .main{grid-template-columns:minmax(0,1fr)}
   .rail{flex-direction:row;width:auto;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}
-  .rail h3{display:none}.tool{flex:none}
+  .rail h3{margin:0}.rail h3 .lbl{display:none}.tool,.toolrow{flex:none}
   .sheet{height:62svh;flex:none}
   .follow{grid-template-columns:1fr 1fr}
   .brand h1{font-size:22px}
@@ -166,13 +206,14 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
   <header class="top">
     <div class="brand"><small id="dates">Build-up board</small><h1 id="planName">Site board</h1></div>
     <div class="ctl">
+      <span class="evpick" id="undoBox" hidden><button class="btn" id="btnUndo" type="button" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button class="btn" id="btnRedo" type="button" title="Redo (Ctrl+Shift+Z)" disabled>↷ Redo</button></span>
       <span class="save" id="saveState"></span>
       <span class="evpick" id="evPick"><label class="muted" for="eventSel" style="font-size:12px">Event</label>
       <select id="eventSel" class="sel" style="max-width:220px" data-list="event"></select>
       <button class="btn" id="btnNewEvent" type="button" hidden>+ New event</button></span>
       <label class="muted" for="viewAs" style="font-size:12px">Viewing as</label>
       <select id="viewAs" class="sel" data-list="vendor"></select>
-      <button class="btn" id="btnLogin" type="button" hidden>Planner sign-in</button>
+      <span class="evpick" id="userBox" hidden><span class="save" id="userEmail"></span><button class="btn" id="btnSignOut" type="button">Sign out</button></span>
       <button class="btn" id="btnSettings" type="button">Event settings</button>
     </div>
   </header>
@@ -200,6 +241,8 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
           <button class="btn" id="zout" type="button" aria-label="Zoom out">−</button>
           <button class="btn" id="zfit" type="button" aria-label="Fit to sheet" style="font-size:11px">Fit</button>
         </div>
+        <div class="viewbar" id="viewbar" hidden></div>
+        <div class="showpanel" id="showPanel" hidden></div>
         <div class="banner" id="banner" hidden></div>
         <div class="hint" id="hint" hidden></div>
         <div class="empty" id="empty" hidden></div>
@@ -214,6 +257,7 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
           <span><i class="sw" style="background:var(--muted);opacity:.5"></i>Installed</span>
           <span><i class="sw" style="background:radial-gradient(var(--ok) 30%,transparent 35%) 0 0/5px 5px"></i>Drop-off open</span>
           <span><i class="sw" style="border:2px solid var(--bad)"></i>Restriction in force</span>
+          <label class="fillctl" for="fillAll">Area fill <input type="range" id="fillAll" min="0" max="1" step="0.05" value="1" aria-label="Fill strength of all areas"> <span class="mono" id="fillAllV">100%</span></label>
         </div>
       </div>
     </div>
@@ -223,29 +267,32 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
     </section>
   </div>
 </div>
+<div id="gate" class="gate" hidden></div>
 <div id="modalRoot"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
 "use strict";
 /* ============ CONFIG ============ */
 const CONFIG={
-  // Your GitHub repository. Leave owner and repo empty when the board runs on <you>.github.io/<repo>/ — they are read from the address.
-  // Fill them in if you use your own domain, e.g. owner:'my-company', repo:'site-board'.
-  owner:'',
-  repo:'',
-  branch:'main',              // the branch GitHub Pages publishes from
-  planPath:'data/plan.json',  // where the first event is saved in the repository
-  eventsDir:'data/events',    // where every other event is saved
-  indexPath:'data/events.json', // the list of events
-  pollSeconds:60,             // how often vendor pages check for updates
-  saveDelaySeconds:3,         // wait this long after your last change before saving (each save is one commit)
-  maxImageMB:20,              // largest floor plan image
+  // 1. Paste your Firebase web app settings here (Firebase console → Project settings → Your apps → Web app → Config).
+  //    These values identify your project; they are not secret. Leave empty to use the board in this browser only.
+  firebase:{
+    apiKey:'',
+    authDomain:'',
+    projectId:'',
+    appId:''
+  },
+  // 2. Your email address. Planners see and edit everything; everyone else only sees what you assign them.
+  //    More planners can be added later under Event settings → Planners.
+  adminEmails:['you@example.com'],
+  saveDelaySeconds:2,         // wait this long after your last change before saving
   snapPixels:11,              // how close (on screen) the cursor must be to snap to a corner or edge
-  snapDegrees:6,              // how close a line must be to straight / 45° / square to snap
-  apiBase:'https://api.github.com',
-  rawBase:'https://raw.githubusercontent.com'
+  snapDegrees:6               // how close a line must be to straight / 45° / square to snap
 };
 if(window.SITEBOARD_CONFIG)Object.assign(CONFIG,window.SITEBOARD_CONFIG);
 
@@ -288,7 +335,7 @@ const uid=()=>Math.random().toString(36).slice(2,10);
 const clone=o=>JSON.parse(JSON.stringify(o));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const r1=v=>Math.round(v*10)/10;
-function toast(msg){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function toast(msg){document.querySelectorAll('.toast').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
 const ls={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function baseDate(){const s=S().setupStart;const d=s?new Date(s+'T00:00:00'):new Date();d.setHours(0,0,0,0);return d;}
@@ -356,7 +403,7 @@ function normalize(d){
   d.settings=d.settings||{};
   Object.values(d.zones).forEach(z=>{
     if(z.geom==='rect'){z.pts=[{x:z.x,y:z.y},{x:z.x+z.w,y:z.y},{x:z.x+z.w,y:z.y+z.h},{x:z.x,y:z.y+z.h}];z.geom='poly';delete z.x;delete z.y;delete z.w;delete z.h;}
-    z.pts=Array.isArray(z.pts)?z.pts:[];z.parallel=z.parallel||[];z.answers=z.answers||{};
+    z.pts=Array.isArray(z.pts)?z.pts:[];z.parts=Array.isArray(z.parts)?z.parts.filter(a=>Array.isArray(a)&&a.length>=2):[];z.parallel=z.parallel||[];z.answers=z.answers||{};
   });
   Object.values(d.tasks).forEach(t=>{t.deps=Array.isArray(t.deps)?t.deps:[];});
   d.lists=d.lists&&typeof d.lists==='object'?d.lists:{};
@@ -367,198 +414,246 @@ function normalize(d){
   return d;
 }
 
-/* ============ storage: your GitHub repository, or this browser ============
-   The plan lives in data/plan.json inside the repository.
-   Everyone reads it through GitHub's public API (no sign-in needed).
-   The planner saves with a personal access token kept only in their own browser. */
-function b64enc(str){const bytes=new TextEncoder().encode(str);let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin);}
-function b64dec(b64){const bin=atob(String(b64).replace(/\s/g,''));const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder().decode(bytes);}
-function repoInfo(){
-  let owner=CONFIG.owner,repo=CONFIG.repo;
-  if((!owner||!repo)&&/\.github\.io$/i.test(location.hostname)){
-    owner=owner||location.hostname.split('.')[0];
-    const seg=location.pathname.split('/').filter(Boolean)[0];
-    repo=repo||(seg&&!/\.html?$/i.test(seg)?seg:location.hostname.toLowerCase());
-  }
-  return owner&&repo?{owner,repo}:null;
-}
-const GH={
-  url(path){const r=repoInfo();return `${CONFIG.apiBase}/repos/${r.owner}/${r.repo}${path||''}`;},
-  headers(token,accept){const h={Accept:accept||'application/vnd.github+json'};if(token)h.Authorization='Bearer '+token;return h;},
-  err(r,j){const e=new Error((j&&j.message)||('GitHub error '+r.status));e.status=r.status;e.limited=r.status===403&&r.headers.get('x-ratelimit-remaining')==='0'||r.status===429;return e;},
-  // returns {sha, json}; throws with e.missing when the file doesn't exist
-  async readJson(token,path){
-    const u=this.url('/contents/'+path)+'?ref='+encodeURIComponent(CONFIG.branch);
-    const r=await fetch(u,{headers:this.headers(token),cache:'no-cache'});
-    if(r.status===404){const e=this.err(r,await r.json().catch(()=>null));e.missing=true;throw e;}
-    if(!r.ok)throw this.err(r,await r.json().catch(()=>null));
-    const j=await r.json();let text;
-    if(j.encoding==='base64'&&j.content)text=b64dec(j.content);
-    else{const r2=await fetch(u,{headers:this.headers(token,'application/vnd.github.raw+json'),cache:'no-cache'});if(!r2.ok)throw this.err(r2,null);text=await r2.text();}
-    let json=null;try{json=JSON.parse(text);}catch(e){}
-    return {sha:j.sha,json};
-  },
-  async repoExists(token){const r=await fetch(this.url(''),{headers:this.headers(token),cache:'no-cache'});if(r.ok)return await r.json();if(r.status===404)return null;throw this.err(r,await r.json().catch(()=>null));},
-  async put(token,path,b64,sha,message){
-    const r=await fetch(this.url('/contents/'+path),{method:'PUT',headers:{...this.headers(token),'Content-Type':'application/json'},body:JSON.stringify({message,content:b64,branch:CONFIG.branch,...(sha?{sha}:{})})});
-    const j=await r.json().catch(()=>null);
-    if(!r.ok){const e=this.err(r,j);e.conflict=r.status===409||(r.status===422&&/sha/i.test(e.message));throw e;}
-    return j.content.sha;
-  },
-  async remove(token,path,sha,message){
-    const r=await fetch(this.url('/contents/'+path),{method:'DELETE',headers:{...this.headers(token),'Content-Type':'application/json'},body:JSON.stringify({message,sha,branch:CONFIG.branch})});
-    if(!r.ok&&r.status!==404){const e=this.err(r,await r.json().catch(()=>null));e.conflict=r.status===409||r.status===422;throw e;}
-  },
-  // fallback for viewers when GitHub's hourly limit for signed-out visitors is used up: the copy GitHub Pages serves
-  async readPages(path){const r=await fetch(path+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Pages '+r.status);return {sha:null,json:await r.json()};}
-};
-/* Each event is its own file. The very first event ("plan") keeps the original data/plan.json path,
-   so a board set up before multiple events existed keeps working. */
-function evPath(id){return id==='plan'?CONFIG.planPath:`${CONFIG.eventsDir}/${id}.json`;}
-function localKey(id){return id==='plan'?'siteboard.v2':'siteboard.v2.'+id;}
-function evEntry(id,d){const s=(d&&d.settings)||{};return {id,name:s.name||'Untitled event',setupStart:s.setupStart||'',eventDate:s.eventDate||''};}
+/* ============ storage: Firebase (sign-in + database), or this browser ============
+   Planners (emails in CONFIG.adminEmails, plus any added under Event settings → Planners) read and edit whole events.
+   Each supplier gets their own published copy of just their part (events/<event>/views/<vendor>),
+   which Firebase only lets that supplier's email open. See firestore.rules. */
+const Cloud={auth:null,db:null};
+function cloudConfigured(){const f=CONFIG.firebase||{};return !!(f.apiKey&&f.projectId&&window.firebase);}
+const FV=()=>firebase.firestore.FieldValue;
 function slugify(s){return (String(s||'event').toLowerCase().normalize('NFKD').replace(/[^\w]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'event');}
 function shiftISO(iso,days){if(!iso)return iso;const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;d.setDate(d.getDate()+days);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function setUrlEvent(id){try{const u=new URL(location.href);if(id)u.searchParams.set('event',id);else u.searchParams.delete('event');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}}
-
-const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token:'',dirty:false,saving:false,again:false,lockedVendor:null,lastSaved:null,problem:'',events:[],eventId:null,
-  async init(){
-    const qs=new URLSearchParams(location.search);this.lockedVendor=qs.get('vendor');
-    const wanted=qs.get('event');
-    this.token=this.lockedVendor?'':(ls.get('siteboard.ghtoken')||'');
-    const info=location.protocol==='file:'?null:repoInfo();
-    if(info){
-      this.mode='github';
-      try{await this.loadIndex();}catch(e){this.problem='Could not load the event list from GitHub ('+e.message+').';}
-      const id=this.pickEvent(wanted);
-      if(id){this.eventId=id;await this.loadSafe();}
-      if(!this.problem&&!this.events.length){try{const repo=await GH.repoExists(this.token);if(!repo)this.problem=`Can’t find the repository ${info.owner}/${info.repo}. Check owner and repo at the top of index.html.`;}catch(e){}}
-      if(this.token)this.canEdit=await this.check(this.token,true);
-      const every=(this.canEdit?Math.min(20,CONFIG.pollSeconds):CONFIG.pollSeconds)*1000;
-      setInterval(()=>this.poll(),every);
-      document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.poll();else if(this.dirty)this.flush();});
-    }else{
-      this.mode='local';
-      let evs=null;try{evs=JSON.parse(ls.get('siteboard.events')||'null');}catch(e){}
-      if(!Array.isArray(evs)||!evs.length){
-        let saved=null;try{saved=JSON.parse(ls.get('siteboard.v2')||'null');}catch(e){}
-        const d=normalize(saved&&saved.zones?saved:makeSample());ls.set('siteboard.v2',JSON.stringify(d));
-        evs=[evEntry('plan',d)];ls.set('siteboard.events',JSON.stringify(evs));
-      }
-      this.events=evs;this.eventId=this.pickEvent(wanted);this.loadLocal();
-      this.canEdit=!this.lockedVendor;
+function siteUrl(){return location.origin+location.pathname;}
+function localKey(id){return id==='plan'?'siteboard.v2':'siteboard.v2.'+id;}
+function evEntry(id,d){const s=(d&&d.settings)||{};return {id,name:s.name||'Untitled event',setupStart:s.setupStart||'',eventDate:s.eventDate||''};}
+function hashStr(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36)+':'+str.length;}
+function authMessage(e){
+  const c=e&&e.code||'';
+  return ({
+    'auth/invalid-email':'That email address doesn’t look right.',
+    'auth/missing-email':'Enter your email address.',
+    'auth/invalid-action-code':'This sign-in link has expired or was already used. Ask for a new one.',
+    'auth/expired-action-code':'This sign-in link has expired. Ask for a new one.',
+    'auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.',
+    'auth/quota-exceeded':'The daily limit for sign-in emails was reached. The planner needs to switch Firebase to the Blaze plan.',
+    'auth/unauthorized-continue-uri':'This website isn’t on Firebase’s list of allowed domains yet. Add it under Authentication → Settings → Authorized domains.',
+    'auth/unauthorized-domain':'This website isn’t on Firebase’s list of allowed domains yet. Add it under Authentication → Settings → Authorized domains.',
+    'auth/operation-not-allowed':'Email-link sign-in is turned off. Turn it on under Authentication → Sign-in method → Email/Password.',
+    'auth/network-request-failed':'No connection. Check your internet and try again.'
+  })[c]||((e&&e.message)||'Something went wrong.');
+}
+// shrink a floor plan so it fits in one database document (under 1 MB)
+async function compressImage(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('That file isn’t an image this browser can read. Use PNG or JPG.'));im.src=url;});
+    const W0=img.naturalWidth,H0=img.naturalHeight;let scale=Math.min(1,3200/Math.max(W0,H0)),q=0.85,out='';
+    for(let i=0;i<10;i++){
+      const c=document.createElement('canvas');c.width=Math.round(W0*scale);c.height=Math.round(H0*scale);
+      const g=c.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+      out=c.toDataURL('image/jpeg',q);if(out.length<=950000)break;
+      if(q>0.6)q-=0.1;else scale*=0.8;
     }
-    if(this.eventId)setUrlEvent(this.eventId);
+    if(out.length>950000)throw new Error('the floor plan is too detailed to store. Export it smaller.');
+    return {data:out,w:W0,h:H0};
+  }finally{URL.revokeObjectURL(url);}
+}
+
+const Store={mode:'loading',role:null,email:'',d:emptyPlan(),version:0,canEdit:false,dirty:false,saving:false,again:false,lockedVendor:null,lastSaved:null,problem:'',
+  events:[],eventId:null,views:{},accessSig:{},bgCache:{},unsub:null,previewing:null,previewBackup:null,signin:{},
+  async init(){
+    const qs=new URLSearchParams(location.search);const wanted=qs.get('event');
+    if(!cloudConfigured()||location.protocol==='file:'){this.initLocal(wanted);setSave();return;}
+    this.mode='cloud';
+    try{firebase.initializeApp(CONFIG.firebase);}catch(e){}
+    Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
+    // returning from a sign-in email
+    if(Cloud.auth.isSignInWithEmailLink(location.href)){
+      const email=ls.get('siteboard.signinEmail');
+      if(email){try{await Cloud.auth.signInWithEmailLink(email,location.href);ls.del('siteboard.signinEmail');}catch(e){this.signin.error=authMessage(e);}this.cleanLink();}
+      else this.signin.pendingLink=location.href; // opened on another device: ask them to confirm their email
+    }
+    await new Promise(res=>{const un=Cloud.auth.onAuthStateChanged(()=>{un();res();});});
+    await this.afterAuth(wanted);
+    // signing in or out in another tab reloads this one
+    Cloud.auth.onAuthStateChanged(u=>{if((u?.email||'').toLowerCase()!==this.email)location.reload();});
     setSave();
+  },
+  cleanLink(){try{const u=new URL(location.href);['apiKey','oobCode','mode','lang','continueUrl','tenantId'].forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}},
+  initLocal(wanted){
+    this.mode='local';this.role='planner';
+    let evs=null;try{evs=JSON.parse(ls.get('siteboard.events')||'null');}catch(e){}
+    if(!Array.isArray(evs)||!evs.length){
+      let saved=null;try{saved=JSON.parse(ls.get('siteboard.v2')||'null');}catch(e){}
+      const d=normalize(saved&&saved.zones?saved:makeSample());ls.set('siteboard.v2',JSON.stringify(d));
+      evs=[evEntry('plan',d)];ls.set('siteboard.events',JSON.stringify(evs));
+    }
+    this.events=evs;this.eventId=this.pickEvent(wanted);this.loadLocal();this.canEdit=true;
+    if(this.eventId)setUrlEvent(this.eventId);
   },
   pickEvent(wanted){
     const has=id=>id&&this.events.some(e=>e.id===id);
     if(has(wanted))return wanted;
-    if(wanted&&this.mode==='github')return wanted; // a link to an event not in the list yet: try it anyway
     const last=ls.get('siteboard.lastEvent');if(has(last))return last;
     return this.events[0]?.id||null;
   },
-  async loadIndex(){
-    try{const r=await GH.readJson(this.token,CONFIG.indexPath);this.events=Array.isArray(r.json)?r.json:[];}
-    catch(e){
-      if(e.missing){
-        // no event list yet: use the single original plan file if there is one
-        try{const p=await GH.readJson(this.token,CONFIG.planPath);this.events=[evEntry('plan',p.json&&p.json.data)];}
-        catch(e2){if(e2.missing)this.events=[];else throw e2;}
-      }else if(e.limited){try{const p=await GH.readPages(CONFIG.indexPath);this.events=Array.isArray(p.json)?p.json:[];}catch(e3){this.events=[];}}
-      else throw e;
+  async afterAuth(wanted){
+    const u=Cloud.auth.currentUser;this.email=(u?.email||'').toLowerCase();
+    if(!u){this.role='none';return;}
+    if(await this.isPlanner()){
+      this.role='planner';this.canEdit=true;
+      try{await this.loadEvents();}catch(e){this.problem='Could not load events: '+authMessage(e);}
+      const id=this.pickEvent(wanted);if(id)await this.openEvent(id);
+    }else{
+      this.role='vendor';this.canEdit=false;
+      let items=[];
+      try{const s=await Cloud.db.collection('access').doc(this.email).get();items=s.exists?Object.values(s.data().items||{}):[];}catch(e){}
+      this.events=items.map(it=>({id:it.eventId+'__'+it.vendorId,eventId:it.eventId,vendorId:it.vendorId,name:it.eventName||'Event',vendorName:it.vendorName||'',setupStart:it.setupStart||'',eventDate:it.eventDate||''}));
+      if(!this.events.length){this.role='denied';return;}
+      const id=this.pickEvent(wanted&&this.events.find(e=>e.eventId===wanted)?.id||wanted);
+      await this.openView(id);
     }
   },
-  // read-modify-write of the event list, retrying if someone else changed it meanwhile
-  async saveIndex(mutate,message){
-    if(this.mode==='local'){this.events=mutate(clone(this.events));ls.set('siteboard.events',JSON.stringify(this.events));return;}
-    for(let i=0;i<3;i++){
-      let cur,sha=null;
-      try{const r=await GH.readJson(this.token,CONFIG.indexPath);cur=Array.isArray(r.json)?r.json:[];sha=r.sha;}
-      catch(e){if(!e.missing)throw e;cur=clone(this.events);}
-      const next=mutate(cur);
-      try{await GH.put(this.token,CONFIG.indexPath,b64enc(JSON.stringify(next,null,1)),sha,message||'Update event list');this.events=next;return;}
-      catch(e){if(!e.conflict||i===2)throw e;await sleep(400);}
-    }
+  async isPlanner(){
+    if((CONFIG.adminEmails||[]).map(x=>String(x).trim().toLowerCase()).includes(this.email))return true;
+    try{const s=await Cloud.db.collection('meta').doc('admins').get();return s.exists&&(s.data().emails||[]).map(x=>String(x).toLowerCase()).includes(this.email);}catch(e){return false;}
   },
-  apply(res){this.sha=res.sha;const w=res.json;this.version=w&&w.version||0;this.d=normalize(w&&w.data?w.data:emptyPlan());},
-  async load(){const res=await GH.readJson(this.token,evPath(this.eventId));this.apply(res);},
-  async loadSafe(){
-    try{await this.load();this.problem='';}
-    catch(e){
-      if(e.missing){this.d=emptyPlan();this.sha=null;this.version=0;if(!this.events.some(x=>x.id===this.eventId))this.problem='That event was not found. It may have been deleted.';}
-      else if(e.limited){try{this.apply(await GH.readPages(evPath(this.eventId)));}catch(e2){this.problem='GitHub is busy. The plan will load in a minute.';}}
-      else this.problem='Could not load the plan from GitHub ('+e.message+').';
-    }
+  async sendLink(email,forSupplier){
+    email=String(email||'').trim().toLowerCase();
+    await Cloud.auth.sendSignInLinkToEmail(email,{url:siteUrl(),handleCodeInApp:true});
+    if(!forSupplier)ls.set('siteboard.signinEmail',email);
   },
-  loadLocal(){let saved=null;try{saved=JSON.parse(ls.get(localKey(this.eventId))||'null');}catch(e){}this.d=normalize(saved&&saved.settings?saved:emptyPlan());},
-  // checks the token can write to this repository
-  async check(token,quiet){
-    try{const repo=await GH.repoExists(token);
-      if(!repo){if(!quiet)toast('That token can’t see this repository. Give it access to this repository only.');return false;}
-      if(!repo.permissions||!repo.permissions.push){if(!quiet)toast('That token can read but not write. Set “Contents” to “Read and write”.');return false;}
-      return true;
-    }catch(e){if(!quiet)toast(e.status===401?'GitHub didn’t accept that token. Check it was copied in full and hasn’t expired.':'Could not reach GitHub: '+e.message);return false;}
+  async finishLink(email){
+    await Cloud.auth.signInWithEmailLink(String(email||'').trim().toLowerCase(),this.signin.pendingLink);
+    this.cleanLink();location.reload();
   },
+  async signOut(){await this.idle();await this.flush();await this.idle();ls.del('siteboard.lastEvent');await Cloud.auth.signOut();location.href=siteUrl();},
+  async loadEvents(){
+    const q=await Cloud.db.collection('events').get();
+    this.events=q.docs.map(d=>{const x=d.data();return {id:d.id,name:x.name||'Untitled event',setupStart:x.setupStart||'',eventDate:x.eventDate||''};});
+  },
+  applyDoc(x){this.version=x.version||0;let data=null;try{data=JSON.parse(x.json||'null');}catch(e){}this.d=normalize(data||emptyPlan());History.reset();},
+  async openEvent(id){
+    if(this.unsub){this.unsub();this.unsub=null;}
+    this.eventId=id;ls.set('siteboard.lastEvent',id);setUrlEvent(id);this.problem='';
+    const ref=Cloud.db.collection('events').doc(id);
+    try{
+      const snap=await ref.get();
+      if(snap.exists)this.applyDoc(snap.data());else{this.d=emptyPlan();this.version=0;History.reset();this.problem='That event was not found. It may have been deleted.';}
+      const vs=await ref.collection('views').get();this.views={};this.accessSig={};
+      vs.docs.forEach(v=>{const x=v.data();this.views[v.id]={email:x.email,hash:x.hash};});
+    }catch(e){this.problem='Could not open the event: '+authMessage(e);}
+    this.loadFloorplan();
+    // another planner's saves stream in live
+    this.unsub=ref.onSnapshot(s=>{if(!s.exists||s.metadata.hasPendingWrites||this.eventId!==id)return;const x=s.data();
+      if((x.version||0)>this.version&&!this.dirty&&!this.saving){if(this.previewing)this.exitPreview(true);this.applyDoc(x);this.loadFloorplan();changed();}},()=>{});
+  },
+  async openView(id){
+    if(this.unsub){this.unsub();this.unsub=null;}
+    const ev=this.events.find(e=>e.id===id)||this.events[0];if(!ev)return;
+    this.eventId=ev.id;this.lockedVendor=ev.vendorId;ui.viewAs=ev.vendorId;ls.set('siteboard.lastEvent',ev.id);setUrlEvent(ev.eventId);
+    const ref=Cloud.db.collection('events').doc(ev.eventId).collection('views').doc(ev.vendorId);
+    await new Promise(res=>{let first=true;
+      this.unsub=ref.onSnapshot(s=>{
+        if(s.exists){let data=null;try{data=JSON.parse(s.data().json||'null');}catch(e){}this.d=normalize(data||emptyPlan());this.problem='';}
+        else{this.d=emptyPlan();this.problem='The planner has removed your access to this event.';}
+        this.loadFloorplan();dataStamp++;if(!first)changed();if(first){first=false;res();}
+      },e=>{this.problem='Could not open your plan: '+authMessage(e);if(first){first=false;res();}});
+    });
+  },
+  async loadFloorplan(){
+    const u=S().bgUrl;if(!u||!u.startsWith('fs:')||this.bgCache[u]||this.mode!=='cloud')return;
+    try{const s=await Cloud.db.collection('floorplans').doc(u.slice(3)).get();if(s.exists){this.bgCache[u]=s.data().data;changed();}}catch(e){}
+  },
+  loadLocal(){let saved=null;try{saved=JSON.parse(ls.get(localKey(this.eventId))||'null');}catch(e){}this.d=normalize(saved&&saved.settings?saved:emptyPlan());History.reset();},
   touch(){changed();
-    if(!this.eventId)return;
+    if(!this.eventId||this.previewing)return;
+    History.record();
     if(this.mode==='local'){if(!ls.set(localKey(this.eventId),JSON.stringify(this.d)))toast('This browser is out of space. Use a smaller floor plan image or download a backup.');this.lastSaved=new Date();this.syncEntry();setSave();return;}
-    if(!this.canEdit)return;
-    // every save is a commit, so wait for a short pause in editing
+    if(this.role!=='planner')return;
     this.dirty=true;setSave();clearTimeout(this.tm);this.tm=setTimeout(()=>this.flush(),CONFIG.saveDelaySeconds*1000);},
   put(col,id,obj){this.d[col]={...this.d[col],[id]:obj};this.touch();},
   del(col,id){const c={...this.d[col]};delete c[id];this.d[col]=c;this.touch();},
   setSettings(patch){this.d.settings={...this.d.settings,...patch};this.touch();},
   replaceAll(d){this.d=normalize(d);this.touch();},
-  // keep the event list's name and dates in step with the plan's settings
   syncEntry(){
-    const e=evEntry(this.eventId,this.d);const cur=this.events.find(x=>x.id===this.eventId);
-    if(cur&&cur.name===e.name&&cur.setupStart===e.setupStart&&cur.eventDate===e.eventDate)return;
-    const mut=list=>{const i=list.findIndex(x=>x.id===e.id);if(i>=0)list[i]=e;else list.push(e);return list;};
-    if(this.mode==='local'){this.saveIndex(mut);renderHeader();return;}
-    this.events=mut(clone(this.events));renderHeader();
-    this.saveIndex(mut,`Update event list: ${e.name}`).catch(()=>{});
+    const e=evEntry(this.eventId,this.d);const i=this.events.findIndex(x=>x.id===this.eventId);
+    if(i>=0&&this.events[i].name===e.name&&this.events[i].setupStart===e.setupStart&&this.events[i].eventDate===e.eventDate)return;
+    if(i>=0)this.events[i]=e;else this.events.push(e);
+    if(this.mode==='local')ls.set('siteboard.events',JSON.stringify(this.events));
+    renderHeader();
   },
   async idle(){while(this.saving)await sleep(150);},
   async flush(){
     clearTimeout(this.tm);
-    if(this.mode!=='github'||!this.canEdit||!this.dirty||!this.eventId)return;
+    if(this.mode!=='cloud'||this.role!=='planner'||!this.dirty||!this.eventId||this.previewing)return;
     if(this.saving){this.again=true;return;}
     this.saving=true;this.dirty=false;setSave();
-    const id=this.eventId;
-    const wrap={version:this.version+1,savedAt:new Date().toISOString(),data:this.d};
+    const id=this.eventId,ref=Cloud.db.collection('events').doc(id);const s=S();
+    const body={name:s.name||'Untitled event',setupStart:s.setupStart||'',eventDate:s.eventDate||'',json:JSON.stringify(this.d),updatedAt:FV().serverTimestamp(),updatedBy:this.email};
     try{
-      const sha=await GH.put(this.token,evPath(id),b64enc(JSON.stringify(wrap)),this.sha,`Update site plan: ${S().name||'event'}`);
-      if(this.eventId===id){this.sha=sha;this.version=wrap.version;this.lastSaved=new Date();this.syncEntry();}
+      const base=this.version;
+      const v=await Cloud.db.runTransaction(async tx=>{
+        const snap=await tx.get(ref);const cur=snap.exists?(snap.data().version||0):0;
+        if(cur!==base){const e=new Error('conflict');e.conflict=true;e.remote=snap.data();throw e;}
+        tx.set(ref,{...body,version:cur+1});return cur+1;});
+      if(this.eventId===id){this.version=v;this.lastSaved=new Date();this.syncEntry();await this.publishViews(id);}
     }catch(e){
-      if(e.conflict){
-        try{await this.load();}catch(e2){}
-        toast('The plan was changed from another device. Loaded the latest version; redo your last change.');changed();
-      }else if(e.status===401||e.status===403&&!e.limited){this.canEdit=false;this.dirty=true;toast('GitHub refused the save: your token has expired or lost access. Sign in again; your changes are still on screen.');changed();}
-      else{this.dirty=true;toast('Could not save to GitHub ('+(e.message||'connection lost')+'). Retrying…');setTimeout(()=>this.flush(),8000);}
+      if(e.conflict){if(e.remote&&this.eventId===id)this.applyDoc(e.remote);toast('The plan was changed from another device. Loaded the latest version; redo your last change.');changed();}
+      else if(e.code==='permission-denied'){this.dirty=true;toast('Firebase refused the save: this email is not a planner. Check the planner list and firestore.rules.');}
+      else{this.dirty=true;toast('Could not save ('+authMessage(e)+'). Retrying…');setTimeout(()=>this.flush(),8000);}
     }finally{this.saving=false;setSave();if(this.again){this.again=false;if(this.dirty)this.flush();}}
   },
-  pollCount:0,
-  async poll(){
-    if(this.mode!=='github'||document.hidden||this.dirty||this.saving||ui.ptr||$('#modalRoot').firstChild)return;
-    this.pollCount++;
-    if(this.pollCount%3===0||!this.eventId){try{const before=JSON.stringify(this.events);await this.loadIndex();if(JSON.stringify(this.events)!==before){if(!this.eventId&&this.events.length){this.eventId=this.pickEvent(null);await this.loadSafe();dataStamp++;}renderAll();}}catch(e){}}
-    if(!this.eventId)return;
-    const id=this.eventId;
-    try{const res=await GH.readJson(this.token,evPath(id));if(id===this.eventId&&res.sha!==this.sha&&!this.dirty&&!this.saving){this.apply(res);this.problem='';changed();}}
-    catch(e){if(e.limited&&!this.canEdit){try{const p=await GH.readPages(evPath(id));if(p.json&&p.json.version>this.version){this.apply(p);changed();}}catch(e2){}}}
+  // publish each registered supplier's own part, and keep the list of who can open what up to date
+  async publishViews(eid){
+    if(this.eventId!==eid)return;
+    ensureSchedule();
+    const db=Cloud.db,evRef=db.collection('events').doc(eid),s=S(),evName=s.name||'Untitled event';
+    const want={};
+    Object.entries(V()).forEach(([vid,v])=>{const em=String(v.email||'').trim().toLowerCase();if(!em||v.portal===false||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return;
+      const view=buildVendorView(vid);const json=JSON.stringify(view);want[vid]={email:em,json,hash:hashStr(json+'|'+em)};});
+    const batch=db.batch();let n=0;
+    for(const [vid,w] of Object.entries(want)){const old=this.views[vid];if(old&&old.hash===w.hash&&old.email===w.email)continue;
+      batch.set(evRef.collection('views').doc(vid),{email:w.email,vendorId:vid,vendorName:V()[vid].name||'',eventName:evName,json:w.json,hash:w.hash,updatedAt:FV().serverTimestamp()});n++;}
+    for(const vid of Object.keys(this.views))if(!want[vid]){batch.delete(evRef.collection('views').doc(vid));n++;}
+    const nowBy={},oldBy={};
+    Object.entries(want).forEach(([vid,w])=>(nowBy[w.email]=nowBy[w.email]||[]).push(vid));
+    Object.entries(this.views).forEach(([vid,w])=>(oldBy[w.email]=oldBy[w.email]||[]).push(vid));
+    const sigs={};
+    for(const em of new Set([...Object.keys(nowBy),...Object.keys(oldBy)])){
+      const nowV=nowBy[em]||[],oldV=oldBy[em]||[];const items={};
+      nowV.forEach(vid=>{items[eid+'__'+vid]={eventId:eid,vendorId:vid,eventName:evName,vendorName:V()[vid].name||'',setupStart:s.setupStart||'',eventDate:s.eventDate||''};});
+      const sig=JSON.stringify(items);sigs[em]=sig;
+      const removed=oldV.filter(v=>!nowV.includes(v));
+      if(this.accessSig[em]===sig&&!removed.length)continue;
+      removed.forEach(vid=>{items[eid+'__'+vid]=FV().delete();});
+      batch.set(db.collection('access').doc(em),{email:em,items,eventIds:nowV.length?FV().arrayUnion(eid):FV().arrayRemove(eid)},{merge:true});n++;
+    }
+    if(!n)return;
+    try{await batch.commit();this.views=Object.fromEntries(Object.entries(want).map(([vid,w])=>[vid,{email:w.email,hash:w.hash}]));this.accessSig=sigs;renderVendorsIfOpen();}
+    catch(e){toast('Saved, but supplier views could not be updated: '+authMessage(e));}
+  },
+  // views of one event that are no longer wanted (event deleted)
+  async unpublishAll(eid){
+    const db=Cloud.db,evRef=db.collection('events').doc(eid);const vs=await evRef.collection('views').get();if(vs.empty)return;
+    const batch=db.batch();
+    vs.docs.forEach(v=>{const em=v.data().email;batch.delete(v.ref);if(em)batch.set(db.collection('access').doc(em),{items:{[eid+'__'+v.id]:FV().delete()},eventIds:FV().arrayRemove(eid)},{merge:true});});
+    await batch.commit();
   },
   async switchEvent(id){
     if(id===this.eventId)return;
+    if(this.previewing)this.exitPreview(true);
     await this.idle();await this.flush();await this.idle();
-    this.eventId=id;ls.set('siteboard.lastEvent',id);setUrlEvent(id);
     ui.sel=null;ui.selTask=null;ui.draft=null;ui.day=0;ui.tool='select';
-    if(this.mode==='github'){this.sha=null;this.version=0;await this.loadSafe();}else this.loadLocal();
+    if(this.mode==='cloud'){if(this.role==='vendor')await this.openView(id);else await this.openEvent(id);}
+    else{this.eventId=id;ls.set('siteboard.lastEvent',id);setUrlEvent(id);this.loadLocal();}
     this.lastSaved=null;dataStamp++;renderAll();fit();
   },
-  // from: 'blank' | 'team' (vendors + questions) | 'copy' (whole plan, dates shifted)
+  // from: 'blank' | 'team' (vendors, questions, item types, lists) | 'copy' (whole plan, dates shifted)
   async createEvent({name,setupStart,eventDate,from}){
+    if(this.previewing)this.exitPreview(true);
     await this.idle();await this.flush();await this.idle();
     const id=slugify(name)+'-'+uid().slice(0,4);
     let d=emptyPlan();
@@ -566,87 +661,137 @@ const Store={mode:'loading',d:emptyPlan(),version:0,sha:null,canEdit:false,token
     if(from==='copy'){
       d=clone(this.d);
       const oldStart=this.d.settings.setupStart,shift=oldStart&&setupStart?Math.round((new Date(setupStart+'T00:00:00')-new Date(oldStart+'T00:00:00'))/864e5):0;
-      Object.values(d.tasks).forEach(t=>{t.status='todo';if(shift)t.notBefore=shiftISO(t.notBefore,shift);});
+      Object.values(d.tasks).forEach(t=>{t.status='todo';if(shift){t.notBefore=shiftISO(t.notBefore,shift);if(t.start)t.start=shiftISO(t.start,shift);}});
       Object.values(d.zones).forEach(z=>{if(shift&&z.clearBy)z.clearBy=shiftISO(z.clearBy,shift);});
     }
     d.settings={...d.settings,name,setupStart,eventDate};
-    if(this.mode==='github'){
-      await GH.put(this.token,evPath(id),b64enc(JSON.stringify({version:1,savedAt:new Date().toISOString(),data:d})),null,`Create event: ${name}`);
-      await this.saveIndex(list=>[...list.filter(e=>e.id!==id),evEntry(id,d)],`Add event: ${name}`);
-    }else{
-      ls.set(localKey(id),JSON.stringify(d));
-      await this.saveIndex(list=>[...list.filter(e=>e.id!==id),evEntry(id,d)]);
-    }
+    if(this.mode==='cloud'){
+      const db=Cloud.db;
+      if(from==='copy'&&String(d.settings.bgUrl||'').startsWith('fs:')){
+        try{const fp=await db.collection('floorplans').doc(d.settings.bgUrl.slice(3)).get();
+          if(fp.exists){const nid=id+'-'+uid().slice(0,4);await db.collection('floorplans').doc(nid).set({...fp.data(),eventId:id});d.settings.bgUrl='fs:'+nid;this.bgCache['fs:'+nid]=fp.data().data;}}catch(e){d.settings.bgUrl='';}
+      }
+      await db.collection('events').doc(id).set({name,setupStart,eventDate,version:1,json:JSON.stringify(d),updatedAt:FV().serverTimestamp(),updatedBy:this.email});
+      this.events.push(evEntry(id,d));
+    }else{ls.set(localKey(id),JSON.stringify(d));this.events.push(evEntry(id,d));ls.set('siteboard.events',JSON.stringify(this.events));}
     await this.switchEvent(id);
+    if(this.mode==='cloud'&&from!=='blank')await this.publishViews(id);
   },
   async deleteEvent(id){
+    if(this.previewing)this.exitPreview(true);
     await this.idle();
     if(id===this.eventId){clearTimeout(this.tm);this.dirty=false;}
-    const name=this.events.find(e=>e.id===id)?.name||'event';
-    if(this.mode==='github'){
-      try{const r=await GH.readJson(this.token,evPath(id));await GH.remove(this.token,evPath(id),r.sha,`Delete event: ${name}`);}catch(e){if(!e.missing)throw e;}
-      await this.saveIndex(list=>list.filter(e=>e.id!==id),`Remove event: ${name}`);
-    }else{ls.del(localKey(id));await this.saveIndex(list=>list.filter(e=>e.id!==id));}
+    if(this.mode==='cloud'){
+      const db=Cloud.db;
+      await this.unpublishAll(id);
+      try{const fps=await db.collection('floorplans').where('eventId','==',id).get();const b=db.batch();fps.docs.forEach(f=>b.delete(f.ref));if(!fps.empty)await b.commit();}catch(e){}
+      await db.collection('events').doc(id).delete();
+    }else ls.del(localKey(id));
+    this.events=this.events.filter(e=>e.id!==id);if(this.mode==='local')ls.set('siteboard.events',JSON.stringify(this.events));
     if(id===this.eventId){
-      const next=this.events[0]?.id||null;this.eventId=null;
+      if(this.unsub){this.unsub();this.unsub=null;}
+      const next=this.events[0]?.id||null;this.eventId=null;this.views={};
       if(next)await this.switchEvent(next);
-      else{this.d=emptyPlan();this.sha=null;this.version=0;setUrlEvent(null);ls.del('siteboard.lastEvent');dataStamp++;renderAll();}
+      else{this.d=emptyPlan();this.version=0;setUrlEvent(null);ls.del('siteboard.lastEvent');dataStamp++;renderAll();}
     }else renderAll();
   },
   async upload(file){
-    const ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type]||'png';
-    if(file.size>CONFIG.maxImageMB*1024*1024)throw new Error(`the image is over ${CONFIG.maxImageMB} MB. Export it smaller.`);
-    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.onerror=()=>rej(new Error('could not read the file'));fr.readAsDataURL(file);});
-    const d=new Date();const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
-    const path=`uploads/${this.eventId||'plan'}-${stamp}.${ext}`;
-    await GH.put(this.token,path,b64,null,`Add floor plan: ${S().name||'event'}`);
-    const r=repoInfo();
-    // served straight from the repository, so it shows immediately without waiting for Pages
-    return {url:`${CONFIG.rawBase}/${r.owner}/${r.repo}/${CONFIG.branch}/${path}`};
-  }
+    const img=await compressImage(file);
+    if(this.mode!=='cloud')return {url:img.data,w:img.w,h:img.h};
+    const fpId=this.eventId+'-'+Date.now().toString(36);
+    await Cloud.db.collection('floorplans').doc(fpId).set({eventId:this.eventId,data:img.data,w:img.w,h:img.h,createdAt:FV().serverTimestamp()});
+    this.bgCache['fs:'+fpId]=img.data;
+    return {url:'fs:'+fpId,w:img.w,h:img.h};
+  },
+  // "View as": show exactly what a supplier sees, built the same way as their published copy
+  enterPreview(vid){
+    if(!this.previewing){ensureSchedule();this.previewBackup=this.d;}
+    else{this.d=this.previewBackup;dataStamp++;ensureSchedule();}
+    const view=buildVendorView(vid);this.previewing=vid;this.d=normalize(view);dataStamp++;
+  },
+  exitPreview(quiet){if(!this.previewing)return;this.d=this.previewBackup;this.previewBackup=null;this.previewing=null;dataStamp++;if(!quiet){ui.viewAs='planner';}}
 };
 function setSave(){
   const el=$('#saveState');if(!el)return;
   if(Store.mode==='local')el.textContent='Saved in this browser';
-  else if(Store.mode==='github'){
-    if(!Store.canEdit)el.textContent='Live plan · read-only';
-    else if(Store.saving)el.textContent='Saving to GitHub…';
+  else if(Store.mode==='cloud'&&Store.role==='planner'){
+    if(Store.previewing)el.textContent='Preview · read-only';
+    else if(Store.saving)el.textContent='Saving…';
     else if(Store.dirty)el.textContent='Unsaved changes…';
-    else el.textContent=Store.lastSaved?'Saved to GitHub '+Store.lastSaved.toTimeString().slice(0,5):'Live plan';
-  }else el.textContent='';
+    else el.textContent=Store.lastSaved?'Saved '+Store.lastSaved.toTimeString().slice(0,5):'All changes saved';
+  }else if(Store.mode==='cloud'&&Store.role==='vendor')el.textContent='Live plan · read-only';
+  else el.textContent='';
+}
+function renderVendorsIfOpen(){if(ui.tab==='vendors'&&!$('#pbody').contains(document.activeElement))renderPanel();}
+
+/* What one supplier is allowed to see. Their own work in full; other suppliers' work only as
+   "another supplier" (so they can see where and when areas are locked); handover partners named
+   only when the event setting allows it; no planner notes. */
+function buildVendorView(vid){
+  const T=TK(),zs=Z(),vend=V(),s=S();
+  const share=s.shareHandover!==false;
+  const leaves=Object.keys(T).filter(isLeaf);
+  const mine=new Set(leaves.filter(i=>T[i].vendorId===vid));
+  const nbrTasks=new Set();
+  mine.forEach(i=>{(EDEPS[i]||[]).forEach(d=>{if(isParent(d))KIDS[d].forEach(k=>nbrTasks.add(k));else nbrTasks.add(d);});successors(i).forEach(o=>nbrTasks.add(o));});
+  mine.forEach(i=>nbrTasks.delete(i));
+  const nbrVendors=new Set([...nbrTasks].map(t=>T[t]?.vendorId).filter(v=>v&&v!==vid));
+  const named=v=>v===vid||(share&&nbrVendors.has(v));
+  const who=v=>named(v)?vendorName(v):'another supplier';
+  const lbl=d=>isParent(d)?`${T[d].title} (all steps)`:`${taskLabel(d)} (${who(T[d].vendorId)})`;
+  const outT={};
+  leaves.forEach(i=>{const t=T[i];const own=mine.has(i);const nb=share&&nbrTasks.has(i);
+    outT[i]={title:own||nb?taskLabel(i):'Work by another supplier',zoneId:t.zoneId,vendorId:own?vid:(nb&&named(t.vendorId)?t.vendorId:'_other'),days:t.days,deps:[],
+      status:own?(t.status||'todo'):'todo',notBefore:'',fixedS:SCH[i].s,fixedE:SCH[i].e,state:taskState(i),
+      ...(own?{waitsOn:(EDEPS[i]||[]).filter(d=>T[d]).map(lbl),nextUp:successors(i).map(o=>`${who(T[o].vendorId)} (${taskLabel(o)})`),withPrev:!!t.withPrev}:{})};});
+  const outZ={};
+  Object.entries(zs).forEach(([id,z])=>{
+    const drop=TYPES[z.type]?.drop;const ownZone=z.vendorId===vid||zoneTasks(id).some(t=>mine.has(t));
+    outZ[id]={opacity:z.opacity??1,type:z.type,geom:z.geom,pts:z.pts,parts:z.parts||[],label:drop&&z.vendorId!==vid?'Storage (another supplier)':z.label,after:z.after||'none',parallel:[],
+      answers:ownZone?(z.answers||{}):{},vendorId:z.vendorId?(named(z.vendorId)?z.vendorId:'_other'):'',clearBy:drop?(z.clearBy||''):''};});
+  const outV={_other:{name:'Another supplier',color:'#868e96',trade:'',contact:'',phone:'',email:'',notes:''}};
+  const pub=v=>({name:v.name||'',color:v.color||'#868e96',trade:v.trade||'',contact:v.contact||'',phone:v.phone||'',email:v.email||'',notes:''});
+  if(vend[vid])outV[vid]=pub(vend[vid]);
+  if(share)nbrVendors.forEach(v=>{if(vend[v])outV[v]=pub(vend[v]);});
+  const st={name:s.name||'',setupStart:s.setupStart||'',eventDate:s.eventDate||'',bgUrl:s.bgUrl||'',bgW:s.bgW||0,bgH:s.bgH||0,bgOpacity:s.bgOpacity??0.8,mPerUnit:s.mPerUnit||0,shareHandover:share};
+  return {settings:st,vendors:outV,zones:outZ,tasks:outT,templates:{},types:clone(Store.d.types||{}),lists:clone(Store.d.lists||{}),view:{vendorId:vid}};
 }
 const S=()=>Store.d.settings||{};
 const Z=()=>Store.d.zones||{}, TK=()=>Store.d.tasks||{}, V=()=>Store.d.vendors||{};
-const editable=()=>Store.canEdit&&ui.viewAs==='planner'&&!!Store.eventId;
+const editable=()=>Store.canEdit&&ui.viewAs==='planner'&&!!Store.eventId&&!Store.previewing;
 
 /* ============ UI state ============ */
-const ui={tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
+const ui={multi:ls.get('siteboard.multi')==='1',fill:(()=>{const v=parseFloat(ls.get('siteboard.fill'));return isNaN(v)?1:v;})(),tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
 function mapH(){const s=S();return s.bgW&&s.bgH?Math.round(W*s.bgH/s.bgW):640;}
 
 /* ============ schedule ============ */
 /* A task can be a job with ordered steps (subtasks). Steps run one after another;
    a step marked "withPrev" runs alongside the step before it. A job spans its steps,
    and anything that waits for a job waits for all of its steps. */
-let SCH={},CYC=new Set(),EDEPS={},KIDS={},STATE={};
+let SCH={},CYC=new Set(),EDEPS={},KIDS={},STATE={},EARLY={};
 function computeSchedule(){
-  const T=TK();SCH={};CYC=new Set();EDEPS={};KIDS={};STATE={};const vis={};
+  const T=TK();SCH={};CYC=new Set();EDEPS={};KIDS={};STATE={};EARLY={};const vis={};
   Object.entries(T).forEach(([id,t])=>{if(t.parentId&&T[t.parentId])(KIDS[t.parentId]=KIDS[t.parentId]||[]).push(id);});
   Object.values(KIDS).forEach(a=>a.sort((x,y)=>(T[x].order??0)-(T[y].order??0)));
   function go(id){
     if(SCH[id])return SCH[id];
     if(vis[id]){CYC.add(id);return {s:0,e:0};}
-    vis[id]=1;const t=T[id];const ks=KIDS[id];
+    vis[id]=1;const t=T[id];
+    if(t.fixedS!=null){const r={s:t.fixedS,e:t.fixedE};SCH[id]=r;EDEPS[id]=[];return r;} // supplier copy: dates worked out by the planner
+    const ks=KIDS[id];
     if(ks&&ks.length){ks.forEach(go);const r={s:Math.min(...ks.map(k=>SCH[k].s)),e:Math.max(...ks.map(k=>SCH[k].e))};SCH[id]=r;EDEPS[id]=(t.deps||[]).filter(d=>T[d]);return r;}
-    let deps=[...(t.deps||[])],s=0,nb=offOf(t.notBefore);
+    let deps=[...(t.deps||[])],s=0,nb=offOf(t.notBefore),pin=offOf(t.start);
     const p=t.parentId&&T[t.parentId];
     if(p){const sib=KIDS[t.parentId];const i=sib.indexOf(id);
-      if(i===0){deps.push(...(p.deps||[]));const pnb=offOf(p.notBefore);if(pnb!=null)nb=nb==null?pnb:Math.max(nb,pnb);}
+      if(i===0){deps.push(...(p.deps||[]));const pnb=offOf(p.notBefore);if(pnb!=null)nb=nb==null?pnb:Math.max(nb,pnb);if(pin==null&&p.start)pin=offOf(p.start);}
       else if(t.withPrev){const pr=sib[i-1];s=Math.max(s,go(pr).s);deps.push(...(EDEPS[pr]||[]));}
       else{let m=i-1;deps.push(sib[m]);while(m>0&&T[sib[m]].withPrev){m--;deps.push(sib[m]);}}
     }
     deps=[...new Set(deps.filter(d=>T[d]&&d!==id))];EDEPS[id]=deps;
     if(nb!=null)s=Math.max(s,nb);
     deps.forEach(d=>{s=Math.max(s,go(d).e);});
+    // a start date you typed wins; if it's earlier than the work it waits for, Clashes says so
+    if(pin!=null){EARLY[id]=s;s=pin;}
     const r={s,e:s+Math.max(0.5,Number(t.days)||1)};SCH[id]=r;return r;
   }
   Object.keys(T).forEach(go);
@@ -657,6 +802,7 @@ function taskLabel(id){const t=TK()[id];if(!t)return '';const p=t.parentId&&TK()
 function taskState(id){
   if(STATE[id])return STATE[id]==='…'?'wait':STATE[id];
   STATE[id]='…';const t=TK()[id];let r='wait';
+  if(t&&t.state&&t.status!=='done'&&statusBase(t.status)!=='done'){STATE[id]=t.state;return t.state;}
   if(t){
     if(isParent(id)){const st=KIDS[id].map(taskState);r=st.every(x=>x==='done')?'done':st.some(x=>x==='done'||x==='started')?'started':st.some(x=>x==='ready')?'ready':'wait';}
     else if(statusBase(t.status)==='done')r='done';else if(statusBase(t.status)==='started')r='started';
@@ -691,7 +837,14 @@ function autoClearBy(zid){
 function clearByOff(zid){const z=Z()[zid];const man=offOf(z.clearBy);if(man!=null)return {off:man,manual:true};const a=autoClearBy(zid);return a?{off:a.off,manual:false,task:a.task}:null;}
 
 /* ============ geometry ============ */
-function edges(z){const p=z.pts||[];const r=[];for(let i=1;i<p.length;i++)r.push([p[i-1],p[i]]);if(z.geom==='poly'&&p.length>2)r.push([p[p.length-1],p[0]]);return r;}
+// an item can be several separate pieces (e.g. fence runs in different places) that count as one task
+function piecesOf(z){return [z.pts||[],...(z.parts||[])].filter(p=>p.length);}
+function pieceRef(z,pi){return pi===0?z.pts:z.parts[pi-1];}
+function allPts(z){return piecesOf(z).flat();}
+function edgesOfPiece(p,geom){const r=[];for(let i=1;i<p.length;i++)r.push([p[i-1],p[i]]);if(geom==='poly'&&p.length>2)r.push([p[p.length-1],p[0]]);return r;}
+function edges(z){return piecesOf(z).flatMap(p=>edgesOfPiece(p,z.geom));}
+function pieceLen(p,geom){return edgesOfPiece(p,geom).reduce((s,[a,b])=>s+dist(a,b),0);}
+function areaOf(z){return piecesOf(z).reduce((s,p)=>s+(p.length>2?Math.abs(polyArea(p)):0),0);}
 function orient(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 function segX(a,b,c,d){const d1=orient(c,d,a),d2=orient(c,d,b),d3=orient(a,b,c),d4=orient(a,b,d);return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));}
 function pip(p,poly){let ins=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x))ins=!ins;}return ins;}
@@ -700,13 +853,14 @@ function overlap(a,b){
   const ea=edges(a),eb=edges(b);
   if(ea.some(([p,q])=>eb.some(([r,s])=>segX(p,q,r,s))))return true;
   const mid=(e)=>({x:(e[0].x+e[1].x)/2,y:(e[0].y+e[1].y)/2});
-  if(a.geom==='poly'&&(b.pts.some(p=>pip(p,a.pts))||eb.some(e=>pip(mid(e),a.pts))))return true;
-  if(b.geom==='poly'&&(a.pts.some(p=>pip(p,b.pts))||ea.some(e=>pip(mid(e),b.pts))))return true;
+  const inZ=(z,p)=>piecesOf(z).some(pc=>pc.length>2&&pip(p,pc));
+  if(a.geom==='poly'&&(allPts(b).some(p=>inZ(a,p))||eb.some(e=>inZ(a,mid(e)))))return true;
+  if(b.geom==='poly'&&(allPts(a).some(p=>inZ(b,p))||ea.some(e=>inZ(b,mid(e)))))return true;
   return false;
 }
 function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const j=(i+1)%p.length;a+=p[i].x*p[j].y-p[j].x*p[i].y;}return a/2;}
 function polyCentroid(p){const A=polyArea(p);if(Math.abs(A)<1)return {x:p.reduce((s,q)=>s+q.x,0)/p.length,y:p.reduce((s,q)=>s+q.y,0)/p.length};let cx=0,cy=0;for(let i=0;i<p.length;i++){const j=(i+1)%p.length;const f=p[i].x*p[j].y-p[j].x*p[i].y;cx+=(p[i].x+p[j].x)*f;cy+=(p[i].y+p[j].y)*f;}return {x:cx/(6*A),y:cy/(6*A)};}
-function bbox(z){const xs=z.pts.map(p=>p.x),ys=z.pts.map(p=>p.y);return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}
+function bbox(z){const P=allPts(z);const xs=P.map(p=>p.x),ys=P.map(p=>p.y);return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function lengthOf(z){return edges(z).reduce((s,[a,b])=>s+dist(a,b),0);}
 function nearestOnSeg(p,a,b){const dx=b.x-a.x,dy=b.y-a.y;const L=dx*dx+dy*dy;if(!L)return {...a};const t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/L,0,1);return {x:a.x+t*dx,y:a.y+t*dy};}
@@ -725,10 +879,12 @@ function snapPoint(raw,ctx){
   const tol=pxUnits(CONFIG.snapPixels);
   const verts=[];const segsAll=[];
   Object.entries(Z()).forEach(([id,z])=>{
-    (z.pts||[]).forEach((p,i)=>{if(id===ctx.skipZone&&i===ctx.skipIdx)return;verts.push(p);});
-    edges(z).forEach((e,i)=>{if(id===ctx.skipZone&&ctx.skipIdx!=null){const n=z.pts.length;const a=i,b=(i+1)%n;if(a===ctx.skipIdx||b===ctx.skipIdx)return;}segsAll.push(e);});
+    piecesOf(z).forEach((pc,pi)=>{const skip=id===ctx.skipZone&&pi===(ctx.skipPiece||0);
+      pc.forEach((p,i)=>{if(skip&&i===ctx.skipIdx)return;verts.push(p);});
+      edgesOfPiece(pc,z.geom).forEach((e,i)=>{if(skip&&ctx.skipIdx!=null){const n=pc.length;const a=i,b=(i+1)%n;if(a===ctx.skipIdx||b===ctx.skipIdx)return;}segsAll.push(e);});});
   });
   (ctx.extra||[]).forEach(p=>verts.push(p));
+  (ctx.more||[]).forEach(pc=>{pc.forEach(p=>verts.push(p));edgesOfPiece(pc,ctx.geom).forEach(e=>segsAll.push(e));});
   for(let i=1;i<(ctx.extra||[]).length;i++)segsAll.push([ctx.extra[i-1],ctx.extra[i]]);
   // 1. corners
   let best=null,bd=tol;
@@ -792,6 +948,11 @@ function straighten(z){
 function conflicts(){
   const out=[];const zs=Z(),T=TK();const zids=Object.keys(zs);
   CYC.forEach(id=>out.push({level:'critical',title:'Circular dependency',detail:`"${T[id]?.title}" ends up waiting on itself. Remove one of its "starts after" links.`,zones:[T[id]?.zoneId]}));
+  Object.keys(EARLY).forEach(id=>{const t=T[id];if(!t||EARLY[id]<=SCH[id].s+1e-6)return;
+    const holder=t.start?id:(t.parentId&&T[t.parentId]?.start?t.parentId:id);const ok=Math.ceil(EARLY[id]-1e-6);
+    out.push({level:'critical',title:'Starts before the work it waits for is finished',detail:`${taskLabel(id)} (${vendorName(t.vendorId)}) is set to start ${fmtDay(SCH[id].s,false)}, but the work before it finishes ${fmtDay(EARLY[id])}.`,zones:[t.zoneId],
+      fix:{label:`Start ${fmtDay(ok,false)} instead`,run:()=>{const c=clone(T[holder]);c.start=isoOf(ok);Store.put('tasks',holder,c);}},
+      fix2:{label:'Start automatically',run:()=>{const c=clone(T[holder]);delete c.start;Store.put('tasks',holder,c);}}});});
   const ev=eventOff();
   Object.keys(T).filter(isLeaf).forEach(id=>{if(SCH[id]&&SCH[id].e>ev)out.push({level:'critical',title:'Finishes after event day',detail:`${taskLabel(id)} (${vendorName(T[id].vendorId)}) ends ${fmtDay(SCH[id].e)}, after the event on ${fmtDay(ev,false)}.`,zones:[T[id].zoneId]});});
   const seen=new Set();
@@ -847,13 +1008,20 @@ function swatch(type){
 function renderRail(){
   const r=$('#rail');const ed=editable();
   r.hidden=!ed;document.querySelector('.main').classList.toggle('norail',!ed);
-  let h=`<h3>Navigate</h3><button class="tool" data-tool="select" aria-pressed="${ui.tool==='select'}" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M7 2l9 6-4 1 2 5-2 1-2-5-3 3z" style="fill:var(--fg)"/></svg>Select / edit</button>`;
+  const icon=p=>`<svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true">${p}</svg>`;
+  let h=`<h3><span class="lbl">Navigate</span></h3>
+  <button class="tool" data-tool="select" aria-pressed="${ui.tool==='select'}" type="button" title="Select (V): click to see details, drag to move around the map. Nothing moves.">${icon('<path d="M7 2l9 6-4 1 2 5-2 1-2-5-3 3z" style="fill:var(--fg)"/>')}<span>Select<small>Look and pan, nothing moves</small></span></button>
+  <button class="tool" data-tool="edit" aria-pressed="${ui.tool==='edit'}" type="button" title="Edit shapes (E): drag shapes and corners.">${icon('<path d="M4 12h14M4 12V4h14v8" fill="none" style="stroke:var(--fg)" stroke-width="1.4" stroke-dasharray="2 2"/><rect x="2.5" y="10.5" width="3" height="3" style="fill:var(--accent)"/><rect x="16.5" y="2.5" width="3" height="3" style="fill:var(--accent)"/>')}<span>Edit shapes<small>Move and reshape</small></span></button>`;
   if(ed){
-    TYPE_GROUPS.forEach(([g,ts])=>{h+=`<h3>${g}</h3>`;ts.forEach(t=>{h+=`<button class="tool" data-tool="${t}" aria-pressed="${ui.tool===t}" type="button">${swatch(t)}${esc(TYPES[t].name)}</button>`;});});
-    h+=`<h3>Setup</h3><button class="tool" data-tool="scale" aria-pressed="${ui.tool==='scale'}" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M2 11h18M2 8v6M20 8v6M8 10v2M14 10v2" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/></svg>Set scale</button>`;
-    h+=`<button class="tool" data-act="types" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="13" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="2" y="9" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M16.5 9v5M14 11.5h5" style="stroke:var(--accent)" stroke-width="1.8"/></svg>Item types</button>`;
-    h+=`<button class="tool" data-act="lists" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M3 4h2M3 8h2M3 12h2M8 4h11M8 8h11M8 12h8" style="stroke:var(--fg)" stroke-width="1.6"/></svg>Lists</button>`;
-    h+=`<button class="tool" data-act="questions" type="button"><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><circle cx="11" cy="8" r="6.5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M9 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.6.6-.6 1.1M11 11.5v.3" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-linecap="round"/></svg>Edit questions</button>`;
+    const grp=[['poly','Areas · click each corner','Add area type'],['line','Lines · click each point','Add line type']];
+    TYPE_GROUPS.forEach(([g,ts],gi)=>{const [geom,,addLbl]=grp[gi]||grp[0];
+      h+=`<h3><span class="lbl">${g}</span><button class="railadd" data-addtype="${geom}" type="button" title="${addLbl}">+ Add</button></h3>`;
+      ts.forEach(t=>{h+=`<div class="toolrow"><button class="tool" data-tool="${t}" aria-pressed="${ui.tool===t}" type="button">${swatch(t)}<span>${esc(TYPES[t].name)}</span></button><button class="tooledit" data-edittype="${t}" type="button" aria-label="Edit ${esc(TYPES[t].name)}" title="Rename or change defaults">✎</button></div>`;});});
+    const hidden=Object.values(TYPES).filter(t=>t.hidden).length;
+    h+=`<h3><span class="lbl">Setup</span></h3><button class="tool" data-tool="scale" aria-pressed="${ui.tool==='scale'}" type="button">${icon('<path d="M2 11h18M2 8v6M20 8v6M8 10v2M14 10v2" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/>')}Set scale</button>`;
+    h+=`<button class="tool" data-act="types" type="button">${icon('<rect x="2" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="13" y="2" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><rect x="2" y="9" width="7" height="5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M16.5 9v5M14 11.5h5" style="stroke:var(--accent)" stroke-width="1.8"/>')}<span>All item types${hidden?`<small>${hidden} hidden</small>`:''}</span></button>`;
+    h+=`<button class="tool" data-act="lists" type="button">${icon('<path d="M3 4h2M3 8h2M3 12h2M8 4h11M8 8h11M8 12h8" style="stroke:var(--fg)" stroke-width="1.6"/>')}Lists</button>`;
+    h+=`<button class="tool" data-act="questions" type="button">${icon('<circle cx="11" cy="8" r="6.5" fill="none" style="stroke:var(--fg)" stroke-width="1.5"/><path d="M9 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.6.6-.6 1.1M11 11.5v.3" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-linecap="round"/>')}Edit questions</button>`;
   }
   r.innerHTML=h;
 }
@@ -873,44 +1041,49 @@ function zoneVisual(id,z,D){
   else if(done)sub='Installed';
   return {T,col,active,upcoming,done,restr,sub,dropBad:T.drop&&sub==='MUST BE CLEAR'};
 }
+function bgSrc(){const u=S().bgUrl||'';return u.startsWith('fs:')?(Store.bgCache[u]||''):u;}
 function renderMap(){
-  ensureSchedule();
+  ensureSchedule();loadView();
   const s=S();const H=mapH();const D=ui.day;
-  const img=$('#bgimg');if(s.bgUrl){img.setAttribute('href',s.bgUrl);img.setAttribute('height',H);img.style.display='';img.setAttribute('opacity',s.bgOpacity??0.8);}else img.style.display='none';
+  const img=$('#bgimg');const src=bgSrc();if(src){img.setAttribute('href',src);img.setAttribute('height',H);img.style.display='';img.setAttribute('opacity',s.bgOpacity??0.8);}else img.style.display='none';
   $('#sheetedge').setAttribute('height',H);
   $('#map').setAttribute('viewBox',`${ui.vb.x} ${ui.vb.y} ${ui.vb.w} ${ui.vb.h}`);
-  $('#sheet').classList.toggle('drawing',!!(TYPES[ui.tool]||ui.tool==='scale'));
+  $('#sheet').classList.toggle('drawing',!!(TYPES[ui.tool]||ui.tool==='scale'));$('#sheet').classList.toggle('editing',ui.tool==='edit'&&editable());
   const va=ui.viewAs;const zs=Z();let out='';
-  const order=Object.keys(zs).filter(id=>(zs[id].pts||[]).length>=2).sort((a,b)=>{const ga=zs[a].geom==='poly'?0:1,gb=zs[b].geom==='poly'?0:1;if(ga!==gb)return ga-gb;return Math.abs(polyArea(zs[b].pts))-Math.abs(polyArea(zs[a].pts));});
+  const order=Object.keys(zs).filter(id=>(zs[id].pts||[]).length>=2).sort((a,b)=>{const ga=zs[a].geom==='poly'?0:1,gb=zs[b].geom==='poly'?0:1;if(ga!==gb)return ga-gb;return areaOf(zs[b])-areaOf(zs[a]);});
   const fsBase=clamp(ui.vb.w/70,9,22);
   order.forEach(id=>{
     const z=zs[id];const v=zoneVisual(id,z,D);const sel=ui.sel===id;const look=lookOf(z.type);
+    if(!zoneShown(id,z,v))return;
     const mine=va==='planner'||z.vendorId===va||zoneTasks(id).some(t=>TK()[t].vendorId===va);
     const dim=!mine&&!v.restr&&!v.active&&!TYPES[z.type]?.route&&!v.dropBad;
-    const pts=polyPts(z.pts);
+    const pcs=piecesOf(z);const dPoly=pcs.map(pc=>'M'+pc.map(q=>q.x+' '+q.y).join('L')+'Z').join('');const dLine=pcs.map(pc=>'M'+pc.map(q=>q.x+' '+q.y).join('L')).join('');
     let g=`<g data-zone="${id}" style="cursor:pointer" opacity="${dim?0.35:1}">`;
     if(z.geom==='poly'){
       const fill=look==='turf'?'url(#turfp)':v.T.drop?(v.dropBad?'url(#dropbad)':'url(#dropp)'):'';
-      g+=`<polygon points="${pts}" style="fill:${look==='nogo'?'var(--bad)':v.col}" fill-opacity="${look==='nogo'?.12:v.done?.3:.13}"/>`;
-      if(fill)g+=`<polygon points="${pts}" fill="${fill}"/>`;
-      if(v.active||look==='nogo')g+=`<polygon points="${pts}" fill="url(#hz)" opacity="${look==='nogo'?.35:.55}"/>`;
+      const fo=Math.max(0,Math.min(1,(z.opacity??1)*ui.fill));
+      g+=`<g opacity="${fo}">`;
+      g+=`<path d="${dPoly}" style="fill:${look==='nogo'?'var(--bad)':v.col}" fill-opacity="${look==='nogo'?.12:v.done?.3:.13}"/>`;
+      if(fill)g+=`<path d="${dPoly}" fill="${fill}"/>`;
+      if(v.active||look==='nogo')g+=`<path d="${dPoly}" fill="url(#hz)" opacity="${look==='nogo'?.35:.55}"/>`;
+      g+=`</g>`;
       const stroke=v.restr||v.dropBad?'var(--bad)':v.T.drop?'var(--ok)':v.col;
-      g+=`<polygon points="${pts}" fill="none" style="stroke:${stroke}" stroke-width="${sel?3:v.restr?2.5:1.6}" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="7 5"':''} vector-effect="non-scaling-stroke"/>`;
-      if(sel)g+=`<polygon points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
-      const c=polyCentroid(z.pts);const b=bbox(z);const fs=clamp(Math.min(b.w/9,b.h/3.2,fsBase*1.1),7,24);
+      g+=`<path d="${dPoly}" fill="none" style="stroke:${stroke}" stroke-width="${sel?3:v.restr?2.5:1.6}" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="7 5"':''} vector-effect="non-scaling-stroke"/>`;
+      if(sel)g+=`<path d="${dPoly}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      const big=pcs.reduce((m,pc)=>Math.abs(polyArea(pc))>Math.abs(polyArea(m))?pc:m,pcs[0]);const c=polyCentroid(big);const b=bbox({pts:big});const fs=clamp(Math.min(b.w/9,b.h/3.2,fsBase*1.1),7,24);
       g+=`<text class="zl" x="${c.x}" y="${c.y}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px">${esc(z.label)}</text>`;
       if(v.sub&&b.h>fs*2)g+=`<text class="zs" x="${c.x}" y="${c.y+fs*0.95}" text-anchor="middle" style="fill:${v.active||v.restr||v.dropBad?'var(--bad)':'var(--muted)'};font-weight:${v.active?600:400};font-size:${fs*0.65}px">${esc(v.sub)}</text>`;
     }else{
       const t=look;
-      g+=`<polyline points="${pts}" fill="none" stroke="transparent" stroke-width="${pxUnits(18)}"/>`;
-      if(v.active)g+=`<polyline points="${pts}" fill="none" style="stroke:var(--hazard)" stroke-width="16" opacity=".55" stroke-linejoin="round"/>`;
-      if(t==='route')g+=`<polyline points="${pts}" fill="none" style="stroke:var(--muted)" stroke-width="18" opacity=".28" stroke-linejoin="round"/><polyline points="${pts}" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-dasharray="10 8" opacity=".6"/>`;
-      else if(t==='wall')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="7" stroke-linejoin="miter" opacity="${v.upcoming?.45:1}"/>`;
-      else if(t==='fence_high')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="3" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="8 6"':''}/><polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="10" stroke-dasharray="2 12" opacity=".9"/>`;
-      else if(t==='fence_low')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>`;
-      else if(t==='cable')g+=`<polyline points="${pts}" fill="none" style="stroke:${v.restr?'var(--bad)':'var(--accent)'}" stroke-width="${v.restr?3.5:2.5}" stroke-dasharray="9 5" stroke-linejoin="round" ${v.upcoming?'opacity=".5"':''}/>`;
-      else g+=`<polyline points="${pts}" fill="none" style="stroke:${v.col}" stroke-width="3"/>`;
-      if(sel)g+=`<polyline points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      g+=`<path d="${dLine}" fill="none" stroke="transparent" stroke-width="${pxUnits(18)}"/>`;
+      if(v.active)g+=`<path d="${dLine}" fill="none" style="stroke:var(--hazard)" stroke-width="16" opacity=".55" stroke-linejoin="round"/>`;
+      if(t==='route')g+=`<path d="${dLine}" fill="none" style="stroke:var(--muted)" stroke-width="18" opacity=".28" stroke-linejoin="round"/><path d="${dLine}" fill="none" style="stroke:var(--fg)" stroke-width="1.5" stroke-dasharray="10 8" opacity=".6"/>`;
+      else if(t==='wall')g+=`<path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="7" stroke-linejoin="miter" opacity="${v.upcoming?.45:1}"/>`;
+      else if(t==='fence_high')g+=`<path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="3" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="8 6"':''}/><path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="10" stroke-dasharray="2 12" opacity=".9"/>`;
+      else if(t==='fence_low')g+=`<path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+      else if(t==='cable')g+=`<path d="${dLine}" fill="none" style="stroke:${v.restr?'var(--bad)':'var(--accent)'}" stroke-width="${v.restr?3.5:2.5}" stroke-dasharray="9 5" stroke-linejoin="round" ${v.upcoming?'opacity=".5"':''}/>`;
+      else g+=`<path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="3"/>`;
+      if(sel)g+=`<path d="${dLine}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
       let li=0,ll=0;edges(z).forEach(([a,b],i)=>{const d=dist(a,b);if(d>ll){ll=d;li=i;}});const [a,b]=edges(z)[li];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
       const fs=clamp(fsBase*0.75,7,16);
       g+=`<text class="zs" x="${mx}" y="${my-fs*0.8}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px;font-weight:500">${esc(z.label)}${v.sub&&t!=='route'?' · ':''}<tspan style="fill:${v.restr||v.active?'var(--bad)':'var(--muted)'}">${t!=='route'?esc(v.sub):''}</tspan></text>`;
@@ -922,11 +1095,13 @@ function renderMap(){
 }
 function renderHandles(){
   let h='';const z=Z()[ui.sel];
-  if(z&&editable()&&ui.tool==='select'){
-    const r=pxUnits(6),m=pxUnits(4);const n=z.pts.length;
-    const closed=z.geom==='line'&&n>2&&dist(z.pts[0],z.pts[n-1])<0.5;
-    edges(z).forEach(([a,b],i)=>{if(dist(a,b)<pxUnits(24))return;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;h+=`<rect data-m="${i}" x="${mx-m}" y="${my-m}" width="${m*2}" height="${m*2}" style="fill:var(--sheet);stroke:var(--accent);cursor:copy" stroke-width="${pxUnits(1.5)}"><title>Drag to add a corner</title></rect>`;});
-    z.pts.forEach((p,i)=>{if(closed&&i===n-1)return;h+=`<circle data-v="${i}" cx="${p.x}" cy="${p.y}" r="${r}" style="fill:var(--accent);stroke:var(--sheet);cursor:move" stroke-width="${pxUnits(2)}"><title>Drag to move. Right-click to remove.</title></circle>`;});
+  if(z&&editable()&&ui.tool==='edit'){
+    const r=pxUnits(6),m=pxUnits(4);
+    piecesOf(z).forEach((pc,pi)=>{const n=pc.length;
+      const closed=z.geom==='line'&&n>2&&dist(pc[0],pc[n-1])<0.5;
+      edgesOfPiece(pc,z.geom).forEach(([a,b],i)=>{if(dist(a,b)<pxUnits(24))return;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;h+=`<rect data-m="${pi}:${i}" x="${mx-m}" y="${my-m}" width="${m*2}" height="${m*2}" style="fill:var(--sheet);stroke:var(--accent);cursor:copy" stroke-width="${pxUnits(1.5)}"><title>Drag to add a corner</title></rect>`;});
+      pc.forEach((p,i)=>{if(closed&&i===n-1)return;h+=`<circle data-v="${pi}:${i}" cx="${p.x}" cy="${p.y}" r="${r}" style="fill:var(--accent);stroke:var(--sheet);cursor:move" stroke-width="${pxUnits(2)}"><title>Drag to move. Right-click to remove.</title></circle>`;});
+    });
   }
   $('#handlesL').innerHTML=h;
 }
@@ -942,6 +1117,8 @@ function renderDraft(){
     else if(hv.kind)h+=`<circle cx="${p.x}" cy="${p.y}" r="${k*0.7}" fill="none" style="stroke:var(--snap)" stroke-width="${sw}"/>`;
     else h+=`<circle cx="${p.x}" cy="${p.y}" r="${pxUnits(2.5)}" style="fill:var(--accent)"/>`;
   }
+  if(d&&d.done&&d.done.length){d.done.forEach(pc=>{const pp=polyPts(pc);
+    h+=d.geom==='poly'?`<polygon points="${pp}" style="fill:var(--accent);stroke:var(--accent)" fill-opacity=".15" stroke-width="${pxUnits(2.5)}"/>`:`<polyline points="${pp}" fill="none" style="stroke:var(--accent)" stroke-width="${pxUnits(3)}" stroke-linejoin="round"/>`;});}
   if(d&&d.pts.length){
     const pts=[...d.pts];const live=hv&&!ui.ptr?.moved?hv.p:null;if(live)pts.push(live);
     if(d.geom==='poly'&&pts.length>=3)h=`<polygon points="${polyPts(pts)}" style="fill:var(--accent)" fill-opacity=".1"/>`+h;
@@ -959,21 +1136,24 @@ function renderHint(){
   const hint=$('#hint');const d=ui.draft;const snapBtn=`<button class="btn small ${ui.snap?'on':''}" id="snapToggle" type="button" aria-pressed="${ui.snap}">Snap ${ui.snap?'on':'off'}</button>`;
   if(ui.tool==='scale'){hint.hidden=false;hint.innerHTML=`<span>Click two points a known distance apart (for example both ends of a wall you know the length of).</span>${snapBtn}<button class="btn small" id="cancelDraft" type="button">Cancel</button>`;return;}
   if(TYPES[ui.tool]){
-    const T=TYPES[ui.tool];const n=d?d.pts.length:0;let msg;
-    if(T.geom==='poly')msg=!n?`Click the first corner of the <b>${esc(T.name.toLowerCase())}</b>.`:n<3?'Click the next corner.':'Keep clicking corners. Click the first corner to close the shape.';
-    else msg=!n?`Click where the <b>${esc(T.name.toLowerCase())}</b> starts.`:n<2?'Click the next point.':'Keep clicking. Click the last point again, or press <kbd>Enter</kbd>, to finish.';
+    const T=TYPES[ui.tool];const n=d?d.pts.length:0;const done=d&&d.done?d.done.length:0;const addTo=d&&d.addTo;const multi=ui.multi||!!addTo;let msg;
+    const nm=`<b>${esc(T.name.toLowerCase())}</b>`;const piece=multi?`Piece ${done+1}: `:'';
+    if(T.geom==='poly')msg=!n?(addTo?`Draw another area for <b>${esc(Z()[addTo]?.label||'')}</b>: click its first corner.`:`${piece}Click the first corner of the ${nm}.`):n<3?'Click the next corner.':`Keep clicking corners. Click the first corner to close ${multi?'this piece':'the shape'}.`;
+    else msg=!n?(addTo?`Draw another line for <b>${esc(Z()[addTo]?.label||'')}</b>: click where it starts.`:`${piece}Click where the ${nm} starts.`):n<2?'Click the next point.':multi?'Keep clicking. Click the last point again to end this piece.':'Keep clicking. Click the last point again, or press <kbd>Enter</kbd>, to finish.';
+    const valid=(T.geom==='poly'&&n>=3)||(T.geom==='line'&&n>=2);const total=done+(valid?1:0);
     hint.hidden=false;
-    hint.innerHTML=`<span>${msg} Hold <kbd>Shift</kbd> to draw freely.</span>${snapBtn}${n?'<button class="btn small" id="undoPt" type="button">Undo point</button>':''}${(T.geom==='poly'&&n>=3)||(T.geom==='line'&&n>=2)?`<button class="btn small primary" id="finishDraft" type="button">Finish ${T.geom==='poly'?'shape':'line'}</button>`:''}<button class="btn small" id="cancelDraft" type="button">${n?'Cancel':'Done'}</button>`;
+    hint.innerHTML=`<span>${msg}</span>${addTo?'':`<label class="mtog" title="Draw separate lines or areas that all belong to one task"><input type="checkbox" id="multiTog" ${ui.multi?'checked':''}> Several pieces</label>`}${snapBtn}${n?'<button class="btn small" id="undoPt" type="button">Undo point</button>':''}${multi&&valid?'<button class="btn small" id="endPiece" type="button">End this piece</button>':''}${(multi?total>=1:valid)?`<button class="btn small primary" id="finishDraft" type="button">${multi?(addTo?`Add ${total} piece${total===1?'':'s'}`:`Finish · ${total} piece${total===1?'':'s'}`):`Finish ${T.geom==='poly'?'shape':'line'}`}</button>`:''}<button class="btn small" id="cancelDraft" type="button">${n||done?'Cancel':'Done'}</button>`;
     return;
   }
-  if(ui.sel&&editable()){hint.hidden=false;hint.innerHTML=`<span>Drag a corner to move it, drag a small square to add a corner, right-click a corner to remove it.</span>${snapBtn}`;return;}
+  if(ui.tool==='edit'&&editable()){hint.hidden=false;hint.innerHTML=ui.sel?`<span><b>Edit shapes:</b> drag the shape to move it, drag a corner to reshape, drag a small square to add a corner, right-click a corner to remove it.</span>${snapBtn}<button class="btn small" id="toSelect" type="button">Done editing</button>`:`<span><b>Edit shapes:</b> click a shape to move or reshape it.</span><button class="btn small" id="toSelect" type="button">Done editing</button>`;return;}
+  if(ui.sel&&editable()){hint.hidden=false;hint.innerHTML=`<span>Selected. Shapes can’t move in Select mode.</span><button class="btn small" id="toEdit" type="button">Edit this shape</button>`;return;}
   hint.hidden=true;
 }
 
 /* ============ map interaction ============ */
 const svg=$('#map');
 function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const r=p.matrixTransform(svg.getScreenCTM().inverse());return {x:r.x,y:r.y};}
-function drawCtx(){const d=ui.draft;if(!d||!d.pts.length)return {extra:[]};const n=d.pts.length;return {prev:d.pts[n-1],prevPrev:n>1?d.pts[n-2]:null,first:d.geom==='poly'?d.pts[0]:null,extra:d.pts};}
+function drawCtx(){const d=ui.draft;const more=d?d.done||[]:[];if(!d||!d.pts.length)return {extra:[],more,geom:d?.geom};const n=d.pts.length;return {prev:d.pts[n-1],prevPrev:n>1?d.pts[n-2]:null,first:d.geom==='poly'?d.pts[0]:null,extra:d.pts,more,geom:d.geom};}
 function isDrawing(){return !!(TYPES[ui.tool]||ui.tool==='scale');}
 svg.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -982,16 +1162,16 @@ svg.addEventListener('pointerdown',e=>{
   if(isDrawing()&&editable()){ui.ptr.mode='draw';}
   else{
     const h=e.target.closest('[data-v],[data-m]');const zg=e.target.closest('[data-zone]');
-    if(h&&editable()&&Z()[ui.sel]){
-      const z=clone(Z()[ui.sel]);let i;
-      if(h.dataset.m!=null){const m=+h.dataset.m;const a=z.pts[m],b=z.pts[(m+1)%z.pts.length];z.pts.splice(m+1,0,{x:r1((a.x+b.x)/2),y:r1((a.y+b.y)/2)});i=m+1;}
-      else i=+h.dataset.v;
-      const n=z.pts.length;
-      ui.ptr.mode='vertex';ui.ptr.i=i;ui.ptr.live=z;ui.ptr.closedLine=z.geom==='line'&&n>2&&dist(z.pts[0],z.pts[n-1])<0.5;
+    if(h&&editable()&&ui.tool==='edit'&&Z()[ui.sel]){
+      const z=clone(Z()[ui.sel]);let pi,i;
+      if(h.dataset.m!=null){[pi,i]=h.dataset.m.split(':').map(Number);const pc=pieceRef(z,pi);const a=pc[i],b=pc[(i+1)%pc.length];pc.splice(i+1,0,{x:r1((a.x+b.x)/2),y:r1((a.y+b.y)/2)});i=i+1;}
+      else [pi,i]=h.dataset.v.split(':').map(Number);
+      const pc=pieceRef(z,pi);const n=pc.length;
+      ui.ptr.mode='vertex';ui.ptr.i=i;ui.ptr.pi=pi;ui.ptr.live=z;ui.ptr.closedLine=z.geom==='line'&&n>2&&dist(pc[0],pc[n-1])<0.5;
       if(h.dataset.m!=null){Store.d.zones={...Store.d.zones,[ui.sel]:z};}
     }else if(zg){
       const id=zg.dataset.zone;if(ui.sel!==id){ui.sel=id;ui.tab='zone';renderAll();}else if(ui.tab!=='zone'){ui.tab='zone';renderPanel();}
-      ui.ptr.mode=editable()?'move':'pan';ui.ptr.orig=clone(Z()[id]);
+      ui.ptr.mode=editable()&&ui.tool==='edit'?'move':'pan';ui.ptr.orig=clone(Z()[id]);
     }else{ui.ptr.mode='pan';ui.ptr.empty=true;}
   }
   svg.setPointerCapture(e.pointerId);
@@ -1005,14 +1185,14 @@ svg.addEventListener('pointermove',e=>{
   if(!P.moved)return;
   if(P.mode==='pan'){const r=svg.getBoundingClientRect();const k=ui.vb.w/r.width;ui.vb.x=P.vb.x-(e.clientX-P.sx)*k;ui.vb.y=P.vb.y-(e.clientY-P.sy)*k;svg.setAttribute('viewBox',`${ui.vb.x} ${ui.vb.y} ${ui.vb.w} ${ui.vb.h}`);return;}
   const p=pt(e);
-  if(P.mode==='move'){const dx=r1(p.x-P.p.x),dy=r1(p.y-P.p.y);const z=clone(P.orig);z.pts=z.pts.map(q=>({x:r1(q.x+dx),y:r1(q.y+dy)}));P.live=z;Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();return;}
+  if(P.mode==='move'){const dx=r1(p.x-P.p.x),dy=r1(p.y-P.p.y);const z=clone(P.orig);const sh=pc=>pc.map(q=>({x:r1(q.x+dx),y:r1(q.y+dy)}));z.pts=sh(z.pts);z.parts=(z.parts||[]).map(sh);P.live=z;Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();return;}
   if(P.mode==='vertex'){
-    const z=P.live;const n=z.pts.length;const i=P.i;
+    const z=P.live;const pc=pieceRef(z,P.pi);const n=pc.length;const i=P.i;
     const prevI=z.geom==='poly'?(i-1+n)%n:(i>0?i-1:(P.closedLine?n-2:null));
-    const ctx={skipZone:ui.sel,skipIdx:i,prev:prevI!=null?z.pts[prevI]:null,prevPrev:prevI!=null&&n>2?z.pts[(prevI-1+n)%n]:null};
+    const ctx={skipZone:ui.sel,skipPiece:P.pi,skipIdx:i,prev:prevI!=null?pc[prevI]:null,prevPrev:prevI!=null&&n>2?pc[(prevI-1+n)%n]:null};
     // the moved corner must not snap onto its own neighbours' angle reference when it is the start of an open line
     const sp=snapPoint(p,ctx);ui.hover=sp;
-    z.pts[i]=sp.p;if(P.closedLine&&i===0)z.pts[n-1]={...sp.p};
+    pc[i]=sp.p;if(P.closedLine&&i===0)pc[n-1]={...sp.p};
     Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();
   }
 });
@@ -1030,29 +1210,44 @@ svg.addEventListener('pointerup',e=>{
 svg.addEventListener('pointercancel',()=>{ui.ptr=null;});
 svg.addEventListener('pointerleave',()=>{if(!ui.ptr&&ui.hover){ui.hover=null;renderDraft();}});
 svg.addEventListener('contextmenu',e=>{
-  const h=e.target.closest('[data-v]');if(!h||!editable())return;e.preventDefault();
-  const z=clone(Z()[ui.sel]);const i=+h.dataset.v;const min=z.geom==='poly'?3:2;
-  const closed=z.geom==='line'&&z.pts.length>2&&dist(z.pts[0],z.pts[z.pts.length-1])<0.5;
-  if(z.pts.length-(closed?1:0)<=min){toast(`A ${z.geom==='poly'?'shape':'line'} needs at least ${min} corners.`);return;}
-  z.pts.splice(i,1);if(closed&&i===0)z.pts[z.pts.length-1]={...z.pts[0]};Store.put('zones',ui.sel,z);
+  const h=e.target.closest('[data-v]');if(!h||!editable()||ui.tool!=='edit')return;e.preventDefault();
+  const z=clone(Z()[ui.sel]);const [pi,i]=h.dataset.v.split(':').map(Number);const min=z.geom==='poly'?3:2;const pc=pieceRef(z,pi);
+  const closed=z.geom==='line'&&pc.length>2&&dist(pc[0],pc[pc.length-1])<0.5;
+  if(pc.length-(closed?1:0)<=min){
+    if(z.parts.length){removePiece(z,pi);Store.put('zones',ui.sel,z);toast('That piece was too small, so it was removed.');return;}
+    toast(`A ${z.geom==='poly'?'shape':'line'} needs at least ${min} corners.`);return;}
+  pc.splice(i,1);if(closed&&i===0)pc[pc.length-1]={...pc[0]};Store.put('zones',ui.sel,z);
 });
 svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12,pt(e));},{passive:false});
 function zoom(k,c){c=c||{x:ui.vb.x+ui.vb.w/2,y:ui.vb.y+ui.vb.h/2};const nw=clamp(ui.vb.w*k,60,6000);const kk=nw/ui.vb.w;ui.vb={x:c.x-(c.x-ui.vb.x)*kk,y:c.y-(c.y-ui.vb.y)*kk,w:nw,h:ui.vb.h*kk};renderMap();}
 function fit(){const r=svg.getBoundingClientRect();const H=mapH();const ar=r.width&&r.height?r.height/r.width:0.64;let w=W+40,h=w*ar;if(h<H+40){h=H+40;w=h/ar;}ui.vb={x:W/2-w/2,y:H/2-h/2,w,h};renderMap();}
 function addPoint(sp){
   const T=TYPES[ui.tool];if(!T)return;
-  if(!ui.draft)ui.draft={type:ui.tool,geom:T.geom,pts:[]};
-  const d=ui.draft;const tol=pxUnits(CONFIG.snapPixels);const last=d.pts[d.pts.length-1];
-  if(d.geom==='poly'&&d.pts.length>=3&&(sp.closes||dist(sp.p,d.pts[0])<tol)){finishDraft();return;}
-  if(last&&dist(sp.p,last)<tol*0.6){if((d.geom==='line'&&d.pts.length>=2)||(d.geom==='poly'&&d.pts.length>=3))finishDraft();return;}
+  if(!ui.draft)ui.draft={type:ui.tool,geom:T.geom,pts:[],done:[]};
+  const d=ui.draft;const tol=pxUnits(CONFIG.snapPixels);const last=d.pts[d.pts.length-1];const multi=ui.multi||!!d.addTo;
+  const end=()=>multi?finishPiece():finishDraft();
+  if(d.geom==='poly'&&d.pts.length>=3&&(sp.closes||dist(sp.p,d.pts[0])<tol)){end();return;}
+  if(last&&dist(sp.p,last)<tol*0.6){if((d.geom==='line'&&d.pts.length>=2)||(d.geom==='poly'&&d.pts.length>=3))end();return;}
   d.pts.push({...sp.p});ui.hover=null;renderDraft();
 }
-function finishDraft(){
+function finishPiece(){
   const d=ui.draft;if(!d)return;const min=d.geom==='poly'?3:2;
   if(d.pts.length<min){toast(`Add at least ${min} ${d.geom==='poly'?'corners':'points'} first.`);return;}
+  let pc=d.pts;if(d.geom==='poly'&&polyArea(pc)<0)pc=pc.slice().reverse();
+  (d.done=d.done||[]).push(pc);d.pts=[];ui.hover=null;renderDraft();
+  toast(`Piece ${d.done.length} done. Draw the next piece, or click Finish.`);
+}
+function removePiece(z,pi){if(pi===0){z.pts=z.parts.shift();}else z.parts.splice(pi-1,1);}
+function finishDraft(){
+  const d=ui.draft;if(!d)return;const min=d.geom==='poly'?3:2;
+  const pieces=[...(d.done||[])];
+  if(d.pts.length>=min){let pc=d.pts;if(d.geom==='poly'&&polyArea(pc)<0)pc=pc.slice().reverse();pieces.push(pc);}
+  else if(d.pts.length&&!pieces.length){toast(`Add at least ${min} ${d.geom==='poly'?'corners':'points'} first.`);return;}
+  if(!pieces.length){toast('Draw at least one piece first.');return;}
   ui.draft=null;ui.hover=null;renderDraft();
-  if(d.geom==='poly'&&polyArea(d.pts)<0)d.pts.reverse();
-  openCreate({type:d.type,geom:d.geom,pts:d.pts});
+  if(d.addTo){const z=clone(Z()[d.addTo]);if(!z)return;z.parts=[...(z.parts||[]),...pieces];Store.put('zones',d.addTo,z);
+    ui.tool='select';ui.sel=d.addTo;ui.tab='zone';renderAll();toast(`Added ${pieces.length} piece${pieces.length===1?'':'s'} to ${z.label}.`);return;}
+  openCreate({type:d.type,geom:d.geom,pts:pieces[0],parts:pieces.slice(1)});
 }
 function addScalePoint(p){
   if(!ui.draft)ui.draft={type:'scale',geom:'line',pts:[]};
@@ -1070,10 +1265,13 @@ document.addEventListener('keydown',e=>{
   if(e.target.closest('input,textarea,select'))return;
   if(e.key==='Enter'&&ui.draft&&ui.tool!=='scale')finishDraft();
   else if((e.key==='Backspace'||e.key==='Delete')&&ui.draft&&ui.draft.pts.length){e.preventDefault();ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
-  else if(e.key==='Escape'){if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
+  else if(e.key==='Escape'){if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()||ui.tool==='edit'){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
   else if((e.key==='s'||e.key==='S')&&!e.metaKey&&!e.ctrlKey){toggleSnap();}
+  else if((e.key==='v'||e.key==='V')&&!e.metaKey&&!e.ctrlKey&&editable()&&!ui.draft){setTool('select');}
+  else if((e.key==='e'||e.key==='E')&&!e.metaKey&&!e.ctrlKey&&editable()&&!ui.draft){setTool('edit');}
 });
 document.addEventListener('keyup',e=>{if(e.key==='Shift')ui.shift=false;});
+document.addEventListener('change',e=>{if(e.target.id==='multiTog'){ui.multi=e.target.checked;ls.set('siteboard.multi',ui.multi?'1':'0');renderHint();}});
 function toggleSnap(){ui.snap=!ui.snap;ls.set('siteboard.snap',ui.snap?'on':'off');renderHint();toast(ui.snap?'Snapping on':'Snapping off — free drawing');}
 document.addEventListener('click',e=>{
   const id=e.target.id;
@@ -1081,9 +1279,17 @@ document.addEventListener('click',e=>{
   else if(id==='undoPt'&&ui.draft){ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
   else if(id==='cancelDraft'){ui.draft=null;ui.hover=null;ui.tool='select';renderAll();}
   else if(id==='snapToggle')toggleSnap();
+  else if(id==='endPiece')finishPiece();
+  else if(id==='toEdit')setTool('edit');
+  else if(id==='toSelect')setTool('select');
 });
 $('#zin').onclick=()=>zoom(1/1.25);$('#zout').onclick=()=>zoom(1.25);$('#zfit').onclick=fit;
-$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b){ui.tool=b.dataset.tool;ui.draft=null;ui.hover=null;if(ui.tool!=='select')ui.sel=null;renderAll();}if(e.target.closest('[data-act="questions"]'))openQuestions();if(e.target.closest('[data-act="types"]'))openTypeManager();if(e.target.closest('[data-act="lists"]'))openListsHub();});
+function setTool(t){ui.tool=t;ui.draft=null;ui.hover=null;if(t!=='select'&&t!=='edit')ui.sel=null;renderAll();}
+$('#rail').addEventListener('click',e=>{
+  const ad=e.target.closest('[data-addtype]');if(ad){openTypeEditor(null,k=>{if(k&&TYPES[k]&&!TYPES[k].hidden)setTool(k);},{geom:ad.dataset.addtype});return;}
+  const et=e.target.closest('[data-edittype]');if(et){openTypeEditor(et.dataset.edittype,()=>renderAll());return;}
+  const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool);
+  if(e.target.closest('[data-act="questions"]'))openQuestions();if(e.target.closest('[data-act="types"]'))openTypeManager();if(e.target.closest('[data-act="lists"]'))openListsHub();});
 
 /* ============ modal helpers ============ */
 // dialogs stack: a list editor opened from a form sits on top of it, and closing it returns to the form
@@ -1112,14 +1318,14 @@ function openCreate(geo){
   const pre=(vs)=>new Set(Object.keys(TK()).filter(t=>overlapping.has(TK()[t].zoneId)&&(vs||[]).includes(TK()[t].vendorId)));
   const preBefore=pre(def.beforeVendors),preAfter=pre(def.afterVendors);
   const count=Object.values(Z()).filter(z=>z.type===type).length+1;
-  const size=geo.geom==='poly'?fmtArea(Math.abs(polyArea(geo.pts))):fmtLen(lengthOf(geo));
+  const size=(geo.geom==='poly'?fmtArea(areaOf(geo)):fmtLen(lengthOf(geo)))+((geo.parts||[]).length?` in ${geo.parts.length+1} pieces`:'');
   let body=`<div class="q"><label class="ql" for="c_label">Name on the plan</label><input class="inp" id="c_label" value="${esc(T.name+' '+count)}"><div class="help">${geo.geom==='poly'?'Area':'Length'}: ${size}${mPer()?'':' (set the scale to see metres)'}</div></div>`;
   qs.forEach(q=>{
     let f='';
     switch(q.kind){
       case 'vendor':f=vendorField('q_'+q.id,def.vendor);break;
-      case 'days':f=`<div class="row"><input class="inp mono" type="number" id="q_${q.id}" min="0.5" step="0.5" value="${def.days??T.days??1}" style="width:90px"><span class="muted">days</span><input class="inp" id="q_taskTitle" value="${esc(def.title||T.task||'Install')}" aria-label="Task name" style="flex:1"></div><div class="help">Starts as soon as everything it depends on is finished.</div>`;break;
-      case 'before':f=taskChecks('before',preBefore,null,overlapping)+`<div class="row"><label class="muted" for="q_notBefore" style="font-size:12px">Not before</label><input class="inp" type="date" id="q_notBefore"></div>`;break;
+      case 'days':f=`<div class="row"><input class="inp mono" type="number" id="q_${q.id}" min="0.5" step="0.5" value="${def.days??T.days??1}" style="width:90px"><span class="muted">days</span><input class="inp" id="q_taskTitle" value="${esc(def.title||T.task||'Install')}" aria-label="Task name" style="flex:1"></div><div class="daterow" style="margin-top:4px"><label>Start <input type="date" class="inp" id="q_start"></label><label>Finish <input type="date" class="inp" id="q_finish"></label></div><div class="help">Dates are optional. Leave them empty and it starts as soon as the work before it is done. Fill in a finish date and the days are worked out for you.</div>`;break;
+      case 'before':f=taskChecks('before',preBefore,null,overlapping);break;
       case 'after':f=taskChecks('after',preAfter,null,overlapping)+`<div class="help">Those tasks will wait until this one is finished.</div>`;break;
       case 'parallel':f=vendorChecks('parallel',new Set(def.parallel||[]))+`<div class="help">Clash warnings are skipped for these vendors in this area.</div>`;break;
       case 'restrict':f=`<select class="sel" id="q_${q.id}" data-list="restrict">${restrictOptions(def.restrict??T.after??'none')}</select>`;break;
@@ -1154,13 +1360,19 @@ function saveCreate(geo,qs){
   const type=geo.type,T=TYPES[type];const zid='z_'+uid();
   const label=$('#c_label').value.trim()||T.name;
   const get=id=>document.getElementById('q_'+id);
-  const z={type,geom:geo.geom,pts:geo.pts,label,after:T.after||'none',parallel:[],answers:{}};
-  let vendorId='',days=T.days||1,title=T.task||'Install',before=[],after=[],follow=[],power=false,notBefore='';
+  const z={type,geom:geo.geom,pts:geo.pts,parts:geo.parts||[],label,after:T.after||'none',parallel:[],answers:{}};
+  let startDate='',vendorId='',days=T.days||1,title=T.task||'Install',before=[],after=[],follow=[],power=false,notBefore='';
+  try{
   qs.forEach(q=>{
     const el=get(q.id);
     switch(q.kind){
       case 'vendor':vendorId=resolveVendor(el,document.getElementById('q_'+q.id+'_new'));break;
-      case 'days':days=Math.max(0.5,parseFloat(el.value)||1);title=$('#q_taskTitle').value.trim()||title;break;
+      case 'days':{days=Math.max(0.5,parseFloat(el.value)||1);title=$('#q_taskTitle').value.trim()||title;
+        const qs0=$('#q_start')?.value||'',qf=$('#q_finish')?.value||'';
+        if(qs0&&qf){const n=offOf(qf)-offOf(qs0)+1;if(n<1){toast('The finish date is before the start date.');throw new Error('stop');}days=n;startDate=qs0;}
+        else if(qs0)startDate=qs0;
+        else if(qf){startDate=isoOf(offOf(qf)-Math.ceil(days)+1);}
+        break;}
       case 'before':before=[...document.querySelectorAll('input[name=before]:checked')].map(i=>i.value);notBefore=$('#q_notBefore')?.value||'';break;
       case 'after':after=[...document.querySelectorAll('input[name=after]:checked')].map(i=>i.value);break;
       case 'parallel':z.parallel=[...document.querySelectorAll('input[name=parallel]:checked')].map(i=>i.value);break;
@@ -1171,6 +1383,7 @@ function saveCreate(geo,qs){
       default:if(el&&el.value!=='')z.answers[q.id]=el.value;
     }
   });
+  }catch(e){if(e.message==='stop')return;throw e;}
   if(T.drop&&!vendorId){toast('Choose whose items are stored here.');return;}
   z.vendorId=vendorId;
   Store.put('zones',zid,z);
@@ -1178,10 +1391,10 @@ function saveCreate(geo,qs){
     const tid='t_'+uid();
     if(follow.length){
       // a job with steps: the installation is step 1, the rest follow in order
-      Store.put('tasks',tid,{title:label,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore});
+      Store.put('tasks',tid,{title:label,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore,...(startDate?{start:startDate}:{})});
       Store.put('tasks','t_'+uid(),{title,zoneId:zid,vendorId,days,deps:[],status:'todo',notBefore:'',parentId:tid,order:0,withPrev:false});
       follow.forEach((f,i)=>Store.put('tasks','t_'+uid(),{title:f.title,zoneId:zid,vendorId:f.vendorId,days:f.days,deps:[],status:'todo',notBefore:'',parentId:tid,order:i+1,withPrev:!!f.withPrev}));
-    }else Store.put('tasks',tid,{title,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore});
+    }else Store.put('tasks',tid,{title,zoneId:zid,vendorId,days,deps:before,status:'todo',notBefore,...(startDate?{start:startDate}:{})});
     after.forEach(a=>{const t=clone(TK()[a]);t.deps=[...new Set([...(t.deps||[]),tid])];Store.put('tasks',a,t);});
   }
   if($('#c_remember').checked){
@@ -1261,13 +1474,21 @@ function depLine(id,ed){
   const txt=own.length?`<span class="muted">Starts after:</span> ${esc(own.map(d=>`${taskLabel(d)} (${isParent(d)?'all steps':vendorName(TK()[d].vendorId)})`).join(', '))}`:'<span class="muted">No other jobs to wait for</span>';
   return `<div style="font-size:12.5px">${txt} ${ed?`<button class="btn small" data-deps="${id}" type="button">Edit</button>`:''}</div>`;
 }
+function startISO(id){return isoOf(Math.floor(SCH[id].s+1e-6));}
+function finishISO(id){const x=SCH[id];return isoOf(Math.max(Math.floor(x.s+1e-6),Math.ceil(x.e-1e-6)-1));}
+// dates are whole days, both included: a 2-day task starting Mon 19 finishes Tue 20
+function dateRow(id,job,pad){const t=TK()[id];const pinned=!!t.start;
+  return `<div class="daterow"${pad?' style="padding-left:22px"':''}><label>Start <input type="date" class="inp" data-date="start" data-id="${id}" value="${startISO(id)}"></label>`+
+    `<label>Finish <input type="date" class="inp" ${job?'disabled title="Set by its steps"':`data-date="finish" data-id="${id}"`} value="${finishISO(id)}"></label>`+
+    `<span class="dstate">${pinned?`Fixed start <button class="btn small ghost" data-auto="${id}" type="button" title="Start as soon as the work before it is done">Make automatic</button>`:'Starts automatically'}</span></div>`;}
 function stepRow(id,i,n,ed){
   const t=TK()[id],s=SCH[id],st=taskState(id);
   if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div></div><span class="st ${st}">${pillText(id,st)}</span></div>`;
   return `<div data-tcard="${id}" style="display:flex;flex-direction:column;gap:5px;padding:7px 0;border-top:1px solid var(--line2)">
     <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${pillText(id,st)}</span></div>
     <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
-    <div class="row" style="padding-left:22px;font-size:12px"><span class="mono muted">${fmtDay(s.s)} → ${fmtDay(s.e)}</span>${i>0?`<label class="muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tf="withPrev" ${t.withPrev?'checked':''}> same time as step ${i}</label>`:''}</div>
+    ${dateRow(id,false,true)}
+    ${i>0?`<div class="row" style="padding-left:22px;font-size:12px"><label class="muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tf="withPrev" ${t.withPrev?'checked':''}> same time as step ${i}</label></div>`:''}
     <div class="row" style="padding-left:22px"><select class="sel" data-tf="status" data-list="status" aria-label="Status" style="font-size:12.5px">${statusOptions(t.status)}</select><button class="btn small ghost" data-sup="${id}" type="button" aria-label="Move step up" ${i?'':'disabled'}>▲</button><button class="btn small ghost" data-sdn="${id}" type="button" aria-label="Move step down" ${i<n-1?'':'disabled'}>▼</button><button class="btn small ghost danger" data-sdel="${id}" type="button">Remove step</button></div>
   </div>`;
 }
@@ -1279,7 +1500,7 @@ function taskCard(id,ed){
       <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Job name" style="font-weight:600">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
       <div class="mono muted" style="font-size:12px">${ks.length} steps · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
       ${depLine(id,ed)}
-      ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>`:''}
+      ${ed?dateRow(id,true):''}
       <div>${ks.map((k,i)=>stepRow(k,i,ks.length,ed)).join('')}</div>
       ${ed?`<div class="row"><button class="btn small" data-addstep="${id}" type="button">+ Add step</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete job and its steps</button></div>`:''}
     </div>`;
@@ -1287,10 +1508,9 @@ function taskCard(id,ed){
   return `<div class="task" data-tcard="${id}">
     <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Task name">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
     <div class="row" style="font-size:12.5px">${ed?`<select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:64px" aria-label="Days"><span class="muted">days</span>`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(vendorName(t.vendorId))} · ${t.days} day${t.days==1?'':'s'}`}</div>
-    <div class="mono muted" style="font-size:12px">${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
+    ${ed?dateRow(id,false):`<div class="mono muted" style="font-size:12px">${fmtDay(s.s)} → ${fmtDay(s.e)}</div>`}
     ${depLine(id,ed)}
-    ${ed?`<div class="row" style="font-size:12px"><label class="muted" for="nb_${id}">Not before</label><input class="inp" type="date" id="nb_${id}" data-tf="notBefore" value="${esc(t.notBefore||'')}"></div>
-    <div class="row"><select class="sel" data-tf="status" data-list="status" aria-label="Status">${statusOptions(t.status)}</select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
+    ${ed?`<div class="row"><select class="sel" data-tf="status" data-list="status" aria-label="Status">${statusOptions(t.status)}</select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
   </div>`;
 }
 /* step editing */
@@ -1321,7 +1541,12 @@ function panelZone(){
   const T=TYPES[z.type]||TYPES.area;const ed=editable();
   const w=zoneWindow(id);const ts=zoneTasks(id);
   let h=`<div class="sec"><h4>${esc(T.name)}</h4>${ed?`<input class="inp" data-zf="label" value="${esc(z.label)}" aria-label="Name" style="width:100%;font-family:var(--f-display);font-size:20px;font-weight:600">`:`<div style="font-family:var(--f-display);font-size:22px;font-weight:600">${esc(z.label)}</div>`}</div>`;
-  h+=`<div class="sec meas">${z.geom==='poly'?`<div><b>${fmtArea(Math.abs(polyArea(z.pts)))}</b><span>Area</span></div><div><b>${fmtLen(lengthOf(z))}</b><span>Perimeter</span></div>`:`<div><b>${fmtLen(lengthOf(z))}</b><span>Length</span></div>`}<div><b>${z.geom==='poly'?z.pts.length:z.pts.length}</b><span>${z.geom==='poly'?'Corners':'Points'}</span></div></div>`;
+  const isHid=(ui.view?.zones||[]).includes(id);
+  h+=`<div class="row"><button class="btn small" data-hidez="${id}" type="button">${eyeIcon()} ${isHid?'Show on map':'Hide on map'}</button>${isHid?'<span class="muted" style="font-size:12px">Hidden on your screen</span>':''}</div>`;
+  h+=`<div class="sec meas">${z.geom==='poly'?`<div><b>${fmtArea(areaOf(z))}</b><span>Area</span></div><div><b>${fmtLen(lengthOf(z))}</b><span>Perimeter</span></div>`:`<div><b>${fmtLen(lengthOf(z))}</b><span>Length</span></div>`}<div><b>${piecesOf(z).length>1?piecesOf(z).length:allPts(z).length}</b><span>${piecesOf(z).length>1?'Pieces':(z.geom==='poly'?'Corners':'Points')}</span></div></div>`;
+  {const pcs=piecesOf(z);const edP=editable();
+   if(pcs.length>1||edP)h+=`<div class="sec"><h4>${pcs.length>1?`Pieces · ${pcs.length} (one task)`:'Pieces'}</h4><div style="display:flex;flex-direction:column;gap:4px">${pcs.length>1?pcs.map((pc,i)=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap;font-size:12.5px"><span>Piece ${i+1} · <span class="mono">${z.geom==='poly'?fmtArea(Math.abs(polyArea(pc))):fmtLen(pieceLen(pc,z.geom))}</span></span>${edP?`<button class="btn small ghost danger" data-rmpiece="${i}" type="button">Remove</button>`:''}</div>`).join(''):''}
+   ${edP?`<div class="row"><button class="btn small" data-addpiece type="button">+ Add a piece</button><span class="muted" style="font-size:12px">Another separate ${z.geom==='poly'?'area':'line'} in a different place, same task.</span></div>`:''}</div></div>`;}
   if(!mPer()&&ed)h+=`<div class="muted" style="font-size:12px;margin-top:-6px">Use “Set scale” on the left to see real metres.</div>`;
   h+=`<div class="sec"><h4>Access timeline</h4><div style="font-size:13px;display:flex;flex-direction:column;gap:3px">`;
   if(T.drop){const c=clearByOff(id);h+=`<div>${esc(vendorName(z.vendorId))} may store items here ${c?`until <b>${fmtDay(c.off)}</b>${c.manual?'':' (set automatically: next vendor starts then)'}`:'with no deadline yet'}.</div>`;}
@@ -1334,6 +1559,7 @@ function panelZone(){
     h+=`<div class="sec"><h4>Settings</h4><div style="display:flex;flex-direction:column;gap:8px">`;
     if(!T.route&&lookOf(z.type)!=='nogo')h+=`<div class="field"><label for="zv">${T.drop?'Whose items':'Responsible vendor'}</label><select class="sel" id="zv" data-zf="vendorId" data-vendor data-list="vendor">${vendorOptions(z.vendorId)}</select><div class="newv" hidden><input class="inp" id="zv_new" placeholder="Vendor name" style="width:100%"></div></div>`;
     if(T.drop)h+=`<div class="field"><label for="zc">Items allowed until (blank = automatic)</label><input class="inp" type="date" id="zc" data-zf="clearBy" value="${esc(z.clearBy||'')}"></div>`;
+    if(z.geom==='poly')h+=`<div class="field"><label for="zop">See-through (fill only; outline and label stay)</label><div class="opctl"><input type="range" id="zop" min="0" max="1" step="0.05" value="${z.opacity??1}" data-zop><span class="mono" id="zopV">${Math.round((z.opacity??1)*100)}%</span></div></div>`;
     h+=`<div class="field"><label for="za">Once installed</label><select class="sel" id="za" data-zf="after" data-list="restrict">${restrictOptions(z.after)}</select></div>`;
     h+=`<div class="field"><label>Can work here in parallel</label>${vendorChecks('zpar',new Set(z.parallel||[]))}</div>`;
     h+=`<div class="row"><button class="btn small" id="zstraight" type="button">Straighten lines</button><span class="muted" style="font-size:12px">Makes nearly-straight and nearly-square sides exact.</span></div>`;
@@ -1350,11 +1576,10 @@ function panelConflicts(){
   if(!CONF.length)return `<div class="row"><span class="pill ok">No clashes</span><span class="muted">Every area has one vendor at a time, and drop-offs clear before work starts.</span></div>`;
   return CONF.map((c,i)=>`<div class="conf ${c.level}"><b>${esc(c.title)}</b><div style="font-size:13px">${esc(c.detail)}</div><div class="row">${(c.zones||[]).filter(Boolean).length?`<button class="btn small" data-cshow="${i}" type="button">Show on plan</button>`:''}${c.fix&&Store.canEdit?`<button class="btn small primary" data-cfix="${i}" type="button">${esc(c.fix.label)}</button>`:''}${c.fix2&&Store.canEdit?`<button class="btn small" data-cfix2="${i}" type="button">${esc(c.fix2.label)}</button>`:''}</div></div>`).join('');
 }
-function vendorLink(id){return location.origin+location.pathname+'?'+(Store.eventId?'event='+encodeURIComponent(Store.eventId)+'&':'')+'vendor='+encodeURIComponent(id);}
 function vendorSteps(vid){return Object.keys(TK()).filter(i=>isLeaf(i)&&TK()[i].vendorId===vid).sort((a,b)=>SCH[a].s-SCH[b].s);}
 function panelVendors(){
   const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));const ed=Store.canEdit;const dis=ed?'':'disabled';
-  let h=`<div class="sec muted" style="font-size:12.5px">${Store.mode==='github'?'Your vendor directory. Send each vendor their own link: they see only their steps, deadlines and site rules, and can’t change anything.':'Your vendor directory. Publish the board on GitHub Pages to send live links to vendors.'}</div>`;
+  let h=`<div class="sec muted" style="font-size:12.5px">${Store.mode==='cloud'?'Your supplier directory. Add a supplier’s email and they can sign in with it to see only their part: their steps, deadlines, drop-off areas and site rules.':'Your supplier directory. Once Firebase is set up, suppliers can sign in with their email to see only their part.'}</div>`;
   if(ed)h+=`<div class="sec"><h4>Add a vendor</h4><div style="display:flex;flex-direction:column;gap:6px"><input class="inp" id="newVendor" placeholder="Company name"><input class="inp" id="newTrade" placeholder="What they do, e.g. Stage structure and stairs"><button class="btn" id="addVendor" type="button" style="align-self:flex-start">Add vendor</button></div></div>`;
   if(!vs.length)return h+`<div class="muted">No vendors yet.</div>`;
   h+=vs.map(([id,v])=>{
@@ -1368,10 +1593,11 @@ function panelVendors(){
         <div class="row" style="flex-wrap:nowrap"><input type="color" value="${esc(v.color)}" data-vf="color" aria-label="Colour on the plan" ${dis}><input class="inp" data-vf="name" value="${esc(v.name)}" aria-label="Company name" style="flex:1;min-width:0" ${dis}></div>
         <div class="field"><label>What they do</label><input class="inp" data-vf="trade" value="${esc(v.trade||'')}" placeholder="e.g. Stage structure, stairs and backstage walls" ${dis}></div>
         <div class="row"><div class="field" style="flex:1;min-width:130px"><label>Contact person</label><input class="inp" data-vf="contact" value="${esc(v.contact||'')}" ${dis}></div><div class="field" style="flex:1;min-width:130px"><label>Phone</label><input class="inp" type="tel" data-vf="phone" value="${esc(v.phone||'')}" ${dis}></div></div>
-        <div class="field"><label>Email</label><input class="inp" type="email" data-vf="email" value="${esc(v.email||'')}" ${dis}></div>
+        <div class="field"><label>Email (they sign in with this)</label><input class="inp" type="email" data-vf="email" value="${esc(v.email||'')}" placeholder="name@company.com" ${dis}></div>
+        ${ed?accessBlock(id,v):''}
         <div class="field"><label>Notes (access, vehicles, crew size…)</label><textarea class="inp" data-vf="notes" rows="2" ${dis}>${esc(v.notes||'')}</textarea></div>
         <div class="sec"><h4>Their steps, in order${drops?` · ${drops} drop-off area${drops>1?'s':''}`:''}</h4><div style="display:flex;flex-direction:column;gap:6px">${stepList}</div></div>
-        <div class="row"><button class="btn small" data-viewas="${id}" type="button">View as</button><button class="btn small" data-copy="${id}" type="button">Copy brief</button>${Store.mode==='github'?`<button class="btn small" data-link="${id}" type="button">Copy vendor link</button>`:''}${ed&&!steps.length&&!drops?`<button class="btn small ghost danger" data-vdel="${id}" type="button">Remove vendor</button>`:''}</div>
+        <div class="row"><button class="btn small" data-viewas="${id}" type="button">See what they see</button><button class="btn small" data-copy="${id}" type="button">Copy brief</button>${ed&&!steps.length&&!drops?`<button class="btn small ghost danger" data-vdel="${id}" type="button">Remove vendor</button>`:''}</div>
       </div></details>`;}).join('');
   return h;
 }
@@ -1379,46 +1605,59 @@ function contactLine(vid){const v=V()[vid];if(!v)return '';const bits=[v.contact
 function briefText(vid){
   const T=TK(),zs=Z();const mine=vendorSteps(vid);
   const L=[];L.push(`${S().name||'Event'} — brief for ${vendorName(vid)}`);L.push(`Build-up ${fmtDay(0,false)} → event ${fmtDay(eventOff(),false)}`);
-  if(Store.mode==='github')L.push(`Live plan: ${vendorLink(vid)}`);
+  if(Store.mode==='cloud')L.push(`Your live plan: ${siteUrl()} (sign in with ${V()[vid]?.email||'your registered email'})`);
   const linked=new Set();
   L.push('');L.push('YOUR WORK');
   if(!mine.length)L.push('- No installation work assigned.');
   mine.forEach(i=>{const t=T[i];const z=zs[t.zoneId];
-    const w=(EDEPS[i]||[]).map(d=>{const dv=isParent(d)?null:T[d].vendorId;if(dv&&dv!==vid)linked.add(dv);if(isParent(d))KIDS[d].forEach(k=>{if(T[k].vendorId!==vid)linked.add(T[k].vendorId);});return `${taskLabel(d)} (${isParent(d)?'all steps':vendorName(dv)})`;});
-    const nxt=successors(i);nxt.forEach(o=>{if(T[o].vendorId!==vid)linked.add(T[o].vendorId);});
-    const size=z&&mPer()&&!t.parentId?` (${z.geom==='poly'?fmtArea(Math.abs(polyArea(z.pts))):fmtLen(lengthOf(z))})`:'';
+    const w=t.waitsOn?t.waitsOn:(EDEPS[i]||[]).map(d=>{const dv=isParent(d)?null:T[d].vendorId;if(dv&&dv!==vid)linked.add(dv);if(isParent(d))KIDS[d].forEach(k=>{if(T[k].vendorId!==vid)linked.add(T[k].vendorId);});return `${taskLabel(d)} (${isParent(d)?'all steps':vendorName(dv)})`;});
+    const nxt=t.nextUp?[]:successors(i);nxt.forEach(o=>{if(T[o].vendorId!==vid)linked.add(T[o].vendorId);});
+    const nxtTxt=t.nextUp?t.nextUp:nxt.map(o=>`${vendorName(T[o].vendorId)} (${taskLabel(o)})`);
+    const size=z&&mPer()&&!t.parentId?` (${z.geom==='poly'?fmtArea(areaOf(z)):fmtLen(lengthOf(z))}${(z.parts||[]).length?`, ${z.parts.length+1} pieces`:''})`:'';
     L.push(`- ${taskLabel(i)} at ${z?.label||'site'}${size}: ${fmtDay(SCH[i].s)} → ${fmtDay(SCH[i].e)} (${t.days} day${t.days==1?'':'s'}).`);
     if(t.withPrev)L.push('    Runs at the same time as the step before it.');
     if(w.length)L.push(`    Start only after: ${w.join('; ')}.`);
-    if(nxt.length)L.push(`    Finish on time: ${nxt.map(o=>`${vendorName(T[o].vendorId)} (${taskLabel(o)})`).join(', ')} starts right after you.`);});
+    if(nxtTxt.length)L.push(`    Finish on time: ${nxtTxt.join(', ')} starts right after you.`);});
   const drops=Object.keys(zs).filter(id=>TYPES[zs[id].type]?.drop&&zs[id].vendorId===vid);
   if(drops.length){L.push('');L.push('WHERE YOU CAN LEAVE ITEMS');drops.forEach(id=>{const c=clearByOff(id);L.push(`- ${zs[id].label}: ${c?`remove everything before ${fmtDay(c.off)}`:'no deadline yet'}${c&&c.task?` — ${taskLabel(c.task)} starts there`:''}.`);});L.push('- Do not leave items anywhere else.');}
   const rules=Object.keys(zs).filter(id=>zs[id].after&&zs[id].after!=='none');
   if(rules.length){L.push('');L.push('SITE RULES');rules.forEach(id=>L.push(`- ${zs[id].label}: ${restrictLabel(zs[id].after).toLowerCase()} from ${fmtDay(restrictFrom(id))}.`));}
   const locks=Object.keys(zs).map(id=>({id,w:zoneWindow(id)})).filter(x=>x.w&&zoneTasks(x.id).some(t=>T[t].vendorId!==vid));
   if(locks.length){L.push('');L.push('LOCKED WHILE OTHERS WORK (stay out)');locks.sort((a,b)=>a.w.s-b.w.s).forEach(({id})=>{const parts=zoneTasks(id).filter(t=>T[t].vendorId!==vid);const s=Math.min(...parts.map(t=>SCH[t].s)),e=Math.max(...parts.map(t=>SCH[t].e));const others=[...new Set(parts.map(t=>vendorName(T[t].vendorId)))];L.push(`- ${zs[id].label}: ${fmtDay(s)} → ${fmtDay(e)} (${others.join(', ')}).`);});}
-  linked.delete(vid);linked.delete('');linked.delete(undefined);
+  if(Store.d.view)Object.keys(V()).forEach(k=>{if(k!=='_other')linked.add(k);});
+  linked.delete(vid);linked.delete('_other');linked.delete('');linked.delete(undefined);
   if(linked.size){L.push('');L.push('VENDORS BEFORE AND AFTER YOU');[...linked].forEach(o=>L.push('- '+contactLine(o)));}
   return L.join('\n');
 }
-function panelBrief(){const vid=ui.viewAs;if(!V()[vid])return `<div class="muted">Choose your company under “Viewing as”.</div>`;return `<div class="row"><button class="btn small primary" data-copy="${vid}" type="button">Copy brief</button><span class="muted" style="font-size:12px">Paste into WhatsApp or email.</span></div><div class="brief">${esc(briefText(vid))}</div>`;}
+function panelBrief(){const vid=ui.viewAs;if(!V()[vid])return `<div class="muted">${Store.role==='vendor'?'Nothing assigned to you yet.':'Choose a supplier under “Viewing as”.'}</div>`;return `<div class="row"><button class="btn small primary" data-copy="${vid}" type="button">Copy brief</button><span class="muted" style="font-size:12px">Paste into WhatsApp or email.</span></div><div class="brief">${esc(briefText(vid))}</div>`;}
 function copyText(txt,msg){const done=()=>toast(msg||'Copied.');try{navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt));}catch(e){fallbackCopy(txt);}}
 function fallbackCopy(txt){openModal(`<div class="mh"><h2>Copy</h2><p>Select all and copy.</p></div><div class="mb"><textarea class="inp" id="cpy" rows="14" style="width:100%;font-family:var(--f-mono);font-size:12px">${esc(txt)}</textarea></div><div class="mf"><span></span><button class="btn" type="button" id="cpyc">Close</button></div>`,()=>{$('#cpyc').onclick=closeModal;const t=$('#cpy');t.focus();t.select();});}
 
 function wirePanel(p){
   wireNewVendor(p);
   p.querySelectorAll('[data-task]').forEach(r=>r.onclick=()=>{const t=TK()[r.dataset.task];ui.selTask=r.dataset.task;ui.sel=t.zoneId;ui.day=SCH[r.dataset.task].s;renderAll();});
+  const zop=p.querySelector('[data-zop]');if(zop){const id=ui.sel;
+    zop.addEventListener('input',()=>{const v=parseFloat(zop.value);$('#zopV').textContent=Math.round(v*100)+'%';Store.d.zones={...Store.d.zones,[id]:{...Z()[id],opacity:v}};renderMap();});
+    zop.addEventListener('change',()=>{const z=clone(Z()[id]);z.opacity=parseFloat(zop.value);Store.put('zones',id,z);});}
   p.querySelectorAll('[data-zf]').forEach(el=>el.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);const k=el.dataset.zf;
     if(k==='vendorId'){if(el.value==='__new')return;z.vendorId=el.value;}else z[k]=el.value;Store.put('zones',ui.sel,z);}));
   const zvn=p.querySelector('#zv_new');if(zvn)zvn.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.vendorId=resolveVendor($('#zv'),zvn);Store.put('zones',ui.sel,z);});
   p.querySelectorAll('input[name=zpar]').forEach(c=>c.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.parallel=[...p.querySelectorAll('input[name=zpar]:checked')].map(i=>i.value);Store.put('zones',ui.sel,z);}));
-  const zs=p.querySelector('#zstraight');if(zs)zs.onclick=()=>{const z=clone(Z()[ui.sel]);z.pts=straighten(z);Store.put('zones',ui.sel,z);toast('Straightened.');};
+  const zs=p.querySelector('#zstraight');if(zs)zs.onclick=()=>{const z=clone(Z()[ui.sel]);z.pts=straighten(z);z.parts=(z.parts||[]).map(pc=>straighten({...z,pts:pc}));Store.put('zones',ui.sel,z);toast('Straightened.');};
   p.querySelectorAll('[data-tcard]').forEach(card=>{const id=card.dataset.tcard;const own=el=>el.closest('[data-tcard]')===card;
     card.querySelectorAll('[data-tf]').forEach(el=>{if(!own(el))return;el.addEventListener('change',()=>{const t=clone(TK()[id]);const k=el.dataset.tf;
       if(k==='vendorId'){if(el.value==='__new')return;t.vendorId=el.value;}
       else if(k==='days')t.days=Math.max(0.5,parseFloat(el.value)||1);
       else if(el.type==='checkbox')t[k]=el.checked;else t[k]=el.value;Store.put('tasks',id,t);});});
     card.querySelectorAll('.newv input').forEach(i=>{if(!own(i))return;i.addEventListener('change',()=>{const t=clone(TK()[id]);t.vendorId=resolveVendor([...card.querySelectorAll('[data-tf=vendorId]')].find(own),i);Store.put('tasks',id,t);});});});
+  p.querySelectorAll('[data-date]').forEach(el=>el.addEventListener('change',()=>{const id=el.dataset.id;const t=clone(TK()[id]);el.blur(); // a committed date refreshes every date shown
+    if(el.dataset.date==='start'){if(el.value)t.start=el.value;else delete t.start;}
+    else{const F=offOf(el.value),s0=Math.floor(SCH[id].s+1e-6);if(F==null)return;if(F<s0){toast('The finish date is before the start date.');renderPanel();return;}t.days=F-s0+1;}
+    Store.put('tasks',id,t);}));
+  p.querySelectorAll('[data-auto]').forEach(b=>b.onclick=()=>{const t=clone(TK()[b.dataset.auto]);delete t.start;Store.put('tasks',b.dataset.auto,t);});
+  p.querySelectorAll('[data-hidez]').forEach(b=>b.onclick=()=>toggleZoneHidden(b.dataset.hidez));
+  p.querySelectorAll('[data-addpiece]').forEach(b=>b.onclick=()=>{const id=ui.sel,z=Z()[id];if(!z)return;ui.tool=z.type;ui.hover=null;ui.draft={type:z.type,geom:z.geom,pts:[],done:[],addTo:id};renderAll();});
+  p.querySelectorAll('[data-rmpiece]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[ui.sel]);removePiece(z,+b.dataset.rmpiece);Store.put('zones',ui.sel,z);toast('Piece removed.');}));
   p.querySelectorAll('[data-deps]').forEach(b=>b.onclick=()=>openDeps(b.dataset.deps));
   p.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.tdel)));
   p.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.sdel)));
@@ -1430,10 +1669,12 @@ function wirePanel(p){
   p.querySelectorAll('[data-cshow]').forEach(b=>b.onclick=()=>{const c=CONF[+b.dataset.cshow];const zid=c.zones.find(Boolean);ui.sel=zid;const w=zoneWindow(zid);if(w)ui.day=w.s;focusZone(zid);renderAll();});
   p.querySelectorAll('[data-cfix]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix].fix.run();toast('Fixed.');});
   p.querySelectorAll('[data-cfix2]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix2].fix2.run();toast('Marked as parallel.');});
-  p.querySelectorAll('[data-vrow]').forEach(r=>{const id=r.dataset.vrow;r.querySelectorAll('[data-vf]').forEach(el=>el.addEventListener('change',()=>{const v=clone(V()[id]);v[el.dataset.vf]=el.value;Store.put('vendors',id,v);}));});
+  p.querySelectorAll('[data-vrow]').forEach(r=>{const id=r.dataset.vrow;r.querySelectorAll('[data-vf]').forEach(el=>el.addEventListener('change',()=>{const v=clone(V()[id]);v[el.dataset.vf]=el.type==='checkbox'?el.checked:(el.dataset.vf==='email'?el.value.trim():el.value);Store.put('vendors',id,v);}));});
   p.querySelectorAll('[data-viewas]').forEach(b=>b.onclick=()=>setViewAs(b.dataset.viewas));
-  p.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(briefText(b.dataset.copy),'Brief copied.'));
-  p.querySelectorAll('[data-link]').forEach(b=>b.onclick=()=>copyText(vendorLink(b.dataset.link),'Vendor link copied.'));
+  p.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(briefFor(b.dataset.copy),'Brief copied.'));
+  p.querySelectorAll('[data-invite]').forEach(b=>b.onclick=async()=>{const v=V()[b.dataset.invite];b.disabled=true;b.textContent='Sending…';
+    try{await Store.flush();await Store.sendLink(v.email,true);b.textContent='Sent';toast(`Sign-in link sent to ${v.email}.`);}catch(e){b.disabled=false;b.textContent='Email them a sign-in link';toast(authMessage(e));}});
+  p.querySelectorAll('[data-siteurl]').forEach(b=>b.onclick=()=>copyText(siteUrl(),'Address copied. They enter their email there to get a sign-in link.'));
   p.querySelectorAll('[data-vdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>Store.del('vendors',b.dataset.vdel)));
   const av=p.querySelector('#addVendor');if(av){const add=()=>{const n=$('#newVendor').value.trim();if(!n){toast('Enter the company name.');return;}const id='v_'+uid();ui.openVendor=id;Store.put('vendors',id,{name:n,trade:$('#newTrade').value.trim(),color:nextColor(),contact:'',phone:'',email:'',notes:''});};av.onclick=add;['#newVendor','#newTrade'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')add();}));}
   p.querySelectorAll('details[data-vrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)ui.openVendor=d.dataset.vrow;else if(ui.openVendor===d.dataset.vrow)ui.openVendor=null;}));
@@ -1454,7 +1695,7 @@ function openDeps(id){
 $('#btnSettings').onclick=openSettings;
 function openSettings(){
   const s=S();const ed=Store.canEdit;const dis=ed?'':'disabled';
-  openModal(`<div class="mh"><h2>Event settings</h2><p>${Store.mode==='github'?'Saved to your GitHub repository for everyone with the link.':'Saved in this browser only.'}</p></div>
+  openModal(`<div class="mh"><h2>Event settings</h2><p>${Store.mode==='cloud'?'Saved online. Suppliers only ever see their own part.':'Saved in this browser only.'}</p></div>
   <div class="mb">
     <div class="field"><label for="sn">Event name</label><input class="inp" id="sn" value="${esc(s.name||'')}" ${dis}></div>
     <div class="row"><div class="field" style="flex:1"><label for="ss">First build-up day</label><input class="inp" type="date" id="ss" value="${esc(s.setupStart||'')}" ${dis}></div><div class="field" style="flex:1"><label for="se">Event day</label><input class="inp" type="date" id="se" value="${esc(s.eventDate||'')}" ${dis}></div></div>
@@ -1467,46 +1708,31 @@ function openSettings(){
       <div class="row"><button class="btn small danger" id="sclear" type="button">Clear areas and tasks only</button><span class="muted" style="font-size:12px;flex:1;min-width:180px">Keeps vendors, your questions and the floor plan.</span></div>
       <div class="row"><button class="btn small danger" id="sdelev" type="button">Delete this event</button><span class="muted" style="font-size:12px;flex:1;min-width:180px">Removes the event and its vendor links. Other events aren’t affected.</span></div>
     </div></div>`:''}
-    ${Store.mode==='github'&&ed?'<div class="row"><button class="btn small" id="slogout" type="button">Sign out on this device</button></div>':''}
+    ${ed?`<div class="sec"><h4>What suppliers see</h4><label class="row" style="font-size:13px;align-items:flex-start"><input type="checkbox" id="sshare" ${s.shareHandover!==false?'checked':''}> <span>Show each supplier who works right before and after them, with contact details. Everyone else shows as “another supplier”.</span></label></div>`:''}
+    ${Store.mode==='cloud'&&ed?`<div class="sec"><h4>Team</h4><div class="row"><button class="btn small" id="splanners" type="button">Planners…</button><span class="muted" style="font-size:12px">People who can see and edit everything.</span></div><div class="row" id="simportRow" hidden style="margin-top:6px"><button class="btn small" id="simport" type="button">Import events from the GitHub version</button><span class="muted" style="font-size:12px" id="simportNote"></span></div></div>`:''}
   </div>
   <div class="mf"><span></span><div class="row"><button class="btn" id="scl" type="button">Close</button>${ed?'<button class="btn primary" id="ssv" type="button">Save</button>':''}</div></div>`,()=>{
     $('#scl').onclick=closeModal;
     if(!ed)return;
-    $('#ssv').onclick=()=>{Store.setSettings({name:$('#sn').value.trim(),setupStart:$('#ss').value,eventDate:$('#se').value,bgOpacity:$('#so')?parseFloat($('#so').value):(s.bgOpacity??0.8)});closeModal();};
+    $('#ssv').onclick=()=>{Store.setSettings({name:$('#sn').value.trim(),setupStart:$('#ss').value,eventDate:$('#se').value,bgOpacity:$('#so')?parseFloat($('#so').value):(s.bgOpacity??0.8),shareHandover:$('#sshare')?$('#sshare').checked:true});closeModal();};
+    const pb=$('#splanners');if(pb)pb.onclick=()=>openPlanners();
+    if($('#simportRow'))findOldGithubData().then(list=>{if(!list.length||!$('#simportRow'))return;$('#simportRow').hidden=false;$('#simportNote').textContent=`${list.length} event${list.length===1?'':'s'} found in this site’s data folder.`;$('#simport').onclick=()=>importOldGithub(list,$('#simport'));});
     $('#sscale').onclick=()=>{closeModal();ui.tool='scale';ui.draft=null;ui.sel=null;renderAll();};
     $('#sb').onchange=async e=>{const f=e.target.files[0];if(!f)return;
-      const dims=await new Promise(r=>{const u=URL.createObjectURL(f);const im=new Image();im.onload=()=>{r({w:im.naturalWidth||1000,h:im.naturalHeight||640});URL.revokeObjectURL(u);};im.onerror=()=>r(null);im.src=u;});
-      if(!dims){toast('That file isn’t an image this browser can read. Use PNG or JPG.');return;}
-      if(Store.mode==='github'){try{toast('Uploading floor plan to GitHub…');const r=await Store.upload(f);Store.setSettings({bgUrl:r.url,bgW:dims.w,bgH:dims.h});toast('Floor plan added.');closeModal();fit();}catch(err){toast('Upload failed: '+err.message);}}
-      else{const fr=new FileReader();fr.onload=()=>{Store.setSettings({bgUrl:fr.result,bgW:dims.w,bgH:dims.h});closeModal();fit();};fr.readAsDataURL(f);}
+      try{toast('Adding floor plan…');const r=await Store.upload(f);Store.setSettings({bgUrl:r.url,bgW:r.w,bgH:r.h});toast('Floor plan added.');closeModal();fit();}
+      catch(err){toast('Could not add the floor plan: '+err.message);}
     };
     $('#sexp').onclick=()=>{const blob=new Blob([JSON.stringify(Store.d,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(S().name||'site-plan').replace(/[^\w-]+/g,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);};
     $('#simp').onclick=()=>$('#importFile').click();
     const sc=$('#sclear');sc.onclick=()=>confirmBtn(sc,()=>{Store.d.tasks={};Store.d.zones={};ui.sel=null;ui.selTask=null;Store.touch();closeModal();toast('Areas and tasks cleared. Vendors and questions kept.');});
     const sa=$('#sclearall');sa.onclick=()=>confirmBtn(sa,()=>{const keep=S();const d=emptyPlan();d.settings={...d.settings,name:keep.name||d.settings.name,setupStart:keep.setupStart||d.settings.setupStart,eventDate:keep.eventDate||d.settings.eventDate};ui.sel=null;ui.selTask=null;ui.draft=null;ui.day=0;Store.replaceAll(d);closeModal();fit();toast('Plan cleared. Everything removed.');});
     const sdv=$('#sdelev');sdv.onclick=()=>confirmBtn(sdv,async()=>{const name=S().name||'This event';sdv.disabled=true;sdv.textContent='Deleting…';try{await Store.deleteEvent(Store.eventId);closeModal();toast(`Deleted “${name}”.`);}catch(e){sdv.disabled=false;sdv.textContent='Delete this event';toast('Could not delete: '+e.message);}});
-    const lo=$('#slogout');if(lo)lo.onclick=async()=>{await Store.flush();ls.del('siteboard.ghtoken');Store.token='';Store.canEdit=false;closeModal();setSave();renderAll();toast('Signed out on this device.');};
   });
 }
 $('#importFile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d||!d.zones||!d.settings)throw 0;
   openModal(`<div class="mh"><h2>Replace the current plan?</h2><p>“${esc(d.settings.name||'Backup')}” has ${Object.keys(d.zones).length} items and ${Object.keys(d.tasks||{}).length} tasks. The plan on screen will be replaced.</p></div><div class="mf"><span></span><div class="row"><button class="btn" id="ic" type="button">Cancel</button><button class="btn primary" id="iy" type="button">Replace plan</button></div></div>`,()=>{$('#ic').onclick=closeModal;$('#iy').onclick=()=>{Store.replaceAll(d);ui.sel=null;closeAllModals();fit();toast('Backup loaded.');};});
 }catch(err){toast('That file is not a site board backup.');}};fr.readAsText(f);});
-$('#btnLogin').onclick=()=>{
-  const r=repoInfo()||{owner:'?',repo:'?'};
-  openModal(`<div class="mh"><h2>Planner sign-in</h2><p>Paste a GitHub access token that can write to <b>${esc(r.owner)}/${esc(r.repo)}</b>. It stays in this browser only and is never saved to the repository.</p></div>
-  <form class="mb" id="lf"><input class="inp mono" type="password" id="lk" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
-  <details style="font-size:12.5px"><summary style="cursor:pointer">How to make a token (2 minutes)</summary><ol style="padding-left:18px;margin:6px 0;display:flex;flex-direction:column;gap:3px">
-  <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
-  <li>Name it “Site board”. Pick an expiry (for example 1 year).</li>
-  <li>Repository access: <b>Only select repositories</b> → ${esc(r.repo)}.</li>
-  <li>Permissions → Repository permissions → <b>Contents: Read and write</b>. Nothing else.</li>
-  <li>Generate, copy the token, paste it here.</li></ol></details></form>
-  <div class="mf"><span></span><div class="row"><button class="btn" id="lc" type="button">Cancel</button><button class="btn primary" id="ly" type="button">Sign in</button></div></div>`,()=>{
-    const go=async()=>{const k=$('#lk').value.trim();if(!k)return;$('#ly').disabled=true;$('#ly').textContent='Checking…';
-      if(await Store.check(k)){Store.token=k;ls.set('siteboard.ghtoken',k);Store.canEdit=true;try{await Store.loadIndex();if(!Store.eventId)Store.eventId=Store.pickEvent(null);if(Store.eventId)await Store.loadSafe();dataStamp++;}catch(e){}closeModal();setViewAs('planner');setSave();toast('Signed in. Changes now save to GitHub.');}
-      else{$('#ly').disabled=false;$('#ly').textContent='Sign in';}};
-    $('#lc').onclick=closeModal;$('#ly').onclick=go;$('#lf').addEventListener('submit',e=>{e.preventDefault();go();});});
-};
+$('#btnSignOut').onclick=()=>Store.signOut();
 
 /* ============ your own lists: item types, restrictions, statuses ============
    Everything here is stored in the plan, so it can be added to and edited from any dropdown. */
@@ -1614,11 +1840,12 @@ function openListEditor({title,intro,items,columns,newItem,locked,inUse,onSave})
 }
 
 /* ----- one item type: name, look, default work ----- */
-function openTypeEditor(key,onDone){
-  const isNew=!key;const T=key?TYPES[key]:{name:'',geom:'poly',look:'area',task:'Install',days:1,after:'none',custom:true};
+function openTypeEditor(key,onDone,preset){
+  const isNew=!key;const pg=preset&&preset.geom==='line'?'line':'poly';
+  const T=key?TYPES[key]:{name:'',geom:pg,look:pg==='line'?'wall':'area',task:'Install',days:1,after:'none',custom:true};
   const used=key?usageOfType(key):0;const lockShape=!isNew&&(T.builtin||used>0);
-  const looks=Object.entries(LOOKS).filter(([k,l])=>!lockShape||l.geom===T.geom);
-  openModal(`<div class="mh"><h2>${isNew?'New item type':'Edit “'+esc(T.name)+'”'}</h2><p>${isNew?'It appears in the toolbar on the left. When you draw one, the board asks your questions for it.':T.builtin?'A built-in type: you can rename it and change its defaults.':'Your own item type.'}</p></div>
+  const looks=Object.entries(LOOKS).filter(([k,l])=>!(lockShape||preset)||l.geom===T.geom);
+  openModal(`<div class="mh"><h2>${isNew?(preset?(pg==='line'?'New line type':'New area type'):'New item type'):'Edit “'+esc(T.name)+'”'}</h2><p>${isNew?'It appears in the toolbar on the left. When you draw one, the board asks your questions for it.':T.builtin?'A built-in type: you can rename it and change its defaults.':'Your own item type.'}</p></div>
   <form class="mb" id="te_f">
     ${fieldHtml('te_name',{label:'Name',placeholder:'e.g. Tent, Barrier, Signage, Toilets'},T.name)}
     ${T.builtin?'':fieldHtml('te_look',{type:'select',label:'How it looks on the map',options:looks.map(([k,l])=>[k,(l.geom==='poly'?'Area — ':'Line — ')+l.label]),help:lockShape?'Already drawn on the plan, so it stays an '+(T.geom==='poly'?'area':'line')+'.':'Areas are drawn corner by corner, lines point by point.'},T.look)}
@@ -1744,31 +1971,324 @@ function openListsHub(){
   });
 }
 
+/* ============ what's shown on the map (per person, per event) + sharing a clean image ============ */
+const VIEW_DEFAULT={focus:'all',hideDone:false,types:[],vendors:[],zones:[]};
+function loadView(){
+  if(ui.viewFor===Store.eventId)return;
+  ui.viewFor=Store.eventId;let v=null;try{v=JSON.parse(ls.get('siteboard.view.'+Store.eventId)||'null');}catch(e){}
+  ui.view={...VIEW_DEFAULT,...(v||{})};
+}
+function saveView(){ls.set('siteboard.view.'+Store.eventId,JSON.stringify(ui.view));}
+function zoneVendors(id,z){const s=new Set();if(z.vendorId)s.add(z.vendorId);zoneTasks(id).forEach(t=>{const v=TK()[t].vendorId;if(v)s.add(v);});return s.size?[...s]:['_none'];}
+// work on the day shown in this area (any step)
+function activeOn(id,D){return zoneTasks(id).some(t=>SCH[t].s<=D+1e-6&&D<SCH[t].e-1e-6);}
+function zoneShown(id,z,v){
+  const V0=ui.view||VIEW_DEFAULT;
+  if(V0.zones.includes(id))return false;
+  if(V0.types.includes(z.type))return false;
+  if(V0.vendors.length&&zoneVendors(id,z).every(x=>V0.vendors.includes(x)))return false;
+  if(V0.hideDone&&v.done&&!v.restr)return false;
+  if(V0.focus!=='all'){
+    const T=TYPES[z.type]||{};const D=ui.day;
+    if(activeOn(id,D))return true;
+    if(T.drop){const c=clearByOff(id);return !c||D<c.off;}
+    if(V0.focus==='dayplus')return v.restr||T.route||lookOf(z.type)==='nogo'||T.noTask;
+    return false;
+  }
+  return true;
+}
+function hiddenCount(){if(!ui.view)return 0;const zs=Z();let n=0;ensureSchedule();Object.entries(zs).forEach(([id,z])=>{if(!zoneShown(id,z,zoneVisual(id,z,ui.day)))n++;});return n;}
+function renderViewbar(){
+  const vb=$('#viewbar');if(!vb)return;
+  if(!Store.eventId||Store.mode==='loading'||(Store.mode==='cloud'&&(Store.role==='none'||Store.role==='denied'))){vb.hidden=true;return;}
+  loadView();vb.hidden=false;
+  const n=hiddenCount();const V0=ui.view;
+  const focusTxt=V0.focus==='day'?`Only work on ${fmtDay(ui.day,false)}`:V0.focus==='dayplus'?`Work on ${fmtDay(ui.day,false)} + site rules`:'';
+  vb.innerHTML=`<button class="btn small" id="vShow" type="button" aria-expanded="${!!ui.showOpen}">${eyeIcon()} Show${n?` <span class="pill hid">${n} hidden</span>`:''}</button>
+    <button class="btn small" id="vToday" type="button" title="Jump to today and show only what's happening">Today</button>
+    <button class="btn small" id="vShare" type="button">${shareIcon()} Share view</button>
+    ${focusTxt?`<span class="chip">${esc(focusTxt)} <button class="btn small ghost" id="vAll" type="button" aria-label="Show everything">✕</button></span>`:''}`;
+  $('#vShow').onclick=e=>{e.stopPropagation();ui.showOpen=!ui.showOpen;renderShowPanel();renderViewbar();};
+  $('#vToday').onclick=goToday;
+  $('#vShare').onclick=openShare;
+  const va=$('#vAll');if(va)va.onclick=()=>{ui.view.focus='all';saveView();renderAll();};
+  renderShowPanel();
+}
+const eyeIcon=()=>`<svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M1 6s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" fill="none" style="stroke:currentColor" stroke-width="1.4"/><circle cx="8" cy="6" r="2" style="fill:currentColor"/></svg>`;
+const shareIcon=()=>`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 9V1.5M4 4.5l3-3 3 3M2 8v4h10V8" fill="none" style="stroke:currentColor" stroke-width="1.4"/></svg>`;
+function renderShowPanel(){
+  const p=$('#showPanel');if(!p)return;
+  if(!ui.showOpen||!ui.view){p.hidden=true;return;}
+  p.hidden=false;const V0=ui.view;
+  const typesUsed=[...new Set(Object.values(Z()).map(z=>z.type))].filter(k=>TYPES[k]).sort((a,b)=>TYPES[a].name.localeCompare(TYPES[b].name));
+  const vend=Object.entries(V()).filter(([id])=>Object.values(Z()).some(z=>z.vendorId===id)||Object.values(TK()).some(t=>t.vendorId===id)).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  const hiddenZ=V0.zones.filter(id=>Z()[id]);
+  p.innerHTML=`<div class="sp-h"><b>On the map</b><button class="btn small ghost" id="spReset" type="button">Show everything</button></div>
+    <div class="sp-sec"><span class="sp-t">Day shown: ${esc(fmtDay(ui.day,false))}</span>
+      ${[['all','Everything'],['day','Only work happening that day'],['dayplus','That day’s work + site rules and no-go areas']].map(([k,l])=>`<label><input type="radio" name="spFocus" value="${k}" ${V0.focus===k?'checked':''}> ${l}</label>`).join('')}
+      <label><input type="checkbox" id="spDone" ${V0.hideDone?'checked':''}> Hide finished work</label></div>
+    <div class="sp-sec"><span class="sp-t">Item types</span>${typesUsed.map(k=>`<label><input type="checkbox" data-sptype="${esc(k)}" ${V0.types.includes(k)?'':'checked'}> ${swatch(k)} ${esc(TYPES[k].name)}</label>`).join('')||'<span class="muted">Nothing drawn yet.</span>'}</div>
+    ${vend.length?`<div class="sp-sec"><span class="sp-t">Suppliers</span>${vend.map(([id,v])=>`<label><input type="checkbox" data-spv="${esc(id)}" ${V0.vendors.includes(id)?'':'checked'}> <span class="dot" style="background:${esc(v.color)}"></span> ${esc(v.name)}</label>`).join('')}</div>`:''}
+    ${hiddenZ.length?`<div class="sp-sec"><span class="sp-t">Hidden one by one</span>${hiddenZ.map(id=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span>${esc(Z()[id].label)}</span><button class="btn small ghost" data-spz="${esc(id)}" type="button">Show</button></div>`).join('')}</div>`:''}
+    <div class="muted" style="font-size:11.5px">Only changes your screen. Use Share view to send this picture.</div>`;
+  const upd=()=>{saveView();renderAll();};
+  p.querySelectorAll('input[name=spFocus]').forEach(r=>r.onchange=()=>{V0.focus=r.value;upd();});
+  p.querySelector('#spDone').onchange=e=>{V0.hideDone=e.target.checked;upd();};
+  p.querySelectorAll('[data-sptype]').forEach(c=>c.onchange=()=>{const k=c.dataset.sptype;V0.types=c.checked?V0.types.filter(x=>x!==k):[...V0.types,k];upd();});
+  p.querySelectorAll('[data-spv]').forEach(c=>c.onchange=()=>{const k=c.dataset.spv;V0.vendors=c.checked?V0.vendors.filter(x=>x!==k):[...V0.vendors,k];upd();});
+  p.querySelectorAll('[data-spz]').forEach(b=>b.onclick=()=>{V0.zones=V0.zones.filter(x=>x!==b.dataset.spz);upd();});
+  p.querySelector('#spReset').onclick=()=>{ui.view={...VIEW_DEFAULT,types:[],vendors:[],zones:[]};upd();};
+}
+document.addEventListener('pointerdown',e=>{if(ui.showOpen&&!e.target.closest('#showPanel,#vShow')){ui.showOpen=false;renderShowPanel();renderViewbar();}});
+function toggleZoneHidden(id){loadView();const V0=ui.view;V0.zones=V0.zones.includes(id)?V0.zones.filter(x=>x!==id):[...V0.zones,id];saveView();renderAll();}
+function goToday(){
+  const off=offOf(isoOf0(0));
+  if(off==null||off<0||off>eventOff()){toast(`Today isn’t between the build-up start (${fmtDay(0,false)}) and the event day (${fmtDay(eventOff(),false)}).`);return;}
+  loadView();ui.day=off;ui.view.focus='dayplus';saveView();renderAll();toast(`Showing what’s happening today, ${fmtDay(off,false)}.`);
+}
+// the work happening on the day shown, respecting what's hidden
+function workOnDay(D){
+  const T=TK(),zs=Z();
+  return Object.keys(T).filter(i=>isLeaf(i)&&SCH[i].s<=D+1e-6&&D<SCH[i].e-1e-6).filter(i=>{const z=zs[T[i].zoneId];if(!z)return true;return zoneShown(T[i].zoneId,z,zoneVisual(T[i].zoneId,z,D))&&!(ui.view?.vendors||[]).includes(T[i].vendorId||'_none');})
+    .sort((a,b)=>vendorName(T[a].vendorId).localeCompare(vendorName(T[b].vendorId))||SCH[a].s-SCH[b].s);
+}
+function daySummaryText(title,note){
+  const T=TK(),zs=Z(),D=ui.day;const ws=workOnDay(D);
+  const L=[title,`${S().name||'Event'} · ${fmtDay(D,false)}`];if(note)L.push('',note);
+  L.push('',ws.length?'WORKING ON SITE':'Nobody scheduled on this day.');
+  ws.forEach(i=>{const t=T[i];L.push(`- ${vendorName(t.vendorId)}: ${taskLabel(i)} at ${zs[t.zoneId]?.label||'site'} (${fmtDay(SCH[i].s)} → ${fmtDay(SCH[i].e)})`);});
+  const rules=Object.keys(zs).filter(id=>{const z=zs[id];return z.after&&z.after!=='none'&&D>=restrictFrom(id)&&zoneShown(id,z,zoneVisual(id,z,D));});
+  if(rules.length){L.push('','SITE RULES');rules.forEach(id=>L.push(`- ${zs[id].label}: ${restrictLabel(zs[id].after).toLowerCase()}`));}
+  return L.join('\n');
+}
+function blobToDataURL(b){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b);});}
+// draw the map as it is on screen (or the whole site) into a light-themed picture with a title and today's list
+async function renderShareImage({title,note,whole}){
+  ensureSchedule();renderMap();
+  const root=document.documentElement;const prevTheme=root.getAttribute('data-theme');root.setAttribute('data-theme','light');
+  const cs=getComputedStyle(root);const vars={};
+  for(let i=0;i<cs.length;i++){const k=cs[i];if(k.startsWith('--'))vars[k]=cs.getPropertyValue(k).trim();}
+  if(prevTheme==null)root.removeAttribute('data-theme');else root.setAttribute('data-theme',prevTheme);
+  const svgEl=$('#map').cloneNode(true);
+  ['#handlesL','#draftL','#sheetedge'].forEach(s=>{const n=svgEl.querySelector(s);if(n)n.remove();});
+  const grid=svgEl.querySelector('rect[fill="url(#grid)"]');if(grid)grid.remove();
+  const vb=whole?{x:-20,y:-20,w:W+40,h:mapH()+40}:{...ui.vb};
+  svgEl.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const OUTW=1800,mapHpx=Math.round(Math.min(2200,OUTW*vb.h/vb.w));const mapWpx=Math.round(mapHpx*vb.w/vb.h);
+  svgEl.setAttribute('width',mapWpx);svgEl.setAttribute('height',mapHpx);svgEl.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const bg=svgEl.querySelector('#bgimg');
+  if(bg){if(bg.style.display==='none')bg.remove();else{let href=bg.getAttribute('href')||'';if(href&&!href.startsWith('data:')){try{const r=await fetch(href,{mode:'cors'});href=await blobToDataURL(await r.blob());}catch(e){href='';}}if(href)bg.setAttribute('href',href);else bg.remove();}}
+  let str=new XMLSerializer().serializeToString(svgEl).replace(/var\((--[\w-]+)\)/g,(m,k)=>vars[k]||'#888888');
+  const font='"IBM Plex Sans",Arial,Helvetica,sans-serif';
+  str=str.replace(/<svg([^>]*)>/,`<svg$1><style>.zl{font-family:${font};font-weight:700;paint-order:stroke;stroke:#ffffff;stroke-width:3px;stroke-linejoin:round}.zs{font-family:${font};paint-order:stroke;stroke:#ffffff;stroke-width:3px;stroke-linejoin:round}.ml{display:none}</style>`);
+  const mapImg=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('Could not draw the map.'));im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);});
+  const T=TK(),zs=Z(),D=ui.day;const ws=workOnDay(D);
+  const pad=48,cw=OUTW+pad*2;const noteLines=note?wrapLines(note,110):[];
+  const headH=130+noteLines.length*30,rowH=40,listH=60+Math.max(1,ws.length)*rowH+40;
+  const c=document.createElement('canvas');c.width=cw;c.height=headH+mapHpx+listH+pad;const g=c.getContext('2d');
+  g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);
+  g.fillStyle=vars['--accent']||'#e8590c';g.fillRect(0,0,c.width,10);
+  g.fillStyle='#1d2420';g.font=`700 44px ${font}`;g.fillText(title,pad,72);
+  g.fillStyle='#5f6b64';g.font=`400 26px ${font}`;g.fillText(`${S().name||'Event'} · ${fmtDay(D,false)}`,pad,110);
+  noteLines.forEach((l,i)=>{g.fillStyle='#1d2420';g.font=`400 24px ${font}`;g.fillText(l,pad,150+i*30);});
+  const mx=pad+Math.round((OUTW-mapWpx)/2);g.drawImage(mapImg,mx,headH);g.strokeStyle='#d3d8d2';g.lineWidth=2;g.strokeRect(mx,headH,mapWpx,mapHpx);
+  let y=headH+mapHpx+56;g.fillStyle='#1d2420';g.font=`700 28px ${font}`;g.fillText(ws.length?`Working on site · ${fmtDay(D,false)}`:'Nobody scheduled on this day',pad,y);y+=16;
+  ws.forEach(i=>{const t=T[i];y+=rowH;g.fillStyle=vendorColor(t.vendorId);g.beginPath();g.arc(pad+10,y-9,9,0,Math.PI*2);g.fill();
+    g.fillStyle='#1d2420';g.font=`600 24px ${font}`;const vn=vendorName(t.vendorId);g.fillText(vn,pad+30,y);const w=g.measureText(vn).width;
+    g.fillStyle='#5f6b64';g.font=`400 24px ${font}`;g.fillText(`  ${taskLabel(i)} · ${zs[t.zoneId]?.label||'site'} · ${fmtDay(SCH[i].s)} → ${fmtDay(SCH[i].e)}`,pad+30+w,y);});
+  g.fillStyle='#8a958f';g.font=`400 18px ${font}`;g.fillText(`Shared ${new Date().toLocaleString()}`,pad,c.height-20);
+  return c;
+}
+function wrapLines(text,max){const out=[];String(text).split('\n').forEach(par=>{let line='';par.split(/\s+/).forEach(w=>{if((line+' '+w).trim().length>max){out.push(line.trim());line=w;}else line+=' '+w;});out.push(line.trim());});return out.filter((l,i,a)=>l||i<a.length-1);}
+function openShare(){
+  ui.showOpen=false;renderShowPanel();
+  const def=ui.view&&ui.view.focus!=='all'?`On site ${fmtDay(ui.day,false)}`:`Site plan · ${fmtDay(ui.day,false)}`;
+  openModal(`<div class="mh"><h2>Share this view</h2><p>Makes a picture of the map exactly as it looks now: same day, same things hidden, plus the list of who’s working.</p></div>
+  <div class="mb">
+    <div class="field"><label for="sh_t">Title</label><input class="inp" id="sh_t" value="${esc(def)}"></div>
+    <div class="field"><label for="sh_n">Message (optional)</label><textarea class="inp" id="sh_n" rows="2" placeholder="e.g. Forklifts use the north gate today. Turf area is off limits."></textarea></div>
+    <label class="row" style="font-size:13px"><input type="checkbox" id="sh_w"> Show the whole site instead of the part I’m zoomed into</label>
+    <div class="shprev" id="sh_prev"><span class="muted">Preparing picture…</span></div>
+  </div>
+  <div class="mf"><button class="btn ghost" id="sh_txt" type="button">Copy as text</button><div class="row"><button class="btn" id="sh_c" type="button">Close</button><button class="btn" id="sh_dl" type="button">Download picture</button><button class="btn primary" id="sh_go" type="button">Share…</button></div></div>`,m=>{
+    let canvas=null,tm=0;
+    const build=async()=>{try{canvas=await renderShareImage({title:m.querySelector('#sh_t').value.trim()||def,note:m.querySelector('#sh_n').value.trim(),whole:m.querySelector('#sh_w').checked});
+      const pv=m.querySelector('#sh_prev');pv.innerHTML='';const im=new Image();im.src=canvas.toDataURL('image/png');im.alt='Preview of the shared picture';pv.appendChild(im);}catch(e){m.querySelector('#sh_prev').textContent='Could not make the picture: '+e.message;}};
+    const later=()=>{clearTimeout(tm);tm=setTimeout(build,400);};
+    m.querySelector('#sh_t').addEventListener('input',later);m.querySelector('#sh_n').addEventListener('input',later);m.querySelector('#sh_w').addEventListener('change',build);
+    build();
+    const fname=()=>`${slugify(S().name||'site-plan')}-${isoOf(Math.floor(ui.day))}.png`;
+    const blob=()=>new Promise(res=>canvas.toBlob(res,'image/png'));
+    const download=async()=>{if(!canvas)return;const b=await blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);toast('Picture downloaded.');};
+    m.querySelector('#sh_dl').onclick=download;
+    m.querySelector('#sh_go').onclick=async()=>{if(!canvas)return;const b=await blob();const file=new File([b],fname(),{type:'image/png'});const title=m.querySelector('#sh_t').value.trim()||def;
+      if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title,text:title});}catch(e){if(e.name!=='AbortError')download();}}
+      else{toast('Sharing pictures isn’t available in this browser, so it was downloaded instead.');download();}};
+    m.querySelector('#sh_txt').onclick=()=>copyText(daySummaryText(m.querySelector('#sh_t').value.trim()||def,m.querySelector('#sh_n').value.trim()),'Summary copied. Paste it into WhatsApp or email.');
+    m.querySelector('#sh_c').onclick=closeModal;
+  });
+}
+
+/* ============ undo / redo ============
+   Every change to the plan is recorded (changes made in one go count as one step). */
+const History={stack:[],i:-1,pending:null,max:100,applying:false,
+  reset(){clearTimeout(this.pending);this.pending=null;this.stack=[JSON.stringify(Store.d)];this.i=0;renderUndo();},
+  record(){if(this.applying)return;clearTimeout(this.pending);this.pending=setTimeout(()=>this.commit(),250);},
+  commit(){clearTimeout(this.pending);this.pending=null;const j=JSON.stringify(Store.d);if(j===this.stack[this.i])return;
+    this.stack=this.stack.slice(0,this.i+1);this.stack.push(j);if(this.stack.length>this.max)this.stack.shift();this.i=this.stack.length-1;renderUndo();},
+  can(dir){if(this.pending)this.commit();return dir<0?this.i>0:this.i<this.stack.length-1;},
+  go(dir){
+    if(!editable()&&!(Store.canEdit&&ui.viewAs==='planner'))return;
+    if(!this.can(dir)){toast(dir<0?'Nothing to undo.':'Nothing to redo.');return;}
+    this.i+=dir;this.applying=true;
+    ui.draft=null;ui.hover=null;
+    Store.d=normalize(JSON.parse(this.stack[this.i]));
+    if(ui.sel&&!Store.d.zones[ui.sel])ui.sel=null;
+    Store.touch();this.applying=false;dataStamp++;renderAll();renderUndo();
+    toast(dir<0?'Undone.':'Redone.');
+  }
+};
+function renderUndo(){
+  const box=$('#undoBox');if(!box)return;
+  const show=Store.canEdit&&!!Store.eventId&&!Store.previewing&&Store.role!=='vendor';
+  box.hidden=!show;
+  $('#btnUndo').disabled=!(History.i>0||History.pending);$('#btnRedo').disabled=!(History.i<History.stack.length-1);
+}
+$('#btnUndo').onclick=()=>History.go(-1);
+$('#btnRedo').onclick=()=>History.go(1);
+document.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+  const k=e.key.toLowerCase();if(k!=='z'&&k!=='y')return;
+  // text boxes keep their own undo
+  if(e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))return;
+  if($('#modalRoot').firstChild)return;
+  if(!Store.canEdit||Store.previewing)return;
+  e.preventDefault();
+  if(ui.draft&&k==='z'&&!e.shiftKey){ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();return;} // while drawing: remove the last point
+  History.go(k==='y'||e.shiftKey?1:-1);
+});
+
+/* ============ sign-in screens ============ */
+function renderGate(){
+  const g=$('#gate');
+  const need=Store.mode==='cloud'&&(Store.role==='none'||Store.role==='denied');
+  g.hidden=!need;document.body.classList.toggle('gated',need);
+  if(!need)return;
+  const sg=Store.signin;let body;
+  if(Store.role==='denied'){
+    body=`<h2>No access yet</h2><p><b>${esc(Store.email)}</b> isn’t registered for any event. Ask the planner to add this email to your company in the plan. Once they do, this page opens your part.</p>
+      <div class="row"><button class="btn" id="g_retry" type="button">Check again</button><button class="btn ghost" id="g_out" type="button">Use a different email</button></div>`;
+  }else if(sg.pendingLink){
+    body=`<h2>Confirm your email</h2><p>You opened the sign-in link on a different device or browser. Type the email it was sent to.</p>
+      <form id="g_f" class="gform"><input class="inp" type="email" id="g_email" autocomplete="email" placeholder="name@company.com" required><button class="btn primary" type="submit" id="g_go">Sign in</button></form>`;
+  }else if(sg.sentTo){
+    body=`<h2>Check your inbox</h2><p>We sent a sign-in link to <b>${esc(sg.sentTo)}</b>. Open it on this device to sign in. It can take a minute; check spam if it doesn’t arrive.</p>
+      <div class="row"><button class="btn" id="g_again" type="button">Send it again</button><button class="btn ghost" id="g_other" type="button">Use a different email</button></div>`;
+  }else{
+    body=`<h2>Sign in</h2><p>Enter the email your planner registered. We’ll email you a link; no password needed.</p>
+      <form id="g_f" class="gform"><input class="inp" type="email" id="g_email" autocomplete="email" placeholder="name@company.com" value="${esc(ls.get('siteboard.signinEmail')||'')}" required><button class="btn primary" type="submit" id="g_go">Email me a sign-in link</button></form>`;
+  }
+  g.innerHTML=`<div class="gcard"><small class="gbrand">Build-Up Site Board</small>${body}${sg.error?`<p class="gerr" role="alert">${esc(sg.error)}</p>`:''}</div>`;
+  const f=$('#g_f');
+  if(f)f.addEventListener('submit',async e=>{e.preventDefault();const em=$('#g_email').value.trim();if(!em)return;const b=$('#g_go');b.disabled=true;b.textContent='Please wait…';
+    try{if(sg.pendingLink)await Store.finishLink(em);else{await Store.sendLink(em);sg.sentTo=em.toLowerCase();sg.error='';}}
+    catch(err){sg.error=authMessage(err);}
+    renderGate();});
+  const ag=$('#g_again');if(ag)ag.onclick=async()=>{try{await Store.sendLink(sg.sentTo);toast('Sent again.');}catch(err){sg.error=authMessage(err);renderGate();}};
+  const ot=$('#g_other');if(ot)ot.onclick=()=>{sg.sentTo='';sg.error='';renderGate();};
+  const rt=$('#g_retry');if(rt)rt.onclick=()=>location.reload();
+  const go=$('#g_out');if(go)go.onclick=()=>Store.signOut();
+  const inp=$('#g_email');if(inp)inp.focus();
+}
+
+/* the brief a supplier gets, always built from their own copy so it names only what they may see */
+function briefFor(vid){
+  if(Store.role==='vendor'||Store.previewing===vid)return briefText(vid);
+  if(Store.mode!=='cloud'&&Store.mode!=='local')return briefText(vid);
+  const was=Store.previewing;Store.enterPreview(vid);ensureSchedule();const txt=briefText(vid);
+  if(was)Store.enterPreview(was);else Store.exitPreview(true);ensureSchedule();return txt;
+}
+
+/* supplier access controls inside a vendor card (planner) */
+function accessBlock(id,v){
+  if(Store.mode!=='cloud')return `<div class="muted" style="font-size:12px">Supplier sign-in works once Firebase is set up (see the setup guide). Until then, use Copy brief.</div>`;
+  const em=String(v.email||'').trim();const on=v.portal!==false;const pub=Store.views[id];
+  const state=!em?'Add their email to let them sign in.':!on?'Sign-in is turned off for this supplier.':pub?(pub.email===em.toLowerCase()?'Can sign in now and sees only their part.':'Updating…'):'Publishing their part…';
+  return `<div class="access">
+    <label class="row" style="font-size:13px"><input type="checkbox" data-vf="portal" ${on?'checked':''}> Can sign in and see their part</label>
+    <div class="muted" style="font-size:12px">${state}</div>
+    ${em&&on?`<div class="row"><button class="btn small" data-invite="${id}" type="button">Email them a sign-in link</button><button class="btn small ghost" data-siteurl type="button">Copy sign-in page address</button></div>`:''}
+  </div>`;
+}
+
+/* planners list (stored in meta/admins) */
+async function openPlanners(){
+  let emails=[];try{const s=await Cloud.db.collection('meta').doc('admins').get();emails=s.exists?(s.data().emails||[]):[];}catch(e){toast('Could not load the planner list: '+authMessage(e));return;}
+  const fixed=(CONFIG.adminEmails||[]).map(x=>String(x).toLowerCase());
+  openModal(`<div class="mh"><h2>Planners</h2><p>Planners see and edit every event. Everyone else only sees the part you assign them.</p></div>
+  <div class="mb"><div class="field"><label>Always planners (set in index.html)</label><div class="mono" style="font-size:12.5px">${fixed.map(esc).join('<br>')||'—'}</div></div>
+  <div class="field"><label for="pl_list">Other planners, one email per line</label><textarea class="inp mono" id="pl_list" rows="5" style="font-size:12.5px">${esc(emails.join('\n'))}</textarea></div></div>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="pl_c" type="button">Cancel</button><button class="btn primary" id="pl_s" type="button">Save planners</button></div></div>`,m=>{
+    m.querySelector('#pl_c').onclick=closeModal;
+    m.querySelector('#pl_s').onclick=async()=>{const list=[...new Set(m.querySelector('#pl_list').value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))];
+      try{await Cloud.db.collection('meta').doc('admins').set({emails:list});closeModal();toast('Planners saved. They can sign in with their email.');}catch(e){toast('Could not save: '+authMessage(e));}};
+  });
+}
+
+/* bring events over from the old GitHub version (data/ folder on this same site) */
+async function findOldGithubData(){
+  try{const r=await fetch('data/events.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const list=await r.json();if(Array.isArray(list)&&list.length)return list.map(e=>({...e,path:e.id==='plan'?'data/plan.json':`data/events/${e.id}.json`}));}}catch(e){}
+  try{const r=await fetch('data/plan.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const w=await r.json();return [{id:'plan',name:w?.data?.settings?.name||'Event',path:'data/plan.json'}];}}catch(e){}
+  return [];
+}
+async function importOldGithub(list,btn){
+  btn.disabled=true;let n=0;
+  for(const e of list){
+    btn.textContent=`Importing ${n+1} of ${list.length}…`;
+    try{const r=await fetch(e.path+'?t='+Date.now(),{cache:'no-store'});const w=await r.json();const d=normalize(w&&w.data?w.data:w);
+      const id=(e.id==='plan'?slugify(d.settings.name):e.id)+'-gh';
+      await Cloud.db.collection('events').doc(id).set({name:d.settings.name||'Imported event',setupStart:d.settings.setupStart||'',eventDate:d.settings.eventDate||'',version:1,json:JSON.stringify(d),updatedAt:FV().serverTimestamp(),updatedBy:Store.email});
+      if(!Store.events.some(x=>x.id===id))Store.events.push(evEntry(id,d));n++;}
+    catch(err){toast(`Could not import “${e.name}”: ${err.message}`);}
+  }
+  closeAllModals();renderHeader();
+  toast(`Imported ${n} event${n===1?'':'s'}. Now delete the data and uploads folders from your GitHub repository: they are public.`);
+  if(n&&!Store.eventId)await Store.switchEvent(Store.events[0].id);
+}
+
 /* ============ view as ============ */
-function setViewAs(v){ui.viewAs=v;ls.set('siteboard.viewAs',v);ui.tool='select';ui.draft=null;ui.tab=v==='planner'?'schedule':'brief';renderAll();}
+function setViewAs(v){
+  if(Store.role==='vendor')return;
+  ui.tool='select';ui.draft=null;ui.sel=null;ui.selTask=null;
+  if(v==='planner')Store.exitPreview();else{if(!Store.previewing){Store.flush();}Store.enterPreview(v);}
+  ui.viewAs=v;ui.tab=v==='planner'?'schedule':'brief';renderAll();
+}
 $('#viewAs').onchange=e=>setViewAs(e.target.value);
 
 /* ============ top-level render ============ */
 function renderHeader(){
-  const s=S();$('#planName').textContent=s.name||'Untitled event';document.title=(s.name?s.name+' · ':'')+'Build-Up Site Board';
-  $('#dates').textContent=s.setupStart?`Build-up ${fmtDay(0,false)} · Event ${fmtDay(eventOff(),false)}`:'Build-up board';
-  const lv=Store.lockedVendor&&!Store.canEdit?Store.lockedVendor:null;
-  if(lv&&V()[lv])ui.viewAs=lv;
-  if(ui.viewAs!=='planner'&&!V()[ui.viewAs]&&Store.mode!=='loading')ui.viewAs='planner';
-  const vs=Object.entries(V()).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  const s=S();$('#planName').textContent=s.name||(Store.eventId?'Untitled event':'Build-Up Site Board');document.title=(s.name?s.name+' · ':'')+'Build-Up Site Board';
+  $('#dates').textContent=s.setupStart&&Store.eventId?`Build-up ${fmtDay(0,false)} · Event ${fmtDay(eventOff(),false)}`:'Build-up board';
+  const vendorRole=Store.role==='vendor';
+  const base=Store.previewing?Store.previewBackup:Store.d;
+  const vs=Object.entries(base.vendors||{}).filter(([id])=>id!=='_other').sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  if(!vendorRole&&ui.viewAs!=='planner'&&!(base.vendors||{})[ui.viewAs]&&Store.mode!=='loading'){Store.exitPreview(true);ui.viewAs='planner';}
   const sel=$('#viewAs');
-  sel.innerHTML=(lv?'':`<option value="planner">${Store.canEdit?'Planner (everything)':'Everyone'}</option>`)+vs.filter(([id])=>!lv||id===lv).map(([id,v])=>`<option value="${id}">${esc(v.name)}</option>`).join('')+(lv?'':listTail('vendor'));
-  sel.value=ui.viewAs;sel.disabled=!!lv;
-  $('#btnLogin').hidden=!(Store.mode==='github'&&!Store.canEdit&&!Store.lockedVendor);
-  // event switcher: hidden on vendor links, so a vendor stays on their own event
+  sel.innerHTML=`<option value="planner">Planner (everything)</option>`+vs.map(([id,v])=>`<option value="${id}">${esc(v.name)}</option>`).join('')+listTail('vendor');
+  sel.value=ui.viewAs;
+  sel.hidden=vendorRole||!Store.eventId;sel.previousElementSibling.hidden=sel.hidden;
+  // event switcher: planners see every event; a supplier sees the events they're registered for
   const es=$('#eventSel');const evs=[...Store.events].sort((a,b)=>(a.setupStart||'').localeCompare(b.setupStart||'')||a.name.localeCompare(b.name));
-  const showPick=!Store.lockedVendor&&Store.mode!=='loading'&&(evs.length>0||Store.canEdit);
+  const showPick=Store.mode!=='loading'&&Store.role!=='none'&&Store.role!=='denied'&&(evs.length>(vendorRole?1:0)||Store.canEdit);
   $('#evPick').hidden=!showPick;
   es.hidden=!evs.length;
-  es.innerHTML=evs.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}${e.setupStart?' · '+esc(e.setupStart.slice(5).split('-').reverse().join('/')):''}</option>`).join('')+(Store.eventId&&!evs.some(e=>e.id===Store.eventId)?`<option value="${esc(Store.eventId)}">${esc(S().name||'This event')}</option>`:'')+(Store.canEdit?`<option disabled>──────────</option><option value="__add">+ New event…</option>`+(Store.eventId?`<option value="__edit">✎ Edit this event…</option>`:''):'');
+  es.innerHTML=evs.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}${e.setupStart?' · '+esc(e.setupStart.slice(5).split('-').reverse().join('/')):''}</option>`).join('')+(Store.canEdit?`<option disabled>──────────</option><option value="__add">+ New event…</option>`+(Store.eventId?`<option value="__edit">✎ Edit this event…</option>`:''):'');
   if(Store.eventId)es.value=Store.eventId;
   $('#btnNewEvent').hidden=!Store.canEdit;
-  $('#btnSettings').hidden=!Store.eventId;
+  $('#btnSettings').hidden=!Store.eventId||!Store.canEdit;
+  $('#userBox').hidden=!(Store.mode==='cloud'&&Store.email);
+  $('#userEmail').textContent=Store.email;
+  renderUndo();
   setSave();
 }
 $('#eventSel').addEventListener('change',async e=>{const id=e.target.value;e.target.disabled=true;try{await Store.switchEvent(id);}finally{e.target.disabled=false;renderHeader();}});
@@ -1804,23 +2324,26 @@ function renderScrub(){
   $('#dayLabel').innerHTML=`<small>${ui.day>=eventOff()?'Event day':'Build-up day '+(Math.floor(ui.day)+1)}</small>${fmtDay(ui.day)}`;
   const n=Math.min(max,10);$('#ticks').innerHTML=Array.from({length:n+1},(_,i)=>`<span>${shortDay(Math.round(i*max/n))}</span>`).join('');
 }
-$('#day').addEventListener('input',e=>{ui.day=parseFloat(e.target.value);renderScrub();renderMap();if(ui.tab==='schedule')renderPanel();});
+{const f=$('#fillAll');f.value=ui.fill;$('#fillAllV').textContent=Math.round(ui.fill*100)+'%';
+  f.addEventListener('input',()=>{ui.fill=parseFloat(f.value);$('#fillAllV').textContent=Math.round(ui.fill*100)+'%';ls.set('siteboard.fill',String(ui.fill));renderMap();});}
+$('#day').addEventListener('input',e=>{ui.day=parseFloat(e.target.value);renderScrub();renderMap();renderViewbar();if(ui.tab==='schedule')renderPanel();});
 function renderEmpty(){
   const em=$('#empty'),bn=$('#banner');
   if(Store.mode==='loading'){em.hidden=false;em.innerHTML=`<div class="box"><h2>Loading the plan…</h2></div>`;bn.hidden=true;return;}
   const localWeb=Store.mode==='local'&&location.protocol!=='file:';
   bn.hidden=!(localWeb||Store.problem);
   if(Store.problem)bn.textContent=Store.problem;
-  else if(localWeb)bn.textContent='No GitHub repository set, so this plan is saved in this browser only. Fill in owner and repo at the top of index.html, or open it from your github.io address.';
+  else if(localWeb)bn.textContent='Firebase isn’t set up yet, so this plan is saved in this browser only. See the setup guide.';
+  if(Store.previewing){bn.hidden=false;bn.innerHTML=`Previewing exactly what <b>${esc(vendorName(Store.previewing))}</b> sees after signing in. <button class="btn small" id="exitPrev" type="button">Back to planning</button>`;$('#exitPrev').onclick=()=>setViewAs('planner');}
   if(!Store.eventId){
     em.hidden=false;
-    em.innerHTML=Store.canEdit?`<div class="box"><h2>No events yet</h2><p class="muted">Create your first event. Each event gets its own plan, floor plan and vendor links.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eNew" type="button">+ New event</button></div></div>`:`<div class="box"><h2>No events yet</h2><p class="muted">${Store.mode==='github'?'Planners: use Planner sign-in at the top to create one.':'Nothing has been planned yet.'}</p></div>`;
+    em.innerHTML=Store.canEdit?`<div class="box"><h2>No events yet</h2><p class="muted">Create your first event. Each event gets its own plan, floor plan and vendor links.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eNew" type="button">+ New event</button></div></div>`:`<div class="box"><h2>No events yet</h2><p class="muted">Nothing has been planned yet.</p></div>`;
     const n=$('#eNew');if(n)n.onclick=()=>openNewEvent();
     return;
   }
   if(!Object.keys(Z()).length&&!isDrawing()){
     em.hidden=false;
-    em.innerHTML=Store.canEdit?`<div class="box"><h2>Start your site plan</h2><p class="muted">Upload your floor plan in Event settings, set the scale, then pick an item on the left and click each corner. The board asks who installs it, how long it takes and who goes before and after.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eSettings" type="button">Event settings</button><button class="btn" id="eSample" type="button">Load example event</button></div></div>`:`<div class="box"><h2>No plan yet</h2><p class="muted">The planner hasn’t drawn anything yet. This page updates on its own.</p></div>`;
+    em.innerHTML=Store.canEdit?`<div class="box"><h2>Start your site plan</h2><p class="muted">Upload your floor plan in Event settings, set the scale, then pick an item on the left and click each corner. The board asks who installs it, how long it takes and who goes before and after.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="eSettings" type="button">Event settings</button><button class="btn" id="eSample" type="button">Load example event</button></div></div>`:`<div class="box"><h2>Nothing assigned yet</h2><p class="muted">The planner hasn’t added any work for you yet. This page updates on its own.</p></div>`;
     const a=$('#eSettings');if(a)a.onclick=openSettings;
     const b=$('#eSample');if(b)b.onclick=()=>{Store.replaceAll(makeSample());fit();};
   }else em.hidden=true;
@@ -1831,16 +2354,17 @@ function changed(){dataStamp++;if(raf)return;raf=requestAnimationFrame(()=>{raf=
 function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;rebuildTypes();computeSchedule();CONF=conflicts();}
 function renderAll(){
   ensureSchedule();
-  renderHeader();renderRail();renderScrub();renderMap();
+  renderGate();
+  renderHeader();renderRail();renderScrub();renderMap();renderViewbar();
   const ae=document.activeElement;
   if(!ae||!$('#pbody').contains(ae)||ae.tagName==='BUTTON')renderPanel();else renderTabs();
   renderEmpty();
 }
 window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(fit,150);});
-window.addEventListener('beforeunload',e=>{if(Store.mode==='github'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(Store.mode==='cloud'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
 renderAll();fit();
-Store.init().then(()=>{dataStamp++;if(Store.lockedVendor&&!Store.canEdit){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();});
-window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea};
+Store.init().then(()=>{dataStamp++;if(Store.role==='vendor'){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();}).catch(e=>{Store.mode='local';Store.problem='Could not start: '+e.message;renderAll();});
+window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor};
 })();
 </script>
 </body>

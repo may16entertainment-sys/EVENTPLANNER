@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// Build-Up Site Board: who can read and write what.
+// Paste this into Firebase console → Firestore Database → Rules, then click Publish.
+// Put YOUR email (lowercase) in the list below, the same as adminEmails in index.html.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+    function isPlanner() {
+      return signedIn() && (
+        myEmail() in ['you@example.com']
+        || (exists(/databases/$(database)/documents/meta/admins)
+            && myEmail() in get(/databases/$(database)/documents/meta/admins).data.emails)
+      );
+    }
+    function myEventIds() {
+      return get(/databases/$(database)/documents/access/$(myEmail())).data.eventIds;
+    }
+    function registeredFor(eventId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/access/$(myEmail()))
+        && eventId in myEventIds();
+    }
+
+    // Planner list. Only planners can read or change it.
+    match /meta/{doc} {
+      allow read, write: if isPlanner();
+    }
+
+    // Whole events: planners only.
+    match /events/{eventId} {
+      allow read, write: if isPlanner();
+
+      // One supplier's own part of an event. Readable only by the email it was published for.
+      match /views/{vendorId} {
+        allow read: if isPlanner()
+          || (signedIn() && (resource == null || resource.data.email == myEmail()));
+        allow write: if isPlanner();
+      }
+    }
+
+    // Which events a supplier's email is registered for. Each supplier reads only their own.
+    match /access/{addr} {
+      allow read: if isPlanner() || (signedIn() && addr == myEmail());
+      allow write: if isPlanner();
+    }
+
+    // Floor plan images. Readable by planners and by suppliers registered for that event.
+    match /floorplans/{fpId} {
+      allow read: if isPlanner()
+        || (resource == null && signedIn())
+        || (resource != null && registeredFor(resource.data.eventId));
+      allow write: if isPlanner();
+    }
+  }
+}

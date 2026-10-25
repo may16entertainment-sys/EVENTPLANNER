@@ -1,143 +1,167 @@
 # Build-Up Site Board
 
-A site map for event build-up. Draw every area and line on your floor plan, say who installs it and in what order, and the board works out start dates, locks areas while each vendor works, flags clashes, and gives every vendor their own brief and link.
+A site map for event build-up. Draw every area and line on your floor plan, say who installs it and in what order, and the board works out start dates, locks areas while each supplier works, flags clashes, and gives every supplier their own brief.
 
-It runs entirely on GitHub, with no server and nothing to pay. Each event is saved as a file in this repository (`data/plan.json` for the first event, `data/events/…` for the rest, listed in `data/events.json`). Every save is a commit, so you get a full history of every change.
+**How it's put together**
+- **GitHub Pages** hosts the page.
+- **Firebase** (Google) handles sign-in links and stores the plans.
+- **You** register suppliers by email. A supplier signs in with a link sent to that email (no password) and sees **only their part**: their own work, dates, drop-off deadlines, site rules, and which areas are locked while others work (shown as "another supplier").
+- Firebase's security rules enforce this on Google's side, so a supplier can't get at the rest of the plan even by digging into the page.
 
 ## Files
 
 | File | What it does |
 |---|---|
-| `index.html` | The board itself. |
-| `.nojekyll` | Tells GitHub Pages to publish the files as they are. Keep it. |
+| `index.html` | The board. |
+| `firestore.rules` | Who can read and write what. You paste this into Firebase. |
+| `.nojekyll` | Tells GitHub Pages to publish the files as they are. |
 | `README.md` | This guide. |
 
-The `data/` and `uploads/` folders are created automatically the first time you create an event or upload a floor plan.
+## Setup (about 20 minutes, once)
 
-## Set it up (about 10 minutes, once)
+### 1. Create the Firebase project
+1. Go to **console.firebase.google.com** and click **Create a project**. Name it, for example `site-board`. You can turn Google Analytics off.
+2. Click **Upgrade** (bottom left) and choose the **Blaze** (pay-as-you-go) plan, then add a card.
+   - The free plan only sends **5 sign-in emails a day**, which isn't enough. Blaze sends up to 25,000.
+   - At your volume it should cost nothing, because Blaze includes the same free allowance.
+   - Set a **budget alert** (for example $5) under **Usage and billing** so you're told if that ever changes.
 
-### 1. Create the repository
-1. On GitHub, click **New repository**.
-2. Name it, for example `site-board`.
-3. Choose **Public**. GitHub Pages is free for public repositories; a private repository needs a paid GitHub plan.
-4. Click **Create repository**.
-5. Click **uploading an existing file** and drag in `index.html`, `.nojekyll` and `README.md`. Then click **Commit changes**.
+### 2. Turn on email-link sign-in
+1. **Build → Authentication → Get started**.
+2. **Sign-in method → Email/Password**. Turn on **Email/Password** and **Email link (passwordless sign-in)**, then click **Save**.
+3. **Settings → Authorized domains → Add domain**. Enter your GitHub Pages address, for example `yourname.github.io`.
 
-> `.nojekyll` starts with a dot, so some computers hide it. If you can't see it, skip it; the board still works.
+### 3. Create the database
+1. **Build → Firestore Database → Create database**.
+2. Pick the location closest to you. For Jordan and the Gulf, `me-central2` (Dammam) or `europe-west1` both work. You can't change it later.
+3. Start in **production mode**.
+4. Open the **Rules** tab and replace everything with the contents of `firestore.rules`. Change `you@example.com` to **your** email (lowercase), then click **Publish**.
 
-### 2. Turn on GitHub Pages
-1. In the repository, go to **Settings → Pages**.
-2. Under **Build and deployment**, set Source to **Deploy from a branch**.
-3. Set Branch to **main** and the folder to **/ (root)**, then click **Save**.
-4. After a minute the board is live at `https://YOUR-USERNAME.github.io/site-board/`.
+### 4. Connect the board
+1. In Firebase, open **Project settings** (gear icon) → **Your apps** → the **</>** (Web) button. Name it `Site board` and register it. Firebase Hosting isn't needed.
+2. Firebase shows a `firebaseConfig` block. Open `index.html` in a text editor, find `CONFIG` near the top of the script, and copy in `apiKey`, `authDomain`, `projectId` and `appId`.
+3. In the same place, set `adminEmails:['your@email.com']`. Use the same email you put in the rules.
 
-### 3. Make your planner token
-This is your password for editing. It stays in your browser and is never saved in the repository.
+These values identify your Firebase project. They aren't secret and are safe in a public GitHub repository.
 
-1. Go to **github.com → your photo → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
-2. Name it `Site board` and choose an expiry date (for example 1 year).
-3. Under **Repository access**, choose **Only select repositories** and pick `site-board`.
-4. Under **Permissions → Repository permissions**, set **Contents** to **Read and write**. Leave everything else as it is.
-5. Click **Generate token** and copy it. It starts with `github_pat_`.
+### 5. Publish and sign in
+1. Upload `index.html` (and `firestore.rules`, `.nojekyll`, `README.md`) to your GitHub repository.
+2. Open `https://yourname.github.io/site-board/` and enter your email.
+3. Open the link Firebase emails you **on the same device and browser**. You're in as the planner.
 
-### 4. Sign in
-Open your board, click **Planner sign-in** and paste the token. That browser stays signed in. Do the same on any other computer or phone you plan from.
+### 6. Coming from the GitHub-only version?
+1. Open **Event settings → Team → Import events from the GitHub version**. It copies your old events into Firebase.
+2. Then **delete the `data` and `uploads` folders from your GitHub repository**. They're public, and the old version kept supplier details there.
+3. Re-upload floor plans per event under **Event settings → Floor plan image**.
 
-When the token expires, make a new one and sign in again.
+## Giving a supplier access
+
+1. Open the **Vendors** tab and open the supplier.
+2. Fill in their **Email**.
+3. Leave **Can sign in and see their part** ticked. A few seconds after the plan saves, the card says **Can sign in now**.
+4. Click **Email them a sign-in link**, or send them your board's address. They enter their email there and get a link.
+
+What they see:
+- **Your brief**: their work in order, with dates, what they wait for and who comes after them, where they may leave items and until when, site rules, and areas to stay out of.
+- **Schedule**: only their work.
+- **Map**: their areas in their colour; other work as "another supplier", with the same lock and restriction markings you see.
+- Changes you make reach their page within seconds. They can't edit anything.
+
+**See what they see** on a supplier card shows exactly their view, built the same way. **Back to planning** returns you to the full plan.
+
+**Event settings → What suppliers see**: tick to show each supplier who works right before and after them, with names and contact details. Untick and everyone else is "another supplier". Your vendor notes are never shown.
+
+To remove someone's access, untick **Can sign in** or clear their email. Their access goes with the next save.
+
+**One email, several events:** if the same supplier is registered in several events, they get an event switcher after signing in.
+
+**Other planners:** **Event settings → Team → Planners**. Planners see and edit everything.
+
+## Signing in, in short
+- Sign-in links work once and expire. Open the newest one.
+- Open it on the device where you asked for it. On a different device, the board asks you to type your email once more.
+- **Sign out** is at the top right.
 
 ## Events
-
-Use the **Event** dropdown at the top to switch between events. Each one has its own plan, floor plan, schedule and vendor links.
-
-**+ New event** (button, or at the bottom of the Event dropdown) asks how to start:
-- **Empty plan**: nothing on it.
-- **Same vendors and questions**: copies your vendors, saved questions, item types and lists. The map starts empty.
-- **Copy of this event**: everything, with dates moved to the new build-up day and every task set back to not started.
+The **Event** dropdown switches between events. **+ New event** starts from an empty plan, from the same vendors and questions, or from a full copy. A copy moves its dates with the new build-up day and sets every task back to not started.
 
 **Event settings → Clear or delete:**
-- **Clear everything**: empties this plan completely (areas, lines, tasks, vendors, questions, lists, floor plan, scale). Keeps the event name and dates.
-- **Clear areas and tasks only**: keeps vendors, questions and the floor plan.
-- **Delete this event**: removes the event and its vendor links. Other events aren't touched.
+- **Clear everything** empties the plan but keeps the event name and dates.
+- **Clear areas and tasks only** keeps vendors, questions and the floor plan.
+- **Delete this event** also removes every supplier's access to it.
 
-## Your own dropdown options
+## Dates
+Every task, step and job has a **Start** and **Finish** date box (Area tab, and in the job card).
+- **Type a start date** and the task sits on that date: it shows *Fixed start*. Work that waits for it moves with it.
+- **Type a finish date** and the number of days is worked out for you. Dates are whole days and both count: start Mon 19, finish Tue 20 = 2 days.
+- **Leave the start empty** (or click **Make automatic**) and it starts as soon as the work before it is done.
+- **A job's start date** moves its first step, and the other steps follow. A job's finish is set by its last step.
+- **When you draw something new**, you can type a start and finish right in the form.
+- **If you fix a start before the work it waits for is finished**, Clashes shows it, with one-click fixes: *Start on the first possible day*, or *Start automatically*.
 
-Every dropdown that lists something you might need more of ends with **+ Add…** and **✎ Edit list…**:
+## Select, edit and undo
+- **Select** (top of the toolbar, or press **V**): click anything to see its details, and drag to move around the map. Nothing can move by accident.
+- **Edit shapes** (press **E**): drag a shape to move it and drag corners to reshape it. Click **Done editing** to go back to Select.
+- **Undo / Redo** (top bar, or **Ctrl+Z** / **Ctrl+Shift+Z**, ⌘ on Mac) step back through every change to the plan: drawing, moving, deleting, edits to tasks, vendors, types and lists. While drawing, Ctrl+Z removes the last point. Inside a text box, Ctrl+Z undoes your typing as usual.
 
-- **Item types** (the toolbar): add things like Tent, Toilets or Signage. Choose whether each is an area or a line and how it looks, then set its default work, days and restriction. Built-in types can be renamed or hidden.
-- **Restrictions** (“Once installed”): add your own, such as *No forklifts*, and choose whether a vehicle route crossing it should be flagged.
-- **Task statuses**: add statuses such as *Waiting for materials* or *Signed off*, and say what each counts as (not started / in progress / done). A status counted as done lets the next vendor start.
-- **Vendors**: add, rename and recolour.
-- **Your own option questions**: add options straight from the question while you answer it.
-- **Events**: new event, or edit this one.
+## One task in several pieces (fences, walls…)
+A fence or wall often runs in several separate places but is one job. To draw it that way:
+1. Pick the item (for example **High fence**) and tick **Several pieces** in the bar under the map.
+2. Draw the first run. Click the last point again (or **End this piece**) to end it. For areas, click the first corner to close each piece.
+3. Draw the next run anywhere on the map, and repeat.
+4. Click **Finish · N pieces**. You answer the questions once, and it becomes one task.
 
-Adding from a dropdown opens a small window on top of what you're doing, so the form you were filling in stays as it was. **Lists** in the toolbar shows all of them in one place.
+Later, in the Area tab:
+- **+ Add a piece** draws another run for the same item.
+- **Remove** deletes one piece.
+- In **Edit shapes** you can drag the corners of every piece.
 
-## Sharing with vendors
+Length, area, clashes and supplier views all count every piece.
 
-Go to **Vendors**, open a vendor, and click **Copy vendor link**. It looks like
-`https://YOUR-USERNAME.github.io/site-board/?vendor=v_ab12cd34`.
+## Hiding things and sharing what's happening
+The bar at the top left of the map has three buttons:
+- **Show** chooses what's on the map:
+  - everything, only the work happening on the day shown, or that work plus site rules and no-go areas;
+  - hide finished work;
+  - turn whole item types or suppliers off.
+  The button shows how many items are hidden.
+- **Hide on map** (Area tab) hides a single item. To bring it back, use **Show** → *Hidden one by one*.
+- **Today** jumps to today and shows only what's happening.
+- **Share view** makes a picture of the map exactly as you see it (same day, same things hidden), with a title, your message and the list of who's working that day. Send it from your phone's share menu, download it, or **Copy as text** for WhatsApp. Tick *whole site* to include the full plan instead of the part you're zoomed into.
 
-- Each vendor sees only their own steps, deadlines, drop-off areas and site rules, plus the contacts of the vendors just before and after them.
-- They can't change anything, and they don't need a GitHub account.
-- Their page checks for updates every minute.
-- **Copy brief** gives the same information as text for WhatsApp or email.
+What you hide only changes your own screen; it's remembered in your browser for each event.
 
-**Privacy:** in a public repository, anyone can find and read the plan, including vendor names, phone numbers and emails. Only keep information there you're happy to share. If that's a problem, use a private repository; GitHub Pages for private repositories needs a paid GitHub plan.
+## Seeing what's underneath
+- **See-through** (Area tab, for areas): fades that area's fill so the floor plan and other items show through. The outline and label stay sharp.
+- **Area fill** (slider under the map): fades the fill of every area at once. Your setting is remembered in your browser and doesn't change anyone else's view.
 
-## Using your own domain
-
-If you point your own domain at GitHub Pages (**Settings → Pages → Custom domain**), open `index.html` and fill in the two lines near the top of the script:
-
-```js
-owner:'your-github-username',
-repo:'site-board',
-```
-
-On a `github.io` address you can leave them empty; the board works them out from the address.
+## Adding and editing item types
+- **+ Add** next to *Areas* or *Lines* in the toolbar creates a new item type of that kind, ready to draw.
+- **✎** next to any item (it appears when you point at it) renames it or changes its default work, days and restriction, or hides it.
+- **All item types** under Setup lists everything, including hidden types.
 
 ## Drawing
+- **Areas** (turf, stage, caravans, furniture, drop-off, no-go, and your own types): click each corner, then click the first corner again to close.
+- **Lines** (walls, fences, cables, vehicle routes): click each point, then click the last point again or press **Enter**.
+- **Snapping** pulls you to corners, edges, straight / 45° / square lines, and into line with other corners. Hold **Shift** to draw freely, or press **S** to turn snapping off.
+- **Editing a shape:** select it, then drag corners, drag the small squares to add a corner, or right-click a corner to remove it. **Straighten lines** squares up a shape.
+- **Set scale:** click both ends of something you know the length of and type the real distance. Areas then show m² and lines show metres.
+- **Floor plan:** Event settings → Floor plan image (PNG or JPG). It's shrunk to fit Firebase, and only planners and that event's suppliers can load it.
 
-- **Areas** (turf, stage, caravans, furniture, drop-off, no-go): click each corner. Click the first corner again to close the shape.
-- **Lines** (walls, high and low fences, electrical cables, vehicle routes): click each point. Click the last point again, press **Enter**, or use **Finish line**.
-- **Snapping** pulls you to existing corners, onto existing edges, into straight / 45° / square lines, and into line with other corners. A cyan marker shows what you snapped to. Hold **Shift** to draw freely, or press **S** to turn snapping off.
-- **Fix a shape:** select it, then drag a corner to move it, drag a small square on an edge to add a corner, or right-click a corner to remove it. **Straighten lines** in the Area tab squares up sides that are nearly straight.
-- **Set scale:** click both ends of something you know the length of and type the real distance. Every area then shows m² and every line its length in metres.
-- **Floor plan:** Event settings → Floor plan image. Export your AutoCAD drawing as PNG or JPG. It's saved into the repository's `uploads/` folder.
+## Jobs, steps and your own lists
+- When you draw something, the board asks its questions: who, how many days, who goes before and after, who can work at the same time, next steps, power, and restrictions.
+- Steps are subtasks of one job, each with its own vendor and days.
+- Every dropdown ends with **+ Add…** and **✎ Edit list…**: item types, restrictions, task statuses, vendors, option questions and events.
+- **Lists** in the toolbar shows them all in one place.
 
-## Jobs, steps and vendors
+## Backups
+**Event settings → Download backup** saves an event to a file; **Load from backup** brings one back. Firebase also keeps the data safe on Google's side.
 
-When you draw something, the board asks its questions: who installs it, how many days, who must finish first, who comes after, who can work at the same time, what the next steps are, whether it needs power, and what's not allowed once it's installed.
+## Using it without Firebase
+If `CONFIG.firebase` is left empty, the board works in a single browser: it saves there only and has no sign-in. That's useful for trying it out.
 
-**Steps are subtasks of one job.** For example, *Main stage works*: Build structure → Stairs → Paint → Furniture → Numbering.
-
-- Each step has its own vendor and number of days.
-- Tick **same time as the step before** for steps that can run together.
-- In the Area tab you can add, reorder or remove steps, or split a plain task into steps.
-- Other jobs can wait for one step or for a whole job, meaning all of its steps.
-
-**Vendors** is your directory: company, what they do, contact person, phone, email and notes, plus every step assigned to them in order.
-
-**Edit questions** (left side) lets you reword, reorder, remove or add questions for each item type. Tick **Remember these answers** and the next turf or stage starts pre-filled.
-
-## History, backups and the next event
-
-- Every save is a commit. To see or restore an older version, open `data/plan.json` on GitHub and click **History**.
-- **Event settings → Download backup** saves the whole plan to your computer.
-- **For the next event:** download a backup of the current one, then use **Clear all areas and tasks**. Your vendors and questions stay; upload the new floor plan and redraw.
-
-## Good to know
-
-- Saving waits about 3 seconds after your last change, so a burst of edits becomes one commit. Don't close the tab while the top bar says **Saving to GitHub…**.
-- If you edit on two devices at once, the second save is refused rather than overwriting the first. The board reloads the latest version and tells you to redo your last change.
-- GitHub lets each signed-out visitor make 60 requests an hour, which covers a vendor page that's open all day. If the limit is reached, the page falls back to the copy GitHub Pages serves, which can be a few minutes behind.
-- Opening `index.html` straight from your computer works as a private sandbox. It saves in that browser only and has no vendor links.
-
-## Settings in the file
-
-At the top of the script in `index.html`:
-
-- `owner`, `repo`: only needed on a custom domain
-- `branch`: the branch Pages publishes from (default `main`)
-- `pollSeconds`: how often vendor pages check for updates
+## Settings in `index.html`
+- `firebase`: your project's web settings
+- `adminEmails`: planner emails (also put yours in `firestore.rules`)
 - `saveDelaySeconds`: how long to wait after your last change before saving
 - `snapPixels`, `snapDegrees`: how strongly drawing snaps
