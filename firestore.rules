@@ -15,7 +15,7 @@ service cloud.firestore {
     }
     function isPlanner() {
       return signedIn() && (
-        myEmail() in ['you@example.com']
+        myEmail() in ['may16entertainment@gmail.com']
         || (exists(/databases/$(database)/documents/meta/admins)
             && myEmail() in get(/databases/$(database)/documents/meta/admins).data.emails)
       );
