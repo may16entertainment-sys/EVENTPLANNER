@@ -1185,7 +1185,7 @@ svg.addEventListener('pointerdown',e=>{
       ui.ptr.mode='vertex';ui.ptr.i=i;ui.ptr.pi=pi;ui.ptr.live=z;ui.ptr.closedLine=z.geom==='line'&&n>2&&dist(pc[0],pc[n-1])<0.5;
       if(h.dataset.m!=null){Store.d.zones={...Store.d.zones,[ui.sel]:z};}
     }else if(zg){
-      const id=zg.dataset.zone;if(ui.sel!==id){ui.sel=id;ui.tab='zone';renderAll();}else if(ui.tab!=='zone'){ui.tab='zone';renderPanel();}
+      const id=zg.dataset.zone;if(ui.sel!==id){const ae=document.activeElement;if(ae&&$('#pbody').contains(ae))ae.blur();ui.sel=id;ui.tab='zone';renderAll();}else if(ui.tab!=='zone'){ui.tab='zone';renderPanel();}
       ui.ptr.mode=editable()&&ui.tool==='edit'?'move':'pan';ui.ptr.orig=clone(Z()[id]);
     }else{ui.ptr.mode='pan';ui.ptr.empty=true;}
   }
@@ -1657,16 +1657,18 @@ function copyText(txt,msg){const done=()=>toast(msg||'Copied.');try{navigator.cl
 function fallbackCopy(txt){openModal(`<div class="mh"><h2>Copy</h2><p>Select all and copy.</p></div><div class="mb"><textarea class="inp" id="cpy" rows="14" style="width:100%;font-family:var(--f-mono);font-size:12px">${esc(txt)}</textarea></div><div class="mf"><span></span><button class="btn" type="button" id="cpyc">Close</button></div>`,()=>{$('#cpyc').onclick=closeModal;const t=$('#cpy');t.focus();t.select();});}
 
 function wirePanel(p){
+  // the item this panel was drawn for: edits always go to it, even if another shape gets selected before they save
+  const PZ=ui.sel;
   wireNewVendor(p);
   p.querySelectorAll('[data-task]').forEach(r=>r.onclick=()=>{const t=TK()[r.dataset.task];ui.selTask=r.dataset.task;ui.sel=t.zoneId;ui.day=SCH[r.dataset.task].s;renderAll();});
   const zop=p.querySelector('[data-zop]');if(zop){const id=ui.sel;
     zop.addEventListener('input',()=>{const v=parseFloat(zop.value);$('#zopV').textContent=Math.round(v*100)+'%';Store.d.zones={...Store.d.zones,[id]:{...Z()[id],opacity:v}};renderMap();});
     zop.addEventListener('change',()=>{const z=clone(Z()[id]);z.opacity=parseFloat(zop.value);Store.put('zones',id,z);});}
-  p.querySelectorAll('[data-zf]').forEach(el=>el.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);const k=el.dataset.zf;
-    if(k==='vendorId'){if(el.value==='__new')return;z.vendorId=el.value;}else z[k]=el.value;Store.put('zones',ui.sel,z);}));
-  const zvn=p.querySelector('#zv_new');if(zvn)zvn.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.vendorId=resolveVendor($('#zv'),zvn);Store.put('zones',ui.sel,z);});
-  p.querySelectorAll('input[name=zpar]').forEach(c=>c.addEventListener('change',()=>{const z=clone(Z()[ui.sel]);z.parallel=[...p.querySelectorAll('input[name=zpar]:checked')].map(i=>i.value);Store.put('zones',ui.sel,z);}));
-  const zs=p.querySelector('#zstraight');if(zs)zs.onclick=()=>{const z=clone(Z()[ui.sel]);z.pts=straighten(z);z.parts=(z.parts||[]).map(pc=>straighten({...z,pts:pc}));Store.put('zones',ui.sel,z);toast('Straightened.');};
+  p.querySelectorAll('[data-zf]').forEach(el=>el.addEventListener('change',()=>{const z=clone(Z()[PZ]);const k=el.dataset.zf;
+    if(k==='vendorId'){if(el.value==='__new')return;z.vendorId=el.value;}else z[k]=el.value;Store.put('zones',PZ,z);}));
+  const zvn=p.querySelector('#zv_new');if(zvn)zvn.addEventListener('change',()=>{const z=clone(Z()[PZ]);z.vendorId=resolveVendor($('#zv'),zvn);Store.put('zones',PZ,z);});
+  p.querySelectorAll('input[name=zpar]').forEach(c=>c.addEventListener('change',()=>{const z=clone(Z()[PZ]);z.parallel=[...p.querySelectorAll('input[name=zpar]:checked')].map(i=>i.value);Store.put('zones',PZ,z);}));
+  const zs=p.querySelector('#zstraight');if(zs)zs.onclick=()=>{const z=clone(Z()[PZ]);z.pts=straighten(z);z.parts=(z.parts||[]).map(pc=>straighten({...z,pts:pc}));Store.put('zones',PZ,z);toast('Straightened.');};
   p.querySelectorAll('[data-tcard]').forEach(card=>{const id=card.dataset.tcard;const own=el=>el.closest('[data-tcard]')===card;
     card.querySelectorAll('[data-tf]').forEach(el=>{if(!own(el))return;el.addEventListener('change',()=>{const t=clone(TK()[id]);const k=el.dataset.tf;
       if(k==='vendorId'){if(el.value==='__new')return;t.vendorId=el.value;}
@@ -1679,19 +1681,19 @@ function wirePanel(p){
     Store.put('tasks',id,t);}));
   p.querySelectorAll('[data-auto]').forEach(b=>b.onclick=()=>{const t=clone(TK()[b.dataset.auto]);delete t.start;Store.put('tasks',b.dataset.auto,t);});
   p.querySelectorAll('[data-hidez]').forEach(b=>b.onclick=()=>toggleZoneHidden(b.dataset.hidez));
-  p.querySelectorAll('[data-markprog]').forEach(b=>b.onclick=()=>startProgress(ui.sel));
-  p.querySelectorAll('[data-markall]').forEach(b=>b.onclick=()=>{ui.progZone=ui.sel;markAllDone();});
-  p.querySelectorAll('[data-rmprog]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[ui.sel]);z.progress.splice(+b.dataset.rmprog,1);Store.put('zones',ui.sel,z);}));
-  p.querySelectorAll('[data-addpiece]').forEach(b=>b.onclick=()=>{const id=ui.sel,z=Z()[id];if(!z)return;ui.tool=z.type;ui.hover=null;ui.draft={type:z.type,geom:z.geom,pts:[],done:[],addTo:id};renderAll();});
-  p.querySelectorAll('[data-rmpiece]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[ui.sel]);removePiece(z,+b.dataset.rmpiece);Store.put('zones',ui.sel,z);toast('Piece removed.');}));
+  p.querySelectorAll('[data-markprog]').forEach(b=>b.onclick=()=>startProgress(PZ));
+  p.querySelectorAll('[data-markall]').forEach(b=>b.onclick=()=>{ui.progZone=PZ;markAllDone();});
+  p.querySelectorAll('[data-rmprog]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[PZ]);z.progress.splice(+b.dataset.rmprog,1);Store.put('zones',PZ,z);}));
+  p.querySelectorAll('[data-addpiece]').forEach(b=>b.onclick=()=>{const id=PZ,z=Z()[id];if(!z)return;ui.tool=z.type;ui.hover=null;ui.draft={type:z.type,geom:z.geom,pts:[],done:[],addTo:id};renderAll();});
+  p.querySelectorAll('[data-rmpiece]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[PZ]);removePiece(z,+b.dataset.rmpiece);Store.put('zones',PZ,z);toast('Piece removed.');}));
   p.querySelectorAll('[data-deps]').forEach(b=>b.onclick=()=>openDeps(b.dataset.deps));
   p.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.tdel)));
   p.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>removeTask(b.dataset.sdel)));
   p.querySelectorAll('[data-addstep]').forEach(b=>b.onclick=()=>addStep(b.dataset.addstep));
   p.querySelectorAll('[data-sup]').forEach(b=>b.onclick=()=>moveStep(b.dataset.sup,-1));
   p.querySelectorAll('[data-sdn]').forEach(b=>b.onclick=()=>moveStep(b.dataset.sdn,1));
-  const at=p.querySelector('#addTask');if(at)at.onclick=()=>{const js=zoneJobs(ui.sel);const last=js[js.length-1];Store.put('tasks','t_'+uid(),{title:'New job',zoneId:ui.sel,vendorId:'',days:1,deps:last?[last]:[],status:'todo',notBefore:''});};
-  const zd=p.querySelector('#zdel');if(zd)zd.onclick=()=>confirmBtn(zd,()=>{const id=ui.sel;zoneJobs(id).forEach(t=>{if(TK()[t])removeTask(t);});Store.del('zones',id);ui.sel=null;renderAll();});
+  const at=p.querySelector('#addTask');if(at)at.onclick=()=>{const js=zoneJobs(PZ);const last=js[js.length-1];Store.put('tasks','t_'+uid(),{title:'New job',zoneId:PZ,vendorId:'',days:1,deps:last?[last]:[],status:'todo',notBefore:''});};
+  const zd=p.querySelector('#zdel');if(zd)zd.onclick=()=>confirmBtn(zd,()=>{const id=PZ;zoneJobs(id).forEach(t=>{if(TK()[t])removeTask(t);});Store.del('zones',id);ui.sel=null;renderAll();});
   p.querySelectorAll('[data-cshow]').forEach(b=>b.onclick=()=>{const c=CONF[+b.dataset.cshow];const zid=c.zones.find(Boolean);ui.sel=zid;const w=zoneWindow(zid);if(w)ui.day=w.s;focusZone(zid);renderAll();});
   p.querySelectorAll('[data-cfix]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix].fix.run();toast('Fixed.');});
   p.querySelectorAll('[data-cfix2]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix2].fix2.run();toast('Marked as parallel.');});
