@@ -99,6 +99,18 @@ Every task, step and job has a **Start** and **Finish** date box (Area tab, and 
 - **When you draw something new**, you can type a start and finish right in the form.
 - **If you fix a start before the work it waits for is finished**, Clashes shows it, with one-click fixes: *Start on the first possible day*, or *Start automatically*.
 
+## Calendar
+**Site map | Calendar** at the top switches pages. The calendar is separate from the map: its entries don't create or change anything on the plan.
+
+- **Add:** click a day (or **+ Add**). Fill in what happens, the date (and *Until* for several days), times if you want, **who it's for**, where, and notes about what's expected of them.
+- **Colours** come from who it's for: a supplier (their colour from the Vendors tab), **Everyone** (grey), or a person or company you add just for the calendar, such as the **Landowner**. Add them from the *Who it's for* list or with **People & colours…**.
+- **Edit or delete:** click an entry.
+- **Month / List:** the list shows each day with times, who, where and notes.
+- **Filter:** click a name in the colour key to hide or show their entries.
+- **Show map work** adds the work scheduled on the map as faint notes, for reference only.
+- **PDF / Print:** choose *Everyone* or one person (for example *Only Landowner*, which also includes entries for Everyone), and month pages, the day-by-day list, or both. Add a note at the top, then pick **Save as PDF** in the print window. On a phone, use Print → Share → Save to Files.
+- **Suppliers** who sign in see their own entries and the ones for Everyone.
+
 ## Fixing clashes
 The **Clashes** tab lists every problem as a card:
 - **What's wrong**, in plain words, with the dates.

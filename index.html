@@ -103,6 +103,69 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .ochips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .dchip{display:inline-flex;align-items:center;gap:5px;background:var(--line2);border-radius:999px;padding:1px 8px;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:720px){.orow{grid-template-columns:1fr auto}.olbl{grid-column:1/-1}}
+
+.pageseg{margin-right:auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:none;background:none;padding:6px 12px;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--fg);color:var(--bg);font-weight:600}
+.pageseg button{font-family:var(--f-display);font-size:16px;font-weight:600;letter-spacing:.02em;padding:6px 14px}
+.calview{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.cal-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cal-m{margin:0 4px;font-family:var(--f-display);font-size:26px;min-width:190px;text-align:center}
+.cal-legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:12.5px}
+.lchip.off{opacity:.4;text-decoration:line-through}
+.cal-empty{text-align:center;padding:6px}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.mdow{font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--line2)}
+.mday{position:relative;min-height:112px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0;cursor:default}
+.mday.out{background:color-mix(in srgb,var(--line2) 50%,transparent)}.mday.out .mnum{opacity:.45}
+.mday.build{background:color-mix(in srgb,var(--accent) 5%,var(--panel))}
+.mday.ev{background:color-mix(in srgb,var(--bad) 8%,var(--panel));box-shadow:inset 0 0 0 2px var(--bad)}
+.mday.today .mnum span{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 6px}
+.mnum{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:12px}
+.mnum em{font-style:normal;font-size:10px;color:var(--bad);font-weight:600;text-transform:uppercase}
+.cchip{display:block;width:100%;text-align:left;border:none;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));color:var(--fg);border-radius:4px;padding:2px 5px;font-size:12px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.cchip:hover{background:color-mix(in srgb,var(--c) 28%,var(--panel))}
+.cchip .ct{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-right:3px}
+.cwork{display:block;font-size:11px;color:var(--muted);border-left:2px dotted var(--c);padding-left:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.madd{position:absolute;right:4px;bottom:4px;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--accent);opacity:0;font-weight:700;line-height:1}
+.mday:hover .madd,.madd:focus-visible{opacity:1}
+@media (hover:none){.madd{opacity:.8}}
+.aday{display:grid;grid-template-columns:190px 1fr;gap:10px;border-top:1px solid var(--line2);padding:8px 0}
+.aday.ev .adate b{color:var(--bad)}
+.adate{display:flex;flex-direction:column}.adate em{font-style:normal;font-size:11px;color:var(--bad);font-weight:600;text-transform:uppercase}
+.aitems{display:flex;flex-direction:column;gap:6px;min-width:0}
+.arow{display:grid;grid-template-columns:90px 1fr;gap:8px;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--panel));border-radius:4px;padding:6px 8px;cursor:pointer}
+.arow.work{cursor:default;background:none;border-left-style:dotted}
+.atime{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.abody{min-width:0;font-size:13px}.awho{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.anote{font-size:12.5px;white-space:pre-wrap;margin-top:2px}
+@media (max-width:720px){.aday{grid-template-columns:1fr}.mday{min-height:70px}.cchip{font-size:10.5px}.cal-m{min-width:0;font-size:22px}}
+#printArea{display:none}
+body.printing .app,body.printing #modalRoot,body.printing #gate,body.printing .toast{display:none!important}
+body.printing #printArea{display:block;background:#fff;color:#1d2420;padding:16px}
+.pback{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+#printArea .ph{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:10px}
+#printArea .pk{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#e8590c}
+#printArea h1{margin:2px 0;font-family:var(--f-display);font-size:28px}
+#printArea h2{font-family:var(--f-display);font-size:20px;margin:6px 0}
+#printArea .pm{font-size:12px;color:#5f6b64}#printArea .pn{margin-top:6px;font-size:13px}
+#printArea .pl{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:50%}
+#printArea .mday{min-height:96px}
+#printArea .pf{font-size:10px;color:#8a958f;margin-top:10px}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{background:#fff!important;height:auto}
+  .pback{display:none!important}
+  body.printing #printArea{padding:0}
+  #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  #printArea .ppage{page-break-after:always;break-after:page}
+  #printArea .ppage:last-of-type{page-break-after:auto;break-after:auto}
+  #printArea .mday{min-height:0;height:auto;break-inside:avoid}
+  #printArea .cchip{white-space:normal;font-size:9.5px}
+  #printArea .aday{break-inside:avoid}
+  #printArea .mgrid,#printArea .mdow,#printArea .mday{border-color:#c9cfc9}
+}
 .fillctl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);white-space:nowrap}
 .fillctl input{width:110px;accent-color:var(--accent)}
 .opctl{display:flex;align-items:center;gap:8px}
@@ -231,6 +294,7 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 <div class="app">
   <header class="top">
     <div class="brand"><small id="dates">Build-up board</small><h1 id="planName">Site board</h1></div>
+    <div class="seg pageseg" id="pageSeg" role="tablist" aria-label="Page"><button type="button" data-page="map" role="tab">Site map</button><button type="button" data-page="cal" role="tab">Calendar</button></div>
     <div class="ctl">
       <span class="evpick" id="undoBox" hidden><button class="btn" id="btnUndo" type="button" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button class="btn" id="btnRedo" type="button" title="Redo (Ctrl+Shift+Z)" disabled>↷ Redo</button></span>
       <span class="save" id="saveState"></span>
@@ -293,7 +357,9 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
       <div class="pbody" id="pbody"></div>
     </section>
   </div>
+  <section class="calview" id="calView" hidden aria-label="Calendar"></section>
 </div>
+<div id="printArea"></div>
 <div id="gate" class="gate" hidden></div>
 <div id="modalRoot"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
@@ -438,6 +504,7 @@ function normalize(d){
   if(!Array.isArray(d.lists.statuses))d.lists.statuses=clone(DEFAULT_STATUSES);
   if(!d.types||typeof d.types!=='object')d.types={};
   if(!Array.isArray(d.ignored))d.ignored=[];
+  d.calendar=d.calendar&&typeof d.calendar==='object'?d.calendar:{};d.calendar.entries=d.calendar.entries&&typeof d.calendar.entries==='object'?d.calendar.entries:{};d.calendar.parties=d.calendar.parties&&typeof d.calendar.parties==='object'?d.calendar.parties:{};
   Object.values(d.vendors).forEach(v=>{['trade','contact','phone','email','notes'].forEach(k=>{if(typeof v[k]!=='string')v[k]='';});});
   return d;
 }
@@ -685,12 +752,13 @@ const Store={mode:'loading',role:null,email:'',d:emptyPlan(),version:0,canEdit:f
     await this.idle();await this.flush();await this.idle();
     const id=slugify(name)+'-'+uid().slice(0,4);
     let d=emptyPlan();
-    if(from==='team'){d.vendors=clone(this.d.vendors);d.templates=clone(this.d.templates);d.types=clone(this.d.types||{});d.lists=clone(this.d.lists||{});}
+    if(from==='team'){d.vendors=clone(this.d.vendors);d.templates=clone(this.d.templates);d.types=clone(this.d.types||{});d.lists=clone(this.d.lists||{});d.calendar={entries:{},parties:clone(this.d.calendar?.parties||{})};}
     if(from==='copy'){
       d=clone(this.d);
       const oldStart=this.d.settings.setupStart,shift=oldStart&&setupStart?Math.round((new Date(setupStart+'T00:00:00')-new Date(oldStart+'T00:00:00'))/864e5):0;
       Object.values(d.tasks).forEach(t=>{t.status='todo';if(shift){t.notBefore=shiftISO(t.notBefore,shift);if(t.start)t.start=shiftISO(t.start,shift);}});
       Object.values(d.zones).forEach(z=>{if(shift&&z.clearBy)z.clearBy=shiftISO(z.clearBy,shift);});
+      Object.values(d.calendar?.entries||{}).forEach(e=>{if(shift){e.date=shiftISO(e.date,shift);if(e.end)e.end=shiftISO(e.end,shift);}});
     }
     d.settings={...d.settings,name,setupStart,eventDate};
     if(this.mode==='cloud'){
@@ -782,14 +850,15 @@ function buildVendorView(vid){
   if(vend[vid])outV[vid]=pub(vend[vid]);
   if(share)nbrVendors.forEach(v=>{if(vend[v])outV[v]=pub(vend[v]);});
   const st={name:s.name||'',setupStart:s.setupStart||'',eventDate:s.eventDate||'',bgUrl:s.bgUrl||'',bgW:s.bgW||0,bgH:s.bgH||0,bgOpacity:s.bgOpacity??0.8,mPerUnit:s.mPerUnit||0,shareHandover:share};
-  return {settings:st,vendors:outV,zones:outZ,tasks:outT,templates:{},types:clone(Store.d.types||{}),lists:clone(Store.d.lists||{}),view:{vendorId:vid}};
+  const calE={};Object.entries((Store.d.calendar||{}).entries||{}).forEach(([k,e])=>{if((e.who||'_all')===vid||(e.who||'_all')==='_all')calE[k]=e;});
+  return {calendar:{entries:calE,parties:{}},settings:st,vendors:outV,zones:outZ,tasks:outT,templates:{},types:clone(Store.d.types||{}),lists:clone(Store.d.lists||{}),view:{vendorId:vid}};
 }
 const S=()=>Store.d.settings||{};
 const Z=()=>Store.d.zones||{}, TK=()=>Store.d.tasks||{}, V=()=>Store.d.vendors||{};
 const editable=()=>Store.canEdit&&ui.viewAs==='planner'&&!!Store.eventId&&!Store.previewing;
 
 /* ============ UI state ============ */
-const ui={multi:ls.get('siteboard.multi')==='1',fill:(()=>{const v=parseFloat(ls.get('siteboard.fill'));return isNaN(v)?1:v;})(),tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
+const ui={page:ls.get('siteboard.page')==='cal'?'cal':'map',calMap:false,multi:ls.get('siteboard.multi')==='1',fill:(()=>{const v=parseFloat(ls.get('siteboard.fill'));return isNaN(v)?1:v;})(),tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
 function mapH(){const s=S();return s.bgW&&s.bgH?Math.round(W*s.bgH/s.bgW):640;}
 
 /* ============ schedule ============ */
@@ -1912,6 +1981,7 @@ $('#importFile').addEventListener('change',e=>{const f=e.target.files[0];e.targe
   openModal(`<div class="mh"><h2>Replace the current plan?</h2><p>“${esc(d.settings.name||'Backup')}” has ${Object.keys(d.zones).length} items and ${Object.keys(d.tasks||{}).length} tasks. The plan on screen will be replaced.</p></div><div class="mf"><span></span><div class="row"><button class="btn" id="ic" type="button">Cancel</button><button class="btn primary" id="iy" type="button">Replace plan</button></div></div>`,()=>{$('#ic').onclick=closeModal;$('#iy').onclick=()=>{Store.replaceAll(d);ui.sel=null;closeAllModals();fit();toast('Backup loaded.');};});
 }catch(err){toast('That file is not a site board backup.');}};fr.readAsText(f);});
 $('#btnSignOut').onclick=()=>Store.signOut();
+document.querySelectorAll('#pageSeg [data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
 
 /* ============ your own lists: item types, restrictions, statuses ============
    Everything here is stored in the plan, so it can be added to and edited from any dropdown. */
@@ -2412,6 +2482,194 @@ function progressPanel(id,z,ed){
   return h+`</div>`;
 }
 
+/* ============ calendar: a dated schedule kept separate from the map ============
+   Entries live in the plan (d.calendar.entries). "Who" is a supplier, Everyone, or a person/company
+   you add just for the calendar (d.calendar.parties), e.g. the landowner. Colour comes from "who". */
+const CAL_ALL='_all';
+function calData(){const d=Store.d;d.calendar=d.calendar&&typeof d.calendar==='object'?d.calendar:{};d.calendar.entries=d.calendar.entries||{};d.calendar.parties=d.calendar.parties||{};return d.calendar;}
+function calParties(){return calData().parties;}
+function whoName(w){if(!w||w===CAL_ALL)return 'Everyone';return calParties()[w]?.name||V()[w]?.name||'Someone';}
+function whoColor(w){if(!w||w===CAL_ALL)return '#495057';return calParties()[w]?.color||V()[w]?.color||'#868e96';}
+function whoList(){
+  const vs=Object.entries(V()).filter(([id])=>id!=='_other').map(([id,v])=>({id,name:v.name,color:v.color,kind:'Supplier'}));
+  const ps=Object.entries(calParties()).map(([id,p])=>({id,name:p.name,color:p.color,kind:'Other'}));
+  return [{id:CAL_ALL,name:'Everyone',color:'#495057',kind:''},...vs.sort((a,b)=>a.name.localeCompare(b.name)),...ps.sort((a,b)=>a.name.localeCompare(b.name))];
+}
+const pad2=n=>String(n).padStart(2,'0');
+const isoD=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const parseD=s=>{const d=new Date(s+'T00:00:00');return isNaN(d)?null:d;};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return isoD(d);};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtLong=s=>{const d=parseD(s);return d?`${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`:'';};
+// entries (and, if switched on, map work) that fall on one date
+function calEntriesOn(day,hidden){
+  const out=[];
+  Object.entries(calData().entries).forEach(([id,e])=>{const end=e.end&&e.end>=e.date?e.end:e.date;if(day<e.date||day>end)return;if(hidden.has(e.who||CAL_ALL))return;
+    const n=Math.round((parseD(end)-parseD(e.date))/864e5)+1,k=Math.round((parseD(day)-parseD(e.date))/864e5)+1;out.push({id,e,part:n>1?`${k}/${n}`:''});});
+  out.sort((a,b)=>(a.e.from||'99').localeCompare(b.e.from||'99')||a.e.title.localeCompare(b.e.title));
+  return out;
+}
+function mapWorkOn(day,hidden){
+  if(!ui.calMap)return [];const off=offOf(day);if(off==null)return [];
+  return Object.keys(TK()).filter(i=>isLeaf(i)&&SCH[i]&&SCH[i].s<off+1-1e-6&&SCH[i].e>off+1e-6).filter(i=>!hidden.has(TK()[i].vendorId||'_none')).map(i=>({id:i,t:TK()[i]}));
+}
+function calRange(){
+  const s=S();const dates=Object.values(calData().entries).flatMap(e=>[e.date,e.end||e.date]).filter(Boolean);
+  if(s.setupStart)dates.push(s.setupStart);if(s.eventDate)dates.push(s.eventDate);
+  if(!dates.length)dates.push(isoD(new Date()));dates.sort();return {from:dates[0],to:dates[dates.length-1]};
+}
+function calInit(){
+  if(ui.calFor===Store.eventId)return;ui.calFor=Store.eventId;
+  let h=null;try{h=JSON.parse(ls.get('siteboard.calhide.'+Store.eventId)||'null');}catch(e){}
+  ui.calHide=new Set(Array.isArray(h)?h:[]);
+  const today=isoD(new Date()),r=calRange();ui.calMonth=(today>=r.from&&today<=r.to?today:(S().setupStart||r.from)).slice(0,7);
+  if(!ui.calMode)ui.calMode=window.innerWidth<720?'list':(ls.get('siteboard.calmode')||'month');
+}
+function saveCalHide(){ls.set('siteboard.calhide.'+Store.eventId,JSON.stringify([...ui.calHide]));}
+const canCal=()=>Store.canEdit&&!Store.previewing&&Store.role!=='vendor'&&!!Store.eventId;
+function chip(it){const e=it.e,c=whoColor(e.who);
+  return `<button class="cchip" data-cal="${esc(it.id)}" type="button" style="--c:${esc(c)}" title="${esc(`${e.title} · ${whoName(e.who)}${e.where?' · '+e.where:''}${e.notes?'\n'+e.notes:''}`)}">${e.from?`<span class="ct">${esc(e.from)}</span>`:''}${esc(e.title)}${it.part?` <span class="ct">${it.part}</span>`:''}</button>`;}
+function workChip(w){return `<span class="cwork" style="--c:${esc(vendorColor(w.t.vendorId))}" title="${esc(taskLabel(w.id)+' · '+vendorName(w.t.vendorId))}">${esc(taskLabel(w.id))}</span>`;}
+function monthGrid(ym,hidden,opts){
+  opts=opts||{};const [y,m]=ym.split('-').map(Number);const first=new Date(y,m-1,1);const start=new Date(first);start.setDate(1-first.getDay());
+  const s=S(),today=isoD(new Date());let h=`<div class="mgrid">${DOW.map(d=>`<div class="mdow">${d}</div>`).join('')}`;
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const day=isoD(d);const inM=d.getMonth()===m-1;
+    if(i>=35&&!inM&&d.getDate()<8&&new Date(start.getTime()+35*864e5).getMonth()!==m-1)break;
+    const build=s.setupStart&&s.eventDate&&day>=s.setupStart&&day<s.eventDate,ev=day===s.eventDate;
+    const items=calEntriesOn(day,hidden),work=opts.print?[]:mapWorkOn(day,hidden);
+    h+=`<div class="mday${inM?'':' out'}${build?' build':''}${ev?' ev':''}${day===today&&!opts.print?' today':''}" data-day="${day}">
+      <div class="mnum"><span>${d.getDate()}</span>${ev?'<em>Event day</em>':''}</div>
+      ${items.map(chip).join('')}${work.map(workChip).join('')}
+      ${!opts.print&&canCal()?`<button class="madd" data-addday="${day}" type="button" aria-label="Add on ${esc(fmtLong(day))}">+</button>`:''}
+    </div>`;}
+  return h+'</div>';
+}
+function agenda(hidden,opts){
+  opts=opts||{};const r=calRange();let day=r.from,h='',n=0;
+  while(day<=r.to&&n<800){n++;const items=calEntriesOn(day,hidden),work=opts.print?[]:mapWorkOn(day,hidden);const s=S();
+    if(items.length||work.length||day===s.eventDate){
+      h+=`<div class="aday${day===s.eventDate?' ev':''}"><div class="adate"><b>${esc(fmtLong(day))}</b>${day===s.eventDate?'<em>Event day</em>':''}</div><div class="aitems">`;
+      h+=items.map(it=>{const e=it.e;return `<div class="arow" data-cal="${esc(it.id)}" style="--c:${esc(whoColor(e.who))}"><span class="atime">${esc(e.from?e.from+(e.to?'–'+e.to:''):'All day')}</span><div class="abody"><b>${esc(e.title)}</b>${it.part?` <span class="muted">(day ${it.part})</span>`:''}<div class="awho"><span class="dot" style="background:${esc(whoColor(e.who))}"></span>${esc(whoName(e.who))}${e.where?` · ${esc(e.where)}`:''}</div>${e.notes?`<div class="anote">${esc(e.notes)}</div>`:''}</div></div>`;}).join('');
+      h+=work.map(w=>`<div class="arow work" style="--c:${esc(vendorColor(w.t.vendorId))}"><span class="atime">Site work</span><div class="abody">${esc(taskLabel(w.id))}<div class="awho"><span class="dot" style="background:${esc(vendorColor(w.t.vendorId))}"></span>${esc(vendorName(w.t.vendorId))}</div></div></div>`).join('');
+      h+=`</div></div>`;}
+    day=addDays(day,1);}
+  return h||'<div class="muted" style="padding:20px 0">Nothing on the calendar yet.</div>';
+}
+function legend(hidden,interactive){
+  const used=new Set(Object.values(calData().entries).map(e=>e.who||CAL_ALL));
+  return whoList().filter(w=>(used.has(w.id)||(interactive&&w.kind==='Other'))&&(interactive||!hidden.has(w.id))).map(w=>interactive
+    ?`<button class="lchip${hidden.has(w.id)?' off':''}" data-calwho="${esc(w.id)}" type="button" aria-pressed="${!hidden.has(w.id)}"><span class="dot" style="background:${esc(w.color)}"></span>${esc(w.name)}</button>`
+    :`<span class="lchip"><span class="dot" style="background:${esc(w.color)}"></span>${esc(w.name)}</span>`).join('');
+}
+function renderCalendar(){
+  const v=$('#calView');if(!v||v.hidden)return;calInit();
+  const [y,m]=ui.calMonth.split('-').map(Number);const hidden=ui.calHide;
+  const count=Object.keys(calData().entries).length;
+  v.innerHTML=`<div class="cal-top">
+      <div class="row"><button class="btn small" id="calPrev" type="button" aria-label="Previous month">‹</button><h2 class="cal-m">${MONTHS[m-1]} ${y}</h2><button class="btn small" id="calNext" type="button" aria-label="Next month">›</button><button class="btn small" id="calToday" type="button">Today</button>${S().setupStart?`<button class="btn small ghost" id="calBuild" type="button">Build-up</button>`:''}</div>
+      <div class="row"><div class="seg"><button type="button" data-calmode="month" aria-pressed="${ui.calMode==='month'}">Month</button><button type="button" data-calmode="list" aria-pressed="${ui.calMode==='list'}">List</button></div>
+        <label class="mtog" title="Show the work scheduled on the map as grey notes"><input type="checkbox" id="calMap" ${ui.calMap?'checked':''}> Show map work</label>
+        ${canCal()?'<button class="btn small primary" id="calAdd" type="button">+ Add</button>':''}<button class="btn small" id="calPdf" type="button">PDF / Print</button></div>
+    </div>
+    <div class="cal-legend">${legend(hidden,true)||'<span class="muted">Colours appear here as you add entries.</span>'}${canCal()?'<button class="btn small ghost" id="calPeople" type="button">People & colours…</button>':''}</div>
+    <div class="cal-body">${ui.calMode==='list'?agenda(hidden):monthGrid(ui.calMonth,hidden)}</div>
+    ${!count&&canCal()?'<div class="muted cal-empty">Click a day to add what happens on it. Choose who it is for, and it takes their colour.</div>':''}`;
+  const shift=n=>{const d=new Date(y,m-1+n,1);ui.calMonth=d.getFullYear()+'-'+pad2(d.getMonth()+1);renderCalendar();};
+  $('#calPrev').onclick=()=>shift(-1);$('#calNext').onclick=()=>shift(1);
+  $('#calToday').onclick=()=>{ui.calMonth=isoD(new Date()).slice(0,7);renderCalendar();};
+  const cb=$('#calBuild');if(cb)cb.onclick=()=>{ui.calMonth=S().setupStart.slice(0,7);renderCalendar();};
+  v.querySelectorAll('[data-calmode]').forEach(b=>b.onclick=()=>{ui.calMode=b.dataset.calmode;ls.set('siteboard.calmode',ui.calMode);renderCalendar();});
+  $('#calMap').onchange=e=>{ui.calMap=e.target.checked;renderCalendar();};
+  const ad=$('#calAdd');if(ad)ad.onclick=()=>openCalEntry(null,isoD(new Date())>=S().setupStart?isoD(new Date()):(S().setupStart||isoD(new Date())));
+  $('#calPdf').onclick=openCalPrint;
+  const pp=$('#calPeople');if(pp)pp.onclick=openCalPeople;
+  v.querySelectorAll('[data-calwho]').forEach(b=>b.onclick=()=>{const w=b.dataset.calwho;if(ui.calHide.has(w))ui.calHide.delete(w);else ui.calHide.add(w);saveCalHide();renderCalendar();});
+  v.querySelectorAll('[data-cal]').forEach(b=>b.onclick=e=>{e.stopPropagation();openCalEntry(b.dataset.cal);});
+  v.querySelectorAll('[data-addday]').forEach(b=>b.onclick=e=>{e.stopPropagation();openCalEntry(null,b.dataset.addday);});
+  if(canCal())v.querySelectorAll('.mday').forEach(c=>c.addEventListener('click',e=>{if(e.target.closest('button'))return;openCalEntry(null,c.dataset.day);}));
+}
+function whoOptions(sel){
+  const g={'':[],Supplier:[],Other:[]};whoList().forEach(w=>g[w.kind].push(w));
+  return g[''].map(w=>`<option value="${esc(w.id)}" ${w.id===sel?'selected':''}>${esc(w.name)}</option>`).join('')+
+    (g.Supplier.length?`<optgroup label="Suppliers">${g.Supplier.map(w=>`<option value="${esc(w.id)}" ${w.id===sel?'selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`:'')+
+    (g.Other.length?`<optgroup label="Other people">${g.Other.map(w=>`<option value="${esc(w.id)}" ${w.id===sel?'selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`:'')+
+    `<option disabled>──────────</option><option value="__addparty">+ Add a person or company…</option>`;
+}
+function openCalEntry(id,day){
+  const e=id?calData().entries[id]:null;const edit=canCal();
+  if(!e&&!edit)return;
+  if(e&&!edit){openModal(`<div class="mh"><h2>${esc(e.title)}</h2><p>${esc(fmtLong(e.date))}${e.end&&e.end!==e.date?' → '+esc(fmtLong(e.end)):''}${e.from?' · '+esc(e.from)+(e.to?'–'+esc(e.to):''):''}</p></div><div class="mb"><div class="row"><span class="dot" style="background:${esc(whoColor(e.who))}"></span>${esc(whoName(e.who))}</div>${e.where?`<div><span class="muted">Where:</span> ${esc(e.where)}</div>`:''}${e.notes?`<div style="white-space:pre-wrap">${esc(e.notes)}</div>`:''}</div><div class="mf"><span></span><button class="btn" id="ce_c" type="button">Close</button></div>`,m=>{m.querySelector('#ce_c').onclick=closeModal;});return;}
+  const x=e||{date:day,end:'',from:'',to:'',title:'',who:ui.calLastWho||CAL_ALL,where:'',notes:''};
+  openModal(`<div class="mh"><h2>${e?'Edit entry':'Add to the calendar'}</h2><p>Kept separate from the site map.</p></div>
+  <form class="mb" id="ce_f">
+    <div class="field"><label for="ce_t">What happens</label><input class="inp" id="ce_t" value="${esc(x.title)}" placeholder="e.g. Land handover, Final walkthrough, Trucks arrive" required></div>
+    <div class="row"><div class="field" style="flex:1;min-width:140px"><label for="ce_d">Date</label><input class="inp" type="date" id="ce_d" value="${esc(x.date)}" required></div><div class="field" style="flex:1;min-width:140px"><label for="ce_e">Until (optional)</label><input class="inp" type="date" id="ce_e" value="${esc(x.end||'')}"></div></div>
+    <div class="row"><div class="field" style="flex:1;min-width:110px"><label for="ce_f1">From (optional)</label><input class="inp" type="time" id="ce_f1" value="${esc(x.from||'')}"></div><div class="field" style="flex:1;min-width:110px"><label for="ce_t1">To</label><input class="inp" type="time" id="ce_t1" value="${esc(x.to||'')}"></div></div>
+    <div class="field"><label for="ce_w">Who it’s for (sets the colour)</label><select class="sel" id="ce_w">${whoOptions(x.who||CAL_ALL)}</select></div>
+    <div class="field"><label for="ce_where">Where (optional)</label><input class="inp" id="ce_where" value="${esc(x.where||'')}" placeholder="e.g. Main gate, Stage area"></div>
+    <div class="field"><label for="ce_n">Notes (optional)</label><textarea class="inp" id="ce_n" rows="3" placeholder="What’s expected of them">${esc(x.notes||'')}</textarea></div>
+  </form>
+  <div class="mf">${e?'<button class="btn ghost danger" id="ce_del" type="button">Delete</button>':'<span></span>'}<div class="row"><button class="btn" id="ce_c" type="button">Cancel</button><button class="btn primary" id="ce_s" type="button">${e?'Save':'Add'}</button></div></div>`,m=>{
+    const w=m.querySelector('#ce_w');let prevW=w.value;
+    w.addEventListener('change',()=>{if(w.value!=='__addparty'){prevW=w.value;return;}w.value=prevW;
+      openAddItem({title:'New person or company',intro:'For the calendar only, e.g. the landowner, the client or security.',fields:[{key:'name',label:'Name',required:true},{key:'color',label:'Colour (e.g. #7048e8)',value:nextPartyColor()}],
+        onSave(v){const pid='p_'+uid().slice(0,6);const c=/^#[0-9a-f]{6}$/i.test(v.color)?v.color:nextPartyColor();calData().parties={...calParties(),[pid]:{name:v.name,color:c}};Store.touch();w.innerHTML=whoOptions(pid);w.value=pid;prevW=pid;}});});
+    const save=()=>{const t=m.querySelector('#ce_t').value.trim(),d=m.querySelector('#ce_d').value;let en=m.querySelector('#ce_e').value;
+      if(!t){toast('Write what happens.');return;}if(!d){toast('Pick a date.');return;}if(en&&en<d){toast('“Until” is before the date.');return;}if(en===d)en='';
+      const entry={date:d,end:en,from:m.querySelector('#ce_f1').value,to:m.querySelector('#ce_t1').value,title:t,who:m.querySelector('#ce_w').value||CAL_ALL,where:m.querySelector('#ce_where').value.trim(),notes:m.querySelector('#ce_n').value.trim()};
+      ui.calLastWho=entry.who;calData().entries={...calData().entries,[id||('c_'+uid())]:entry};Store.touch();closeModal();
+      ui.calMonth=d.slice(0,7);renderCalendar();toast(e?'Saved.':'Added to the calendar.');};
+    m.querySelector('#ce_s').onclick=save;m.querySelector('#ce_f').addEventListener('submit',ev=>{ev.preventDefault();save();});
+    m.querySelector('#ce_c').onclick=closeModal;
+    const del=m.querySelector('#ce_del');if(del)del.onclick=()=>confirmBtn(del,()=>{const all={...calData().entries};delete all[id];calData().entries=all;Store.touch();closeModal();renderCalendar();});
+  });
+}
+function nextPartyColor(){const used=new Set(whoList().map(w=>w.color.toLowerCase()));return ['#7048e8','#f08c00','#1098ad','#d6336c','#37b24d','#4263eb','#e8590c','#ae3ec9'].find(c=>!used.has(c))||'#7048e8';}
+function openCalPeople(){
+  const rows=Object.entries(calParties()).map(([id,p])=>({id,...p}));
+  openListEditor({title:'People & colours',intro:'People or companies used only in the calendar, such as the landowner. Supplier colours are set in the Vendors tab.',items:rows,
+    columns:[{key:'name',label:'Name'},{key:'color',type:'color',label:'Colour'}],
+    newItem:()=>({id:'p_'+uid().slice(0,6),name:'',color:nextPartyColor()}),
+    inUse:p=>Object.values(calData().entries).filter(e=>e.who===p.id).length,
+    onSave(list,removed){const ps={};list.forEach(r=>{ps[r.id]={name:r.name.trim(),color:r.color};});calData().parties=ps;
+      const gone=new Set(removed.map(r=>r.id));if(gone.size){const en={...calData().entries};Object.entries(en).forEach(([k,e])=>{if(gone.has(e.who))en[k]={...e,who:CAL_ALL};});calData().entries=en;}
+      Store.touch();renderCalendar();}});
+}
+/* PDF: builds a printable copy (month pages + dated list) and opens the browser's print dialog,
+   where "Save as PDF" makes the file. Colours print as shown, and any language works. */
+function openCalPrint(){
+  const ws=whoList().filter(w=>Object.values(calData().entries).some(e=>(e.who||CAL_ALL)===w.id));
+  openModal(`<div class="mh"><h2>PDF / Print</h2><p>Opens your browser’s print window. Choose <b>Save as PDF</b> as the printer to get a file.</p></div>
+  <div class="mb">
+    <div class="field"><label for="cp_w">For</label><select class="sel" id="cp_w"><option value="">Everyone: the whole calendar</option>${ws.filter(w=>w.id!==CAL_ALL).map(w=>`<option value="${esc(w.id)}">Only ${esc(w.name)} (plus entries for Everyone)</option>`).join('')}</select></div>
+    <label class="row" style="font-size:13px"><input type="checkbox" id="cp_m" checked> Month calendar pages</label>
+    <label class="row" style="font-size:13px"><input type="checkbox" id="cp_l" checked> Day-by-day list with notes</label>
+    <div class="field"><label for="cp_n">Note at the top (optional)</label><textarea class="inp" id="cp_n" rows="2" placeholder="e.g. Contact on site: Ahmad 079…"></textarea></div>
+  </div>
+  <div class="mf"><span></span><div class="row"><button class="btn" id="cp_c" type="button">Cancel</button><button class="btn primary" id="cp_go" type="button">Open print / PDF</button></div></div>`,m=>{
+    m.querySelector('#cp_c').onclick=closeModal;
+    m.querySelector('#cp_go').onclick=()=>{const who=m.querySelector('#cp_w').value;const inc={month:m.querySelector('#cp_m').checked,list:m.querySelector('#cp_l').checked};
+      if(!inc.month&&!inc.list){toast('Tick at least one part.');return;}const note=m.querySelector('#cp_n').value.trim();closeModal();printCalendar(who,inc,note);};
+  });
+}
+function printCalendar(who,inc,note){
+  const hidden=new Set(who?whoList().map(w=>w.id).filter(id=>id!==who&&id!==CAL_ALL):[]);
+  const r=calRange();const s=S();
+  const months=[];let ym=r.from.slice(0,7);const last=r.to.slice(0,7);
+  while(ym<=last&&months.length<24){months.push(ym);const [y,m]=ym.split('-').map(Number);const d=new Date(y,m,1);ym=d.getFullYear()+'-'+pad2(d.getMonth()+1);}
+  const head=`<div class="ph"><div><div class="pk">Schedule${who?' for '+esc(whoName(who)):''}</div><h1>${esc(s.name||'Event')}</h1><div class="pm">${esc(fmtLong(r.from))} → ${esc(fmtLong(r.to))}${s.eventDate?` · Event day ${esc(fmtLong(s.eventDate))}`:''}</div>${note?`<div class="pn">${esc(note)}</div>`:''}</div><div class="pl">${legend(hidden,false)}</div></div>`;
+  let h='';
+  if(inc.month)months.forEach((mo,i)=>{const [y,m]=mo.split('-').map(Number);h+=`<section class="ppage">${i===0?head:''}<h2>${MONTHS[m-1]} ${y}</h2>${monthGrid(mo,hidden,{print:true})}</section>`;});
+  if(inc.list)h+=`<section class="ppage plist">${inc.month?'':head}<h2>Day by day</h2>${agenda(hidden,{print:true})}</section>`;
+  h+=`<div class="pf">Made with Build-Up Site Board · ${esc(new Date().toLocaleString())}</div>`;
+  const pa=$('#printArea');pa.innerHTML=`<div class="pback"><button class="btn primary" id="printBack" type="button">← Back to the board</button><span class="muted">If the print window didn’t open, use your browser’s Print menu and choose Save as PDF.</span></div>`+h;document.body.classList.add('printing');
+  const done=()=>{document.body.classList.remove('printing');pa.innerHTML='';window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);
+  $('#printBack').onclick=done;
+  setTimeout(()=>{try{window.print();}catch(e){toast('Printing isn’t available here. Use your browser’s Print menu.');}},60);
+}
+function setPage(p){ui.page=p;ls.set('siteboard.page',p);renderAll();}
+
 /* ============ undo / redo ============
    Every change to the plan is recorded (changes made in one go count as one step). */
 const History={stack:[],i:-1,pending:null,max:100,applying:false,
@@ -2638,6 +2896,11 @@ function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;
 function renderAll(){
   ensureSchedule();
   renderGate();
+  const cal=ui.page==='cal'&&!!Store.eventId;
+  document.querySelector('.main').hidden=cal;$('#calView').hidden=!cal;
+  document.querySelectorAll('#pageSeg [data-page]').forEach(b=>b.setAttribute('aria-selected',String((b.dataset.page==='cal')===cal)));
+  $('#pageSeg').hidden=!Store.eventId;
+  if(cal){renderHeader();renderCalendar();return;}
   renderHeader();renderRail();renderScrub();renderMap();renderViewbar();
   const ae=document.activeElement;
   if(!ae||!$('#pbody').contains(ae)||ae.tagName==='BUTTON')renderPanel();else renderTabs();
@@ -2647,7 +2910,7 @@ window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setT
 window.addEventListener('beforeunload',e=>{if(Store.mode==='cloud'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
 renderAll();fit();
 Store.init().then(()=>{dataStamp++;if(Store.role==='vendor'){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();}).catch(e=>{Store.mode='local';Store.problem='Could not start: '+e.message;renderAll();});
-window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor,progressPct};
+window.SiteBoard={printCalendar,Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor,progressPct};
 })();
 </script>
 </body>
