@@ -168,7 +168,25 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .task .t1 input{flex:1}
 .st{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
 .st.done{color:var(--ok)} .st.ready{color:var(--accent)} .st.wait{color:var(--muted)} .st.started{color:var(--info)}
-.conf{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.conf{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.conf.ignored{opacity:.7}
+.chead{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
+.cdetail{font-size:13px}
+.csides{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cside{border:1px solid var(--line2);border-left:4px solid var(--muted);border-radius:6px;padding:7px 8px;display:flex;flex-direction:column;gap:4px;font-size:12.5px;min-width:0}
+.cside .daterow{flex-direction:column;align-items:stretch;gap:4px}
+.cside .daterow label{justify-content:space-between}
+.cside .daterow input{min-width:0;width:100%;max-width:150px}
+.cside > .btn{align-self:flex-start;padding-left:0}
+.crole{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cbrow{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:12px}
+.cfixes{display:flex;flex-direction:column;gap:5px}
+.cfixes .btn{white-space:normal;text-align:left}
+.cfoot{gap:4px}
+.csum{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.cmore{border-top:1px solid var(--line2);padding-top:8px}
+.cmore summary{cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:8px}
+.cmore .conf{margin-bottom:8px}
 .conf.critical{border-left-color:var(--bad)} .conf.info{border-left-color:var(--info)}
 .conf b{font-weight:600}
 .brief{white-space:pre-wrap;font-family:var(--f-mono);font-size:12px;background:var(--line2);border-radius:8px;padding:10px;overflow-x:auto}
@@ -419,6 +437,7 @@ function normalize(d){
   if(!Array.isArray(d.lists.restrictions))d.lists.restrictions=clone(DEFAULT_RESTRICTIONS);
   if(!Array.isArray(d.lists.statuses))d.lists.statuses=clone(DEFAULT_STATUSES);
   if(!d.types||typeof d.types!=='object')d.types={};
+  if(!Array.isArray(d.ignored))d.ignored=[];
   Object.values(d.vendors).forEach(v=>{['trade','contact','phone','email','notes'].forEach(k=>{if(typeof v[k]!=='string')v[k]='';});});
   return d;
 }
@@ -954,16 +973,41 @@ function straighten(z){
 }
 
 /* ============ conflicts ============ */
+// everything a task waits for, directly or further back (used to avoid offering fixes that would loop)
+function upstreamOf(id){const T=TK();const up=new Set();const st=[id,...(KIDS[id]||[])];
+  while(st.length){const x=st.pop();(EDEPS[x]||[]).forEach(d=>{if(T[d]&&!up.has(d)){up.add(d);st.push(d);(KIDS[d]||[]).forEach(k=>{if(!up.has(k)){up.add(k);st.push(k);}});}});
+    const p=T[x]?.parentId;if(p&&T[p]&&!up.has(p)){up.add(p);(EDEPS[p]||[]).forEach(d=>st.push(d));}}
+  return up;}
+const jobOf=id=>{const t=TK()[id];return t&&t.parentId&&TK()[t.parentId]?t.parentId:id;};
+function addWait(waiter,on){const T=TK();const t=clone(T[waiter]);t.deps=[...new Set([...(t.deps||[]),on])];Store.put('tasks',waiter,t);}
 function conflicts(){
   const out=[];const zs=Z(),T=TK();const zids=Object.keys(zs);
-  CYC.forEach(id=>out.push({level:'critical',title:'Circular dependency',detail:`"${T[id]?.title}" ends up waiting on itself. Remove one of its "starts after" links.`,zones:[T[id]?.zoneId]}));
+  const ign=new Set(Store.d.ignored||[]);
+  const push=c=>{c.ignored=ign.has(c.key);out.push(c);};
+  // 1. a task that ends up waiting on itself
+  CYC.forEach(id=>push({key:'cycle|'+id,kind:'cycle',level:'critical',title:'Waits for itself',
+    detail:`${taskLabel(id)} ends up waiting on work that waits for it. Remove one of the links.`,a:id,zones:[T[id]?.zoneId],
+    fixes:[{label:'Change what it waits for',run:()=>openDeps(id),keepOpen:true}]}));
+  // 2. a fixed start before the work it waits for is done
   Object.keys(EARLY).forEach(id=>{const t=T[id];if(!t||EARLY[id]<=SCH[id].s+1e-6)return;
     const holder=t.start?id:(t.parentId&&T[t.parentId]?.start?t.parentId:id);const ok=Math.ceil(EARLY[id]-1e-6);
-    out.push({level:'critical',title:'Starts before the work it waits for is finished',detail:`${taskLabel(id)} (${vendorName(t.vendorId)}) is set to start ${fmtDay(SCH[id].s,false)}, but the work before it finishes ${fmtDay(EARLY[id])}.`,zones:[t.zoneId],
-      fix:{label:`Start ${fmtDay(ok,false)} instead`,run:()=>{const c=clone(T[holder]);c.start=isoOf(ok);Store.put('tasks',holder,c);}},
-      fix2:{label:'Start automatically',run:()=>{const c=clone(T[holder]);delete c.start;Store.put('tasks',holder,c);}}});});
+    const blocker=(EDEPS[id]||[]).filter(d=>T[d]).sort((a,b)=>SCH[b].e-SCH[a].e)[0];
+    const fixes=[
+      {label:`Start ${fmtDay(ok,false)} instead`,primary:true,run:()=>{const c=clone(T[holder]);c.start=isoOf(ok);Store.put('tasks',holder,c);}},
+      {label:'Start automatically after it',run:()=>{const c=clone(T[holder]);delete c.start;Store.put('tasks',holder,c);}}];
+    if(blocker){const direct=[id,holder,t.parentId].filter(Boolean).find(h=>(T[h]?.deps||[]).some(d=>d===blocker||d===jobOf(blocker)));
+      if(direct)fixes.push({label:`It doesn’t need to wait for ${taskLabel(blocker)}`,run:()=>{const c=clone(T[direct]);c.deps=(c.deps||[]).filter(d=>d!==blocker&&d!==jobOf(blocker));Store.put('tasks',direct,c);}});}
+    push({key:'early|'+id,kind:'early',level:'critical',title:'Starts before the work it waits for is done',
+      detail:`${taskLabel(id)} is set to start ${fmtDay(SCH[id].s,false)}, but the work before it finishes ${fmtDay(EARLY[id])}.`,a:id,b:blocker,zones:[t.zoneId],fixes});});
+  // 3. finishing after the event day
   const ev=eventOff();
-  Object.keys(T).filter(isLeaf).forEach(id=>{if(SCH[id]&&SCH[id].e>ev)out.push({level:'critical',title:'Finishes after event day',detail:`${taskLabel(id)} (${vendorName(T[id].vendorId)}) ends ${fmtDay(SCH[id].e)}, after the event on ${fmtDay(ev,false)}.`,zones:[T[id].zoneId]});});
+  Object.keys(T).filter(isLeaf).forEach(id=>{if(!SCH[id]||SCH[id].e<=ev)return;const s=SCH[id];const late=Math.ceil(s.e-1e-6);
+    const fixes=[];
+    if(s.s<ev)fixes.push({label:`Shorten it to finish by ${fmtDay(ev-1,false)}`,run:()=>{const c=clone(T[id]);c.days=Math.max(0.5,Math.floor(ev-s.s));Store.put('tasks',id,c);}});
+    fixes.push({label:`Move the event day to ${fmtDay(late,false)}`,run:()=>Store.setSettings({eventDate:isoOf(late)})});
+    push({key:'late|'+id,kind:'late',level:'critical',title:'Finishes after the event day',
+      detail:`${taskLabel(id)} ends ${fmtDay(s.e)}, after the event on ${fmtDay(ev,false)}.`,a:id,zones:[T[id].zoneId],fixes});});
+  // 4. two suppliers in the same place at the same time
   const seen=new Set();
   for(let i=0;i<zids.length;i++)for(let j=i;j<zids.length;j++){
     const a=zs[zids[i]],b=zs[zids[j]];if(i!==j&&!overlap(a,b))continue;
@@ -974,27 +1018,42 @@ function conflicts(){
       if(X.parentId&&X.parentId===Y.parentId)return; // steps of one job: you set their order yourself
       if((a.parallel||[]).includes(Y.vendorId)||(b.parallel||[]).includes(X.vendorId))return;
       const sx=SCH[x],sy=SCH[y];
-      if(sx.s<sy.e&&sy.s<sx.e){
-        const first=sx.s<=sy.s?x:y,second=first===x?y:x;
-        // make the later job (or task) wait for the earlier one
-        const waiter=T[second].parentId&&T[T[second].parentId]?T[second].parentId:second;
-        out.push({level:'critical',title:'Two vendors in the same area',detail:`${vendorName(X.vendorId)} (${taskLabel(x)}) and ${vendorName(Y.vendorId)} (${taskLabel(y)}) are both scheduled in ${a.label}${i!==j?' / '+b.label:''} on ${fmtDay(Math.max(sx.s,sy.s))}.`,zones:[zids[i],zids[j]],
-          fix:{label:`${T[waiter].title} waits for ${taskLabel(first)}`,run:()=>{const t=clone(T[waiter]);t.deps=[...new Set([...(t.deps||[]),first])];Store.put('tasks',waiter,t);}},
-          fix2:{label:'They can work in parallel',run:()=>{const zid=T[second].zoneId;const z=clone(zs[zid]);z.parallel=[...new Set([...(z.parallel||[]),T[first].vendorId])];Store.put('zones',zid,z);}}});
-      }
+      if(!(sx.s<sy.e&&sy.s<sx.e))return;
+      const first=sx.s<=sy.s?x:y,second=first===x?y:x;
+      const fixes=[];
+      const w2=jobOf(second),w1=jobOf(first);
+      if(!upstreamOf(first).has(second))fixes.push({label:`${T[w2].title} waits for ${taskLabel(first)}`,primary:true,run:()=>addWait(w2,first)});
+      if(!upstreamOf(second).has(first))fixes.push({label:`${T[w1].title} waits for ${taskLabel(second)}`,run:()=>addWait(w1,second)});
+      fixes.push({label:'They can work there at the same time',run:()=>{const zid=T[second].zoneId;const z=clone(zs[zid]);z.parallel=[...new Set([...(z.parallel||[]),T[first].vendorId])];Store.put('zones',zid,z);
+        const zid2=T[first].zoneId;if(zid2!==zid){const z2=clone(zs[zid2]);z2.parallel=[...new Set([...(z2.parallel||[]),T[second].vendorId])];Store.put('zones',zid2,z2);}}});
+      push({key:'overlap|'+k,kind:'overlap',level:'critical',title:`Two suppliers in ${a.label}${i!==j?' / '+b.label:''} at the same time`,
+        detail:`From ${fmtDay(Math.max(sx.s,sy.s))} to ${fmtDay(Math.min(sx.e,sy.e))} both are scheduled there.`,a:first,b:second,zones:[zids[i],zids[j]],fixes});
     }));
   }
+  // 5. stored items still in the way
   zids.filter(id=>TYPES[zs[id].type]?.drop).forEach(id=>{
     const z=zs[id];const a=autoClearBy(id);const man=offOf(z.clearBy);
-    if(a&&man!=null&&man>a.off)out.push({level:'critical',title:'Items still stored where work starts',detail:`${vendorName(z.vendorId)} may leave items in ${z.label} until ${fmtDay(man)}, but ${taskLabel(a.task)} (${vendorName(T[a.task].vendorId)}) starts there ${fmtDay(a.off)}.`,zones:[id,T[a.task].zoneId],fix:{label:`Clear by ${fmtDay(a.off)}`,run:()=>{const c=clone(z);c.clearBy=isoOf(a.off);Store.put('zones',id,c);}}});
-    else if(a&&man==null)out.push({level:'info',title:'Drop-off deadline set automatically',detail:`${vendorName(z.vendorId)} must clear ${z.label} by ${fmtDay(a.off)} so ${taskLabel(a.task)} can start.`,zones:[id]});
+    if(a&&man!=null&&man>a.off){const holder=jobOf(a.task);
+      push({key:'drop|'+id+'|'+a.task,kind:'drop',level:'critical',title:'Stored items still in the way',
+        detail:`${vendorName(z.vendorId)} may leave items in ${z.label} until ${fmtDay(man,false)}, but ${taskLabel(a.task)} starts there ${fmtDay(a.off)}.`,zone:id,b:a.task,zones:[id,T[a.task].zoneId],
+        fixes:[{label:`Items must be cleared by ${fmtDay(a.off,false)}`,primary:true,run:()=>{const c=clone(z);c.clearBy=isoOf(a.off);Store.put('zones',id,c);}},
+          {label:`${T[holder].title} starts ${fmtDay(man,false)}, after the items are gone`,run:()=>{const c=clone(T[holder]);c.start=isoOf(man);Store.put('tasks',holder,c);}},
+          {label:'Clear-by date set automatically',run:()=>{const c=clone(z);c.clearBy='';Store.put('zones',id,c);}}]});}
+    else if(a&&man==null)push({key:'dropinfo|'+id,kind:'dropinfo',level:'info',title:'Drop-off deadline set for you',
+      detail:`${vendorName(z.vendorId)} must clear ${z.label} by ${fmtDay(a.off,false)} so ${taskLabel(a.task)} can start.`,zone:id,b:a.task,zones:[id],fixes:[]});
   });
+  // 6. vehicle routes over restricted ground
   zids.filter(id=>TYPES[zs[id].type]?.route).forEach(rid=>{
     zids.forEach(o=>{const oz=zs[o];if(o===rid)return;const r=oz.after||'none';if(!blocksVehicles(r))return;if(!overlap(zs[rid],oz))return;
-      out.push({level:lookOf(oz.type)==='cable'?'critical':'warn',title:lookOf(oz.type)==='cable'?'Vehicle route crosses live cables':'Vehicle route crosses a restricted area',detail:`${zs[rid].label} crosses ${oz.label} (${restrictLabel(r).toLowerCase()} from ${fmtDay(restrictFrom(o))}). Reroute, add a cable ramp, or brief the drivers.`,zones:[rid,o]});});
+      const cable=lookOf(oz.type)==='cable';
+      push({key:'route|'+rid+'|'+o,kind:'route',level:cable?'critical':'warn',title:cable?'Vehicle route crosses live cables':'Vehicle route crosses a restricted area',
+        detail:`${zs[rid].label} crosses ${oz.label} (${restrictLabel(r).toLowerCase()} from ${fmtDay(restrictFrom(o),false)}).`,zone:rid,zone2:o,zones:[rid,o],
+        fixes:[{label:'Reroute: reshape the route',primary:true,run:()=>{ui.sel=rid;ui.tool='edit';ui.tab='zone';focusZone(rid);renderAll();},keepOpen:true},
+          {label:`Allow crossing (cable ramps / protection): lift the restriction on ${oz.label}`,run:()=>{const c=clone(oz);c.after='none';Store.put('zones',o,c);}}]});});
   });
   const ord={critical:0,warn:1,info:2};return out.sort((a,b)=>ord[a.level]-ord[b.level]);
 }
+
 
 /* ============ render: tool rail ============ */
 function swatch(type){
@@ -1469,7 +1528,7 @@ function openQuestions(type,after){
 /* ============ side panel ============ */
 let CONF=[];
 function renderTabs(){
-  const n=CONF.filter(c=>c.level!=='info').length;const vendorMode=ui.viewAs!=='planner';
+  const n=CONF.filter(c=>c.level!=='info'&&!c.ignored).length;const vendorMode=ui.viewAs!=='planner';
   const tabs=vendorMode?[['brief','Your brief'],['schedule','Schedule'],['zone','Area']]:[['schedule','Schedule'],['zone','Area'],['conflicts','Clashes'],['vendors','Vendors']];
   if(!tabs.some(t=>t[0]===ui.tab))ui.tab=tabs[0][0];
   $('#tabs').innerHTML=tabs.map(([k,l])=>`<button class="tab" role="tab" aria-selected="${ui.tab===k}" data-tab="${k}" type="button">${l}${k==='conflicts'&&n?`<span class="n">${n}</span>`:''}</button>`).join('');
@@ -1614,9 +1673,63 @@ function panelZone(){
   if(ed)h+=`<div class="row"><button class="btn small danger" id="zdel" type="button">Delete ${esc(T.name.toLowerCase())}</button></div>`;
   return h;
 }
+// one side of a clash: who, what, where, and its dates you can change right here
+function clashTask(id,role){
+  const T=TK(),t=T[id];if(!t)return '';const z=Z()[t.zoneId];
+  return `<div class="cside" style="border-left-color:${esc(vendorColor(t.vendorId))}">
+    ${role?`<span class="crole">${esc(role)}</span>`:''}
+    <b>${esc(vendorName(t.vendorId))}</b>
+    <div>${esc(taskLabel(id))}<span class="muted"> · ${esc(z?.label||'')}</span></div>
+    ${dateRow(id,false)}
+    <button class="btn small ghost" data-opentask="${id}" type="button">Open in Area tab</button>
+  </div>`;
+}
+function clashZone(id,role,extra){
+  const z=Z()[id];if(!z)return '';
+  return `<div class="cside" style="border-left-color:${esc(z.vendorId?vendorColor(z.vendorId):'var(--muted)')}">
+    ${role?`<span class="crole">${esc(role)}</span>`:''}
+    <b>${esc(z.label)}</b>${z.vendorId?`<div class="muted">${esc(vendorName(z.vendorId))}</div>`:''}
+    ${extra||''}
+    <button class="btn small ghost" data-openzone="${id}" type="button">Open in Area tab</button>
+  </div>`;
+}
+function clashSides(c){
+  switch(c.kind){
+    case 'overlap':return clashTask(c.a,'Starts first')+clashTask(c.b,'Starts second');
+    case 'early':return clashTask(c.a,'Starts too early')+(c.b?clashTask(c.b,'Waits for this'):'');
+    case 'late':case 'cycle':return clashTask(c.a,'');
+    case 'drop':case 'dropinfo':{const cb=clearByOff(c.zone);
+      return clashZone(c.zone,'Stored items',`<label class="cbrow">Items allowed until <input type="date" class="inp" data-clearby="${c.zone}" value="${cb?isoOf(cb.off):''}"></label><div class="muted" style="font-size:11.5px">${Z()[c.zone].clearBy?'Date set by you':'Set automatically'}</div>`)+(c.b?clashTask(c.b,'Work that needs the space'):'');}
+    case 'route':return clashZone(c.zone,'Vehicle route','')+clashZone(c.zone2,'Restricted',`<label class="cbrow">Once installed <select class="sel" data-zrestrict="${c.zone2}" data-list="restrict">${restrictOptions(Z()[c.zone2].after)}</select></label>`);
+  }
+  return '';
+}
+function clashCard(c,i){
+  return `<div class="conf ${c.level}${c.ignored?' ignored':''}">
+    <div class="chead"><b>${esc(c.title)}</b>${c.level==='info'?'<span class="pill">FYI</span>':''}</div>
+    <div class="cdetail">${esc(c.detail)}</div>
+    <div class="csides">${clashSides(c)}</div>
+    ${c.fixes.length?`<div class="cfixes"><span class="olbl">Ways to fix</span><div class="row">${c.fixes.map((f,j)=>`<button class="btn small${f.primary?' primary':''}" data-cfx="${i}:${j}" type="button">${esc(f.label)}</button>`).join('')}</div><div class="muted" style="font-size:11.5px">…or change the dates above.</div></div>`:''}
+    <div class="row cfoot">${(c.zones||[]).filter(Boolean).length?`<button class="btn small ghost" data-cshow="${i}" type="button">Show on map</button>`:''}${c.level!=='info'?`<button class="btn small ghost" data-cignore="${i}" type="button">${c.ignored?'Stop ignoring':'Ignore this clash'}</button>`:''}</div>
+  </div>`;
+}
 function panelConflicts(){
-  if(!CONF.length)return `<div class="row"><span class="pill ok">No clashes</span><span class="muted">Every area has one vendor at a time, and drop-offs clear before work starts.</span></div>`;
-  return CONF.map((c,i)=>`<div class="conf ${c.level}"><b>${esc(c.title)}</b><div style="font-size:13px">${esc(c.detail)}</div><div class="row">${(c.zones||[]).filter(Boolean).length?`<button class="btn small" data-cshow="${i}" type="button">Show on plan</button>`:''}${c.fix&&Store.canEdit?`<button class="btn small primary" data-cfix="${i}" type="button">${esc(c.fix.label)}</button>`:''}${c.fix2&&Store.canEdit?`<button class="btn small" data-cfix2="${i}" type="button">${esc(c.fix2.label)}</button>`:''}</div></div>`).join('');
+  const live=CONF.filter(c=>!c.ignored&&c.level!=='info'),info=CONF.filter(c=>c.level==='info'),ign=CONF.filter(c=>c.ignored);
+  let h='';
+  h+=live.length?`<div class="csum"><b>${live.length} clash${live.length===1?'':'es'} to sort out</b><span class="muted">Change a date right in the card, or pick one of the fixes.</span></div>`
+    :`<div class="row"><span class="pill ok">No clashes</span><span class="muted">Every area has one supplier at a time, and drop-offs clear before work starts.</span></div>`;
+  h+=live.map(c=>clashCard(c,CONF.indexOf(c))).join('');
+  if(info.length)h+=`<details class="cmore"><summary>Good to know (${info.length})</summary>${info.map(c=>clashCard(c,CONF.indexOf(c))).join('')}</details>`;
+  if(ign.length)h+=`<details class="cmore"><summary>Ignored (${ign.length})</summary>${ign.map(c=>clashCard(c,CONF.indexOf(c))).join('')}</details>`;
+  return h;
+}
+function wireClashes(p){
+  p.querySelectorAll('[data-cfx]').forEach(b=>b.onclick=()=>{const [i,j]=b.dataset.cfx.split(':').map(Number);const f=CONF[i]?.fixes[j];if(!f)return;f.run();if(!f.keepOpen)toast('Done. The clash list has been updated.');});
+  p.querySelectorAll('[data-cignore]').forEach(b=>b.onclick=()=>{const c=CONF[+b.dataset.cignore];const list=new Set(Store.d.ignored||[]);if(c.ignored)list.delete(c.key);else list.add(c.key);Store.d.ignored=[...list];Store.touch();});
+  p.querySelectorAll('[data-clearby]').forEach(el=>el.addEventListener('change',()=>{const id=el.dataset.clearby;const z=clone(Z()[id]);z.clearBy=el.value||'';el.blur();Store.put('zones',id,z);}));
+  p.querySelectorAll('[data-zrestrict]').forEach(el=>el.addEventListener('change',()=>{const id=el.dataset.zrestrict;const z=clone(Z()[id]);z.after=el.value;el.blur();Store.put('zones',id,z);}));
+  p.querySelectorAll('[data-opentask]').forEach(b=>b.onclick=()=>{const t=TK()[b.dataset.opentask];ui.sel=t.zoneId;ui.selTask=b.dataset.opentask;ui.tab='zone';focusZone(t.zoneId);renderAll();});
+  p.querySelectorAll('[data-openzone]').forEach(b=>b.onclick=()=>{ui.sel=b.dataset.openzone;ui.tab='zone';focusZone(ui.sel);renderAll();});
 }
 function vendorSteps(vid){return Object.keys(TK()).filter(i=>isLeaf(i)&&TK()[i].vendorId===vid).sort((a,b)=>SCH[a].s-SCH[b].s);}
 function panelVendors(){
@@ -1714,9 +1827,8 @@ function wirePanel(p){
   p.querySelectorAll('[data-sdn]').forEach(b=>b.onclick=()=>moveStep(b.dataset.sdn,1));
   const at=p.querySelector('#addTask');if(at)at.onclick=()=>{const js=zoneJobs(PZ);const last=js[js.length-1];Store.put('tasks','t_'+uid(),{title:'New job',zoneId:PZ,vendorId:'',days:1,deps:last?[last]:[],status:'todo',notBefore:''});};
   const zd=p.querySelector('#zdel');if(zd)zd.onclick=()=>confirmBtn(zd,()=>{const id=PZ;zoneJobs(id).forEach(t=>{if(TK()[t])removeTask(t);});Store.del('zones',id);ui.sel=null;renderAll();});
+  wireClashes(p);
   p.querySelectorAll('[data-cshow]').forEach(b=>b.onclick=()=>{const c=CONF[+b.dataset.cshow];const zid=c.zones.find(Boolean);ui.sel=zid;const w=zoneWindow(zid);if(w)ui.day=w.s;focusZone(zid);renderAll();});
-  p.querySelectorAll('[data-cfix]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix].fix.run();toast('Fixed.');});
-  p.querySelectorAll('[data-cfix2]').forEach(b=>b.onclick=()=>{CONF[+b.dataset.cfix2].fix2.run();toast('Marked as parallel.');});
   p.querySelectorAll('[data-vrow]').forEach(r=>{const id=r.dataset.vrow;r.querySelectorAll('[data-vf]').forEach(el=>el.addEventListener('change',()=>{const v=clone(V()[id]);v[el.dataset.vf]=el.type==='checkbox'?el.checked:(el.dataset.vf==='email'?el.value.trim():el.value);Store.put('vendors',id,v);}));});
   p.querySelectorAll('[data-viewas]').forEach(b=>b.onclick=()=>setViewAs(b.dataset.viewas));
   p.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(briefFor(b.dataset.copy),'Brief copied.'));

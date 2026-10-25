@@ -99,6 +99,20 @@ Every task, step and job has a **Start** and **Finish** date box (Area tab, and 
 - **When you draw something new**, you can type a start and finish right in the form.
 - **If you fix a start before the work it waits for is finished**, Clashes shows it, with one-click fixes: *Start on the first possible day*, or *Start automatically*.
 
+## Fixing clashes
+The **Clashes** tab lists every problem as a card:
+- **What's wrong**, in plain words, with the dates.
+- **Both sides next to each other**: supplier, work and area, with **start and finish dates you can change right there**. Drop-off cards let you change the *items allowed until* date; route cards let you change the restriction.
+- **Ways to fix**: several options, not just one. The highlighted one is the usual choice. For example:
+  - two suppliers in one spot: either one waits for the other, or they work there at the same time;
+  - a start before the work it waits for is done: start on the first possible day, start automatically, or it doesn't need to wait;
+  - finishing after the event day: shorten it, or move the event day;
+  - stored items in the way: clear the items by the start day, or start the work after the items are gone;
+  - a vehicle route over cables: reshape the route, or lift the restriction (cable ramps).
+- **Show on map**, **Open in Area tab**, and **Ignore this clash** for ones you've accepted. Ignored clashes move to *Ignored* at the bottom and don't count in the red number; open it to stop ignoring them.
+
+Every fix can be undone.
+
 ## Changing the order of work later
 Every task, job and step in the Area tab has an order box with two rows:
 - **Must finish first** (*Also waits for* on a step): what has to be done before this can start. **+ Add** / **Change** opens a list of all work, grouped by area, where you tick what it waits for.
