@@ -118,6 +118,21 @@ Later, in the Area tab:
 
 Length, area, clashes and supplier views all count every piece.
 
+## Marking finished parts (progress)
+When a crew has finished part of an item, for example half the wall on day 3:
+1. Move the day slider under the map to the day the work was finished.
+2. Click the item. In the bar under the map, or in the Area tab, click **Mark finished parts**.
+   - **Lines** (walls, fences, cables): click where the finished part starts on the line, then where it ends. It turns green.
+   - **Areas** (turf…): outline the finished patch corner by corner, then click the first corner to close it.
+3. Repeat for other parts or other days, then click **Done**.
+
+What you get:
+- **On the map:** finished parts show in green from the day they were marked, so moving the slider shows the progress growing day by day. The label shows the real share done, for example *Backstage wall · 50% done*, and says **behind schedule** when the planned days are over but it isn't finished.
+- **In the Area tab:** a progress bar, the share done by the day shown and in total, and every mark with its date and size. **Remove** takes a mark off.
+- **Mark all finished** marks the whole item done in one click.
+- **Task status:** the first mark sets the task to *In progress*. When it reaches 100%, set the task to *Done* yourself.
+- **Suppliers** see the same progress on their own view.
+
 ## Hiding things and sharing what's happening
 The bar at the top left of the map has three buttons:
 - **Show** chooses what's on the map:

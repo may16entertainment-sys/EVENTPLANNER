@@ -95,6 +95,8 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
 .daterow input{padding:4px 6px;font-family:var(--f-mono);font-size:12.5px}
 .dstate{font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
 .mtog{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;white-space:nowrap}
+.pbar{height:8px;border-radius:99px;background:var(--line2);overflow:hidden;margin-bottom:4px}
+.pbar i{display:block;height:100%;background:var(--ok);border-radius:99px}
 .fillctl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);white-space:nowrap}
 .fillctl input{width:110px;accent-color:var(--accent)}
 .opctl{display:flex;align-items:center;gap:8px}
@@ -227,6 +229,7 @@ select.sel,input.inp,textarea.inp{border:1px solid var(--line);background:var(--
             <pattern id="turfp" patternUnits="userSpaceOnUse" width="10" height="10"><path d="M2 8 l1.5-4 M6 9 l1-3.5" style="stroke:var(--ok)" stroke-width="1" fill="none" opacity=".7"/></pattern>
             <pattern id="dropp" patternUnits="userSpaceOnUse" width="12" height="12"><circle cx="3" cy="3" r="1.4" style="fill:var(--ok)"/></pattern>
             <pattern id="dropbad" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)"><rect width="3" height="12" style="fill:var(--bad)" opacity=".5"/></pattern>
+            <pattern id="donep" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(-45)"><rect width="2" height="10" style="fill:var(--ok)" opacity=".55"/></pattern>
             <pattern id="grid" patternUnits="userSpaceOnUse" width="50" height="50"><path d="M50 0H0V50" fill="none" style="stroke:var(--grid)" stroke-width="1"/></pattern>
           </defs>
           <rect x="-5000" y="-5000" width="11000" height="11000" fill="url(#grid)"/>
@@ -403,7 +406,7 @@ function normalize(d){
   d.settings=d.settings||{};
   Object.values(d.zones).forEach(z=>{
     if(z.geom==='rect'){z.pts=[{x:z.x,y:z.y},{x:z.x+z.w,y:z.y},{x:z.x+z.w,y:z.y+z.h},{x:z.x,y:z.y+z.h}];z.geom='poly';delete z.x;delete z.y;delete z.w;delete z.h;}
-    z.pts=Array.isArray(z.pts)?z.pts:[];z.parts=Array.isArray(z.parts)?z.parts.filter(a=>Array.isArray(a)&&a.length>=2):[];z.parallel=z.parallel||[];z.answers=z.answers||{};
+    z.pts=Array.isArray(z.pts)?z.pts:[];z.parts=Array.isArray(z.parts)?z.parts.filter(a=>Array.isArray(a)&&a.length>=2):[];z.progress=Array.isArray(z.progress)?z.progress:[];z.parallel=z.parallel||[];z.answers=z.answers||{};
   });
   Object.values(d.tasks).forEach(t=>{t.deps=Array.isArray(t.deps)?t.deps:[];});
   d.lists=d.lists&&typeof d.lists==='object'?d.lists:{};
@@ -747,7 +750,7 @@ function buildVendorView(vid){
   const outZ={};
   Object.entries(zs).forEach(([id,z])=>{
     const drop=TYPES[z.type]?.drop;const ownZone=z.vendorId===vid||zoneTasks(id).some(t=>mine.has(t));
-    outZ[id]={opacity:z.opacity??1,type:z.type,geom:z.geom,pts:z.pts,parts:z.parts||[],label:drop&&z.vendorId!==vid?'Storage (another supplier)':z.label,after:z.after||'none',parallel:[],
+    outZ[id]={progress:z.progress||[],opacity:z.opacity??1,type:z.type,geom:z.geom,pts:z.pts,parts:z.parts||[],label:drop&&z.vendorId!==vid?'Storage (another supplier)':z.label,after:z.after||'none',parallel:[],
       answers:ownZone?(z.answers||{}):{},vendorId:z.vendorId?(named(z.vendorId)?z.vendorId:'_other'):'',clearBy:drop?(z.clearBy||''):''};});
   const outV={_other:{name:'Another supplier',color:'#868e96',trade:'',contact:'',phone:'',email:'',notes:''}};
   const pub=v=>({name:v.name||'',color:v.color||'#868e96',trade:v.trade||'',contact:v.contact||'',phone:v.phone||'',email:v.email||'',notes:''});
@@ -1039,6 +1042,10 @@ function zoneVisual(id,z,D){
   else if(upcoming)sub=`${vendorName(TK()[ts[0]].vendorId)} starts ${shortDay(w.s)}`;
   else if(restr)sub=restrictShort(z.after);
   else if(done)sub='Installed';
+  // marked progress beats the plan: show the real share done, and say so when it's late
+  if(progOf(z).length&&!T.drop){const f=progressPct(z,D);
+    if(f>=0.995)sub=restr?sub:'Finished';
+    else if(f>0)sub=done?`${pctTxt(f)} done · behind schedule`:(active?`LOCKED · ${vendorName(TK()[activeTask].vendorId)} · ${pctTxt(f)} done`:(sub?sub+' · ':'')+pctTxt(f)+' done');}
   return {T,col,active,upcoming,done,restr,sub,dropBad:T.drop&&sub==='MUST BE CLEAR'};
 }
 function bgSrc(){const u=S().bgUrl||'';return u.startsWith('fs:')?(Store.bgCache[u]||''):u;}
@@ -1070,6 +1077,7 @@ function renderMap(){
       const stroke=v.restr||v.dropBad?'var(--bad)':v.T.drop?'var(--ok)':v.col;
       g+=`<path d="${dPoly}" fill="none" style="stroke:${stroke}" stroke-width="${sel?3:v.restr?2.5:1.6}" stroke-linejoin="round" ${v.upcoming?'stroke-dasharray="7 5"':''} vector-effect="non-scaling-stroke"/>`;
       if(sel)g+=`<path d="${dPoly}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      g+=progressSvg(id,z,D,dPoly);
       const big=pcs.reduce((m,pc)=>Math.abs(polyArea(pc))>Math.abs(polyArea(m))?pc:m,pcs[0]);const c=polyCentroid(big);const b=bbox({pts:big});const fs=clamp(Math.min(b.w/9,b.h/3.2,fsBase*1.1),7,24);
       g+=`<text class="zl" x="${c.x}" y="${c.y}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px">${esc(z.label)}</text>`;
       if(v.sub&&b.h>fs*2)g+=`<text class="zs" x="${c.x}" y="${c.y+fs*0.95}" text-anchor="middle" style="fill:${v.active||v.restr||v.dropBad?'var(--bad)':'var(--muted)'};font-weight:${v.active?600:400};font-size:${fs*0.65}px">${esc(v.sub)}</text>`;
@@ -1084,6 +1092,7 @@ function renderMap(){
       else if(t==='cable')g+=`<path d="${dLine}" fill="none" style="stroke:${v.restr?'var(--bad)':'var(--accent)'}" stroke-width="${v.restr?3.5:2.5}" stroke-dasharray="9 5" stroke-linejoin="round" ${v.upcoming?'opacity=".5"':''}/>`;
       else g+=`<path d="${dLine}" fill="none" style="stroke:${v.col}" stroke-width="3"/>`;
       if(sel)g+=`<path d="${dLine}" fill="none" style="stroke:var(--accent)" stroke-width="1.2" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+      g+=progressSvg(id,z,D,dPoly);
       let li=0,ll=0;edges(z).forEach(([a,b],i)=>{const d=dist(a,b);if(d>ll){ll=d;li=i;}});const [a,b]=edges(z)[li];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
       const fs=clamp(fsBase*0.75,7,16);
       g+=`<text class="zs" x="${mx}" y="${my-fs*0.8}" text-anchor="middle" style="fill:var(--fg);font-size:${fs}px;font-weight:500">${esc(z.label)}${v.sub&&t!=='route'?' · ':''}<tspan style="fill:${v.restr||v.active?'var(--bad)':'var(--muted)'}">${t!=='route'?esc(v.sub):''}</tspan></text>`;
@@ -1117,6 +1126,9 @@ function renderDraft(){
     else if(hv.kind)h+=`<circle cx="${p.x}" cy="${p.y}" r="${k*0.7}" fill="none" style="stroke:var(--snap)" stroke-width="${sw}"/>`;
     else h+=`<circle cx="${p.x}" cy="${p.y}" r="${pxUnits(2.5)}" style="fill:var(--accent)"/>`;
   }
+  if(ui.tool==='progress'&&ui.pdraft){const z=Z()[ui.progZone];const pc=z&&piecesOf(z)[ui.pdraft.pi];
+    if(pc&&hv&&hv.pi===ui.pdraft.pi){const pts=subPath(pc,ui.pdraft.a,hv.along);if(pts.length>1)h+=`<polyline points="${polyPts(pts)}" fill="none" style="stroke:var(--ok)" stroke-width="${pxUnits(8)}" stroke-linecap="round" opacity=".6"/>`;}
+    h+=`<circle cx="${ui.pdraft.p.x}" cy="${ui.pdraft.p.y}" r="${pxUnits(5)}" style="fill:var(--ok);stroke:var(--sheet)" stroke-width="${pxUnits(2)}"/>`;}
   if(d&&d.done&&d.done.length){d.done.forEach(pc=>{const pp=polyPts(pc);
     h+=d.geom==='poly'?`<polygon points="${pp}" style="fill:var(--accent);stroke:var(--accent)" fill-opacity=".15" stroke-width="${pxUnits(2.5)}"/>`:`<polyline points="${pp}" fill="none" style="stroke:var(--accent)" stroke-width="${pxUnits(3)}" stroke-linejoin="round"/>`;});}
   if(d&&d.pts.length){
@@ -1134,6 +1146,9 @@ function renderDraft(){
 }
 function renderHint(){
   const hint=$('#hint');const d=ui.draft;const snapBtn=`<button class="btn small ${ui.snap?'on':''}" id="snapToggle" type="button" aria-pressed="${ui.snap}">Snap ${ui.snap?'on':'off'}</button>`;
+  if(ui.tool==='progress'){const z=Z()[ui.progZone];hint.hidden=false;
+    const msg=!z?'':z.geom==='line'?(ui.pdraft?'Now click where the finished part <b>ends</b>.':`Click where a finished part of <b>${esc(z.label)}</b> <b>starts</b> on the line.`):(ui.draft&&ui.draft.pts.length>=3?'Keep clicking corners. Click the first corner to close the finished patch.':`Outline the finished part of <b>${esc(z.label)}</b> corner by corner.`);
+    hint.innerHTML=`<span>${msg} Dated <b>${esc(fmtDay(Math.floor(ui.day),false))}</b>.</span><button class="btn small" id="progAll" type="button">Mark all finished</button><button class="btn small primary" id="progDone" type="button">Done</button>`;return;}
   if(ui.tool==='scale'){hint.hidden=false;hint.innerHTML=`<span>Click two points a known distance apart (for example both ends of a wall you know the length of).</span>${snapBtn}<button class="btn small" id="cancelDraft" type="button">Cancel</button>`;return;}
   if(TYPES[ui.tool]){
     const T=TYPES[ui.tool];const n=d?d.pts.length:0;const done=d&&d.done?d.done.length:0;const addTo=d&&d.addTo;const multi=ui.multi||!!addTo;let msg;
@@ -1146,7 +1161,7 @@ function renderHint(){
     return;
   }
   if(ui.tool==='edit'&&editable()){hint.hidden=false;hint.innerHTML=ui.sel?`<span><b>Edit shapes:</b> drag the shape to move it, drag a corner to reshape, drag a small square to add a corner, right-click a corner to remove it.</span>${snapBtn}<button class="btn small" id="toSelect" type="button">Done editing</button>`:`<span><b>Edit shapes:</b> click a shape to move or reshape it.</span><button class="btn small" id="toSelect" type="button">Done editing</button>`;return;}
-  if(ui.sel&&editable()){hint.hidden=false;hint.innerHTML=`<span>Selected. Shapes can’t move in Select mode.</span><button class="btn small" id="toEdit" type="button">Edit this shape</button>`;return;}
+  if(ui.sel&&editable()){hint.hidden=false;hint.innerHTML=`<span>Selected. Shapes can’t move in Select mode.</span><button class="btn small" id="toEdit" type="button">Edit this shape</button>${TYPES[Z()[ui.sel]?.type]?.drop||lookOf(Z()[ui.sel]?.type)==='route'?'':'<button class="btn small" id="toProg" type="button">Mark finished parts</button>'}`;return;}
   hint.hidden=true;
 }
 
@@ -1154,7 +1169,7 @@ function renderHint(){
 const svg=$('#map');
 function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const r=p.matrixTransform(svg.getScreenCTM().inverse());return {x:r.x,y:r.y};}
 function drawCtx(){const d=ui.draft;const more=d?d.done||[]:[];if(!d||!d.pts.length)return {extra:[],more,geom:d?.geom};const n=d.pts.length;return {prev:d.pts[n-1],prevPrev:n>1?d.pts[n-2]:null,first:d.geom==='poly'?d.pts[0]:null,extra:d.pts,more,geom:d.geom};}
-function isDrawing(){return !!(TYPES[ui.tool]||ui.tool==='scale');}
+function isDrawing(){return !!(TYPES[ui.tool]||ui.tool==='scale'||ui.tool==='progress');}
 svg.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   ui.shift=e.shiftKey;
@@ -1179,13 +1194,15 @@ svg.addEventListener('pointerdown',e=>{
 svg.addEventListener('pointermove',e=>{
   ui.shift=e.shiftKey;
   const P=ui.ptr;
+  if(!P&&ui.tool==='progress'&&editable()){ui.hover=progressHover(pt(e));renderDraft();return;}
   if(!P){if(isDrawing()&&editable()){const ctx=ui.tool==='scale'?{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]}:drawCtx();ui.hover=snapPoint(pt(e),ctx);renderDraft();}return;}
   if(!P.moved&&Math.hypot(e.clientX-P.sx,e.clientY-P.sy)>6){P.moved=true;if(P.mode==='draw')P.mode='pan';}
+  if(P.mode==='draw'&&ui.tool==='progress'){ui.hover=progressHover(pt(e));renderDraft();return;}
   if(P.mode==='draw'){const ctx=ui.tool==='scale'?{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]}:drawCtx();ui.hover=snapPoint(pt(e),ctx);renderDraft();return;}
   if(!P.moved)return;
   if(P.mode==='pan'){const r=svg.getBoundingClientRect();const k=ui.vb.w/r.width;ui.vb.x=P.vb.x-(e.clientX-P.sx)*k;ui.vb.y=P.vb.y-(e.clientY-P.sy)*k;svg.setAttribute('viewBox',`${ui.vb.x} ${ui.vb.y} ${ui.vb.w} ${ui.vb.h}`);return;}
   const p=pt(e);
-  if(P.mode==='move'){const dx=r1(p.x-P.p.x),dy=r1(p.y-P.p.y);const z=clone(P.orig);const sh=pc=>pc.map(q=>({x:r1(q.x+dx),y:r1(q.y+dy)}));z.pts=sh(z.pts);z.parts=(z.parts||[]).map(sh);P.live=z;Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();return;}
+  if(P.mode==='move'){const dx=r1(p.x-P.p.x),dy=r1(p.y-P.p.y);const z=clone(P.orig);const sh=pc=>pc.map(q=>({x:r1(q.x+dx),y:r1(q.y+dy)}));z.pts=sh(z.pts);z.parts=(z.parts||[]).map(sh);z.progress=(z.progress||[]).map(m=>m.pts?{...m,pts:sh(m.pts)}:m);P.live=z;Store.d.zones={...Store.d.zones,[ui.sel]:z};renderMap();return;}
   if(P.mode==='vertex'){
     const z=P.live;const pc=pieceRef(z,P.pi);const n=pc.length;const i=P.i;
     const prevI=z.geom==='poly'?(i-1+n)%n:(i>0?i-1:(P.closedLine?n-2:null));
@@ -1199,7 +1216,8 @@ svg.addEventListener('pointermove',e=>{
 svg.addEventListener('pointerup',e=>{
   const P=ui.ptr;ui.ptr=null;if(!P)return;
   if(P.mode==='draw'&&!P.moved){
-    if(ui.tool==='scale'){const sp=snapPoint(pt(e),{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]});addScalePoint(sp.p);}
+    if(ui.tool==='progress'){progressClick(pt(e));}
+    else if(ui.tool==='scale'){const sp=snapPoint(pt(e),{prev:ui.draft?.pts?.[0],extra:ui.draft?.pts||[]});addScalePoint(sp.p);}
     else{const sp=snapPoint(pt(e),drawCtx());addPoint(sp);}
     return;
   }
@@ -1237,7 +1255,8 @@ function finishPiece(){
   (d.done=d.done||[]).push(pc);d.pts=[];ui.hover=null;renderDraft();
   toast(`Piece ${d.done.length} done. Draw the next piece, or click Finish.`);
 }
-function removePiece(z,pi){if(pi===0){z.pts=z.parts.shift();}else z.parts.splice(pi-1,1);}
+function removePiece(z,pi){if(pi===0){z.pts=z.parts.shift();}else z.parts.splice(pi-1,1);
+  if(z.geom==='line')z.progress=(z.progress||[]).filter(m=>m.pi!==pi).map(m=>m.pi>pi?{...m,pi:m.pi-1}:m);}
 function finishDraft(){
   const d=ui.draft;if(!d)return;const min=d.geom==='poly'?3:2;
   const pieces=[...(d.done||[])];
@@ -1265,7 +1284,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.closest('input,textarea,select'))return;
   if(e.key==='Enter'&&ui.draft&&ui.tool!=='scale')finishDraft();
   else if((e.key==='Backspace'||e.key==='Delete')&&ui.draft&&ui.draft.pts.length){e.preventDefault();ui.draft.pts.pop();if(!ui.draft.pts.length)ui.draft=null;renderDraft();}
-  else if(e.key==='Escape'){if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()||ui.tool==='edit'){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
+  else if(e.key==='Escape'){if(ui.pdraft){ui.pdraft=null;renderDraft();}else if(ui.draft){ui.draft=null;ui.hover=null;renderDraft();}else if(isDrawing()||ui.tool==='edit'){ui.tool='select';renderAll();}else if(ui.sel){ui.sel=null;renderAll();}}
   else if((e.key==='s'||e.key==='S')&&!e.metaKey&&!e.ctrlKey){toggleSnap();}
   else if((e.key==='v'||e.key==='V')&&!e.metaKey&&!e.ctrlKey&&editable()&&!ui.draft){setTool('select');}
   else if((e.key==='e'||e.key==='E')&&!e.metaKey&&!e.ctrlKey&&editable()&&!ui.draft){setTool('edit');}
@@ -1281,6 +1300,9 @@ document.addEventListener('click',e=>{
   else if(id==='snapToggle')toggleSnap();
   else if(id==='endPiece')finishPiece();
   else if(id==='toEdit')setTool('edit');
+  else if(id==='toProg'&&ui.sel)startProgress(ui.sel);
+  else if(id==='progAll'){markAllDone();}
+  else if(id==='progDone'){ui.tool='select';ui.draft=null;ui.pdraft=null;ui.hover=null;ui.tab='zone';renderAll();}
   else if(id==='toSelect')setTool('select');
 });
 $('#zin').onclick=()=>zoom(1/1.25);$('#zout').onclick=()=>zoom(1.25);$('#zfit').onclick=fit;
@@ -1544,6 +1566,7 @@ function panelZone(){
   const isHid=(ui.view?.zones||[]).includes(id);
   h+=`<div class="row"><button class="btn small" data-hidez="${id}" type="button">${eyeIcon()} ${isHid?'Show on map':'Hide on map'}</button>${isHid?'<span class="muted" style="font-size:12px">Hidden on your screen</span>':''}</div>`;
   h+=`<div class="sec meas">${z.geom==='poly'?`<div><b>${fmtArea(areaOf(z))}</b><span>Area</span></div><div><b>${fmtLen(lengthOf(z))}</b><span>Perimeter</span></div>`:`<div><b>${fmtLen(lengthOf(z))}</b><span>Length</span></div>`}<div><b>${piecesOf(z).length>1?piecesOf(z).length:allPts(z).length}</b><span>${piecesOf(z).length>1?'Pieces':(z.geom==='poly'?'Corners':'Points')}</span></div></div>`;
+  if(!T.drop&&!T.route&&lookOf(z.type)!=='nogo')h+=progressPanel(id,z,editable());
   {const pcs=piecesOf(z);const edP=editable();
    if(pcs.length>1||edP)h+=`<div class="sec"><h4>${pcs.length>1?`Pieces · ${pcs.length} (one task)`:'Pieces'}</h4><div style="display:flex;flex-direction:column;gap:4px">${pcs.length>1?pcs.map((pc,i)=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap;font-size:12.5px"><span>Piece ${i+1} · <span class="mono">${z.geom==='poly'?fmtArea(Math.abs(polyArea(pc))):fmtLen(pieceLen(pc,z.geom))}</span></span>${edP?`<button class="btn small ghost danger" data-rmpiece="${i}" type="button">Remove</button>`:''}</div>`).join(''):''}
    ${edP?`<div class="row"><button class="btn small" data-addpiece type="button">+ Add a piece</button><span class="muted" style="font-size:12px">Another separate ${z.geom==='poly'?'area':'line'} in a different place, same task.</span></div>`:''}</div></div>`;}
@@ -1656,6 +1679,9 @@ function wirePanel(p){
     Store.put('tasks',id,t);}));
   p.querySelectorAll('[data-auto]').forEach(b=>b.onclick=()=>{const t=clone(TK()[b.dataset.auto]);delete t.start;Store.put('tasks',b.dataset.auto,t);});
   p.querySelectorAll('[data-hidez]').forEach(b=>b.onclick=()=>toggleZoneHidden(b.dataset.hidez));
+  p.querySelectorAll('[data-markprog]').forEach(b=>b.onclick=()=>startProgress(ui.sel));
+  p.querySelectorAll('[data-markall]').forEach(b=>b.onclick=()=>{ui.progZone=ui.sel;markAllDone();});
+  p.querySelectorAll('[data-rmprog]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[ui.sel]);z.progress.splice(+b.dataset.rmprog,1);Store.put('zones',ui.sel,z);}));
   p.querySelectorAll('[data-addpiece]').forEach(b=>b.onclick=()=>{const id=ui.sel,z=Z()[id];if(!z)return;ui.tool=z.type;ui.hover=null;ui.draft={type:z.type,geom:z.geom,pts:[],done:[],addTo:id};renderAll();});
   p.querySelectorAll('[data-rmpiece]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const z=clone(Z()[ui.sel]);removePiece(z,+b.dataset.rmpiece);Store.put('zones',ui.sel,z);toast('Piece removed.');}));
   p.querySelectorAll('[data-deps]').forEach(b=>b.onclick=()=>openDeps(b.dataset.deps));
@@ -2129,6 +2155,110 @@ function openShare(){
   });
 }
 
+/* ============ progress: marking the finished parts of an item ============
+   Lines (walls, fences, cables): a finished stretch is stored as a start and end distance along one piece.
+   Areas (turf…): a finished patch is an outline drawn over the item.
+   Each mark has the day it was finished; the map shows it from that day on. */
+function projectOnPiece(p,pc){
+  let best=null,acc=0;
+  for(let i=1;i<pc.length;i++){const a=pc[i-1],b=pc[i];const L=dist(a,b);const q=nearestOnSeg(p,a,b);const d=dist(p,q);
+    if(!best||d<best.d)best={d,along:acc+dist(a,q),q};acc+=L;}
+  return best;
+}
+function subPath(pc,from,to){
+  const out=[];let acc=0;if(to<from)[from,to]=[to,from];
+  for(let i=1;i<pc.length;i++){const a=pc[i-1],b=pc[i];const L=dist(a,b);if(!L)continue;const s=acc,e=acc+L;
+    if(e>=from&&s<=to){const t0=Math.max(0,(from-s)/L),t1=Math.min(1,(to-s)/L);
+      const P=t=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});if(!out.length)out.push(P(t0));out.push(P(t1));}
+    acc=e;}
+  return out;
+}
+function mergeIntervals(list){const s=list.map(x=>[Math.min(x[0],x[1]),Math.max(x[0],x[1])]).sort((a,b)=>a[0]-b[0]);const out=[];s.forEach(x=>{const l=out[out.length-1];if(l&&x[0]<=l[1])l[1]=Math.max(l[1],x[1]);else out.push([...x]);});return out;}
+const progOf=z=>Array.isArray(z.progress)?z.progress:[];
+const progVisible=(m,D)=>{const o=offOf(m.day);return o==null||o<=D+1e-6;};
+// share of the item marked finished by day D (0..1)
+function progressPct(z,D){
+  const marks=progOf(z).filter(m=>D==null||progVisible(m,D));if(!marks.length)return 0;
+  if(z.geom==='line'){
+    const pcs=piecesOf(z);let tot=0,done=0;
+    pcs.forEach((pc,pi)=>{const L=pieceLen(pc,'line');tot+=L;const iv=mergeIntervals(marks.filter(m=>m.pi===pi).map(m=>[clamp(m.a,0,L),clamp(m.b,0,L)]));done+=iv.reduce((s,x)=>s+x[1]-x[0],0);});
+    return tot?Math.min(1,done/tot):0;
+  }
+  // areas: sample a grid of points inside the item and count those covered by a finished patch
+  const b=bbox(z);const N=48;let inside=0,cov=0;const pcs=piecesOf(z).filter(pc=>pc.length>2);
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const p={x:b.x+(i+.5)*b.w/N,y:b.y+(j+.5)*b.h/N};
+    if(!pcs.some(pc=>pip(p,pc)))continue;inside++;if(marks.some(m=>m.pts&&pip(p,m.pts)))cov++;}
+  return inside?cov/inside:0;
+}
+const pctTxt=f=>f>=0.995?'100%':Math.max(1,Math.round(f*100))+'%';
+// drawn on top of the item on the map
+function progressSvg(id,z,D,dPoly){
+  const marks=progOf(z).filter(m=>progVisible(m,D));if(!marks.length)return '';
+  let g='';
+  if(z.geom==='line'){const pcs=piecesOf(z);
+    marks.forEach(m=>{const pc=pcs[m.pi];if(!pc)return;const pts=subPath(pc,m.a,m.b);if(pts.length<2)return;
+      g+=`<polyline points="${polyPts(pts)}" fill="none" style="stroke:var(--ok)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`;});
+  }else{
+    const cid='pc_'+id.replace(/[^\w-]/g,'');
+    g+=`<clipPath id="${cid}"><path d="${dPoly}"/></clipPath><g clip-path="url(#${cid})">`;
+    marks.forEach(m=>{if(!m.pts||m.pts.length<3)return;g+=`<polygon points="${polyPts(m.pts)}" style="fill:var(--ok);stroke:var(--ok)" fill-opacity=".38" stroke-width="2" vector-effect="non-scaling-stroke"/><polygon points="${polyPts(m.pts)}" fill="url(#donep)"/>`;});
+    g+=`</g>`;
+  }
+  return g;
+}
+function startProgress(id){
+  const z=Z()[id];if(!z)return;
+  ui.tool='progress';ui.sel=id;ui.draft=null;ui.pdraft=null;ui.hover=null;ui.progZone=id;renderAll();
+}
+function progressHover(raw){
+  const z=Z()[ui.progZone];if(!z)return null;
+  if(z.geom==='line'){let best=null;piecesOf(z).forEach((pc,pi)=>{const pr=projectOnPiece(raw,pc);if(pr&&(!best||pr.d<best.d))best={...pr,pi};});
+    if(!best)return null;return {p:best.q,kind:'edge',guides:[],pi:best.pi,along:best.along,far:best.d>pxUnits(40)};}
+  return snapPoint(raw,ui.draft?drawCtx():{extra:[]});
+}
+function addProgressMark(m){
+  const id=ui.progZone;const z=clone(Z()[id]);if(!z)return;
+  z.progress=[...progOf(z),{...m,day:isoOf(Math.floor(ui.day+1e-6))}];Store.put('zones',id,z);
+  // first finished part: work has started
+  const tk=zoneTasks(id).find(t=>statusBase(TK()[t].status)==='todo');
+  if(tk&&statusBase(TK()[tk].status)==='todo'&&!zoneTasks(id).some(t=>statusBase(TK()[t].status)!=='todo')){const t=clone(TK()[tk]);t.status='started';Store.put('tasks',tk,t);}
+  const pct=progressPct(Store.d.zones[id],null);
+  toast(pct>=0.995?`${z.label} is fully marked as finished. Set its task to Done when you’re happy.`:`Marked finished on ${fmtDay(Math.floor(ui.day),false)} · ${pctTxt(pct)} done so far.`);
+}
+function progressClick(raw){
+  const z=Z()[ui.progZone];if(!z){ui.tool='select';renderAll();return;}
+  const h=progressHover(raw);if(!h)return;
+  if(z.geom==='line'){
+    if(h.far){toast('Click on the line itself.');return;}
+    if(!ui.pdraft){ui.pdraft={pi:h.pi,a:h.along,p:h.p};renderDraft();return;}
+    if(ui.pdraft.pi!==h.pi){toast('Both ends must be on the same piece of the line.');ui.pdraft=null;renderDraft();return;}
+    const a=ui.pdraft.a,b=h.along;ui.pdraft=null;
+    if(Math.abs(b-a)<0.5){renderDraft();return;}
+    addProgressMark({kind:'line',pi:h.pi,a:Math.min(a,b),b:Math.max(a,b)});return;
+  }
+  // area: outline the finished patch corner by corner
+  if(!ui.draft)ui.draft={geom:'poly',pts:[],done:[],progress:true};
+  const d=ui.draft;const tol=pxUnits(CONFIG.snapPixels);
+  if(d.pts.length>=3&&(h.closes||dist(h.p,d.pts[0])<tol)){const pts=d.pts;ui.draft=null;ui.hover=null;addProgressMark({kind:'area',pts});return;}
+  d.pts.push({...h.p});ui.hover=null;renderDraft();
+}
+function markAllDone(){
+  const id=ui.progZone||ui.sel;const z=Z()[id];if(!z)return;ui.progZone=id;
+  const pcs=piecesOf(z);
+  const marks=z.geom==='line'?pcs.map((pc,pi)=>({kind:'line',pi,a:0,b:pieceLen(pc,'line')})):pcs.filter(pc=>pc.length>2).map(pc=>({kind:'area',pts:pc.map(q=>({...q}))}));
+  const c=clone(z);const day=isoOf(Math.floor(ui.day+1e-6));c.progress=[...progOf(z),...marks.map(m=>({...m,day}))];Store.put('zones',id,c);
+  toast(`${z.label} marked fully finished on ${fmtDay(Math.floor(ui.day),false)}.`);
+}
+function progressPanel(id,z,ed){
+  const marks=progOf(z);const pctNow=progressPct(z,ui.day),pctAll=progressPct(z,null);
+  const size=m=>m.kind==='line'?fmtLen(Math.abs(m.b-m.a)):fmtArea(Math.abs(polyArea(m.pts||[])));
+  let h=`<div class="sec"><h4>Progress</h4><div class="pbar" title="${pctTxt(pctNow)} done by ${esc(fmtDay(ui.day,false))}"><i style="width:${Math.round(pctNow*100)}%"></i></div>
+    <div class="row" style="justify-content:space-between;font-size:12.5px"><span><b>${marks.length?pctTxt(pctNow):'0%'}</b> done by ${esc(fmtDay(ui.day,false))}</span>${pctAll>pctNow+0.004?`<span class="muted">${pctTxt(pctAll)} in total</span>`:''}</div>`;
+  if(marks.length)h+=`<div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">${marks.map((m,i)=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap;font-size:12.5px"><span><span class="dot" style="background:var(--ok)"></span> ${esc(fmtDay(offOf(m.day)??0,false))} · <span class="mono">${size(m)}</span>${z.geom==='line'&&piecesOf(z).length>1?` · piece ${m.pi+1}`:''}</span>${ed?`<button class="btn small ghost danger" data-rmprog="${i}" type="button">Remove</button>`:''}</div>`).join('')}</div>`;
+  if(ed)h+=`<div class="row" style="margin-top:6px"><button class="btn small primary" data-markprog type="button">Mark finished parts</button><button class="btn small" data-markall type="button">Mark all finished</button></div><div class="muted" style="font-size:12px">Marks are dated ${esc(fmtDay(ui.day,false))}, the day shown under the map. Move the slider first to record another day.</div>`;
+  return h+`</div>`;
+}
+
 /* ============ undo / redo ============
    Every change to the plan is recorded (changes made in one go count as one step). */
 const History={stack:[],i:-1,pending:null,max:100,applying:false,
@@ -2364,7 +2494,7 @@ window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setT
 window.addEventListener('beforeunload',e=>{if(Store.mode==='cloud'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
 renderAll();fit();
 Store.init().then(()=>{dataStamp++;if(Store.role==='vendor'){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();}).catch(e=>{Store.mode='local';Store.problem='Could not start: '+e.message;renderAll();});
-window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor};
+window.SiteBoard={Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor,progressPct};
 })();
 </script>
 </body>
