@@ -99,8 +99,20 @@ Every task, step and job has a **Start** and **Finish** date box (Area tab, and 
 - **When you draw something new**, you can type a start and finish right in the form.
 - **If you fix a start before the work it waits for is finished**, Clashes shows it, with one-click fixes: *Start on the first possible day*, or *Start automatically*.
 
-## Calendar
-**Site map | Calendar** at the top switches pages. The calendar is separate from the map: its entries don't create or change anything on the plan.
+## Schedule (live)
+**Site map | Schedule | Calendar study** at the top switches pages. **Schedule** is built from the map automatically: every task and step, on its dates, in its supplier's colour. You don't fill it in; it changes the moment anything on the map changes (dates, order, done, marked finished parts), and in the online version it also updates when someone else edits.
+
+- **Timeline:** one row per piece of work, grouped by supplier, with a line for today and the event day shaded. Solid bar = done, striped = in progress (the green part is what's marked finished), dashed = still waiting for other work. A red outline means **behind schedule**: its finish date has passed and it isn't done, or it should have started and hasn't. ⚠ means it's in a clash.
+- **Month:** each day shows the work on site that day.
+- **Today:** who's on site today, what's behind, and what starts in the next 3 days. On a phone it opens here.
+- The line at the top counts what's on site, done, behind, and the clashes; click the clashes to go to them.
+- **Click any work** to open it on the site map.
+- **Filter:** click a supplier in the colour key to hide or show their work.
+- **Show Calendar study** adds your calendar entries on top.
+- **PDF / Print:** the timeline plus today's list, with the date and time it was printed.
+
+## Calendar study
+Your own planning calendar. It is separate from the map: its entries don't create or change anything on the plan.
 
 - **Add:** click a day (or **+ Add**). Fill in what happens, the date (and *Until* for several days), times if you want, **who it's for**, where, and notes about what's expected of them.
 - **Colours** come from who it's for: a supplier (their colour from the Vendors tab), **Everyone** (grey), or a person or company you add just for the calendar, such as the **Landowner**. Add them from the *Who it's for* list or with **People & colours…**.

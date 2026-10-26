@@ -166,6 +166,54 @@ body.printing #printArea{display:block;background:#fff;color:#1d2420;padding:16p
   #printArea .aday{break-inside:avoid}
   #printArea .mgrid,#printArea .mdow,#printArea .mday{border-color:#c9cfc9}
 }
+
+.ssum{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:color-mix(in srgb,var(--line2) 35%,var(--panel))}
+.sk{display:inline-flex;align-items:center;gap:6px}.sk i{width:9px;height:9px;border-radius:50%;display:inline-block}.sk.bad{color:var(--bad);font-weight:600}
+.linkish{border:none;background:none;padding:0;cursor:pointer;font:inherit}
+.live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;color:var(--ok)}.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.tl{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:calc(100vh - 330px)}
+.tl-inner{position:relative}
+.tl-row{display:flex;min-height:34px;border-bottom:1px solid var(--line2)}
+.tl-lbl{position:sticky;left:0;z-index:2;width:220px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:4px 8px;display:flex;flex-direction:column;justify-content:center;font-size:12.5px;min-width:0;overflow:hidden}
+.tl-lbl .muted{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-grp .tl-lbl{flex-direction:row;align-items:center;gap:6px;background:var(--line2)}.tl-grp{min-height:28px;background:var(--line2)}
+.tl-track{position:relative;flex:none}
+.tl-head{position:sticky;top:0;z-index:3;background:var(--panel);min-height:44px}
+.tl-head .tl-lbl{z-index:4}
+.tl-day{position:absolute;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--muted);border-left:1px solid var(--line2)}
+.tl-day .mo{color:var(--accent);font-weight:700}.tl-day b{font-size:13px;color:var(--fg);font-family:var(--f-mono)}.tl-day i{position:absolute;top:1px;left:3px;font-style:normal;font-size:9px;color:var(--accent);font-weight:700}
+.tl-day.wknd{background:color-mix(in srgb,var(--line2) 55%,transparent)}
+.tl-day.ev{background:color-mix(in srgb,var(--bad) 14%,transparent)}.tl-day.ev b{color:var(--bad)}
+.tl-day.today b{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 5px}
+.tl-name{border:none;background:none;padding:0;text-align:left;font:inherit;font-weight:500;color:var(--fg);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tl-name:hover{text-decoration:underline}
+.tl-bar{position:absolute;top:6px;bottom:6px;border-radius:5px;background:color-mix(in srgb,var(--c) 22%,var(--panel));border:1.5px solid var(--c);overflow:hidden;cursor:pointer;display:flex;align-items:center}
+.tl-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ok);opacity:.45}
+.tl-bar.done{background:var(--c)}.tl-bar.done i{display:none}.tl-bar.done span{color:#fff}
+.tl-bar.wait{border-style:dashed}
+.tl-bar.started{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 30%,var(--panel)) 0 6px,color-mix(in srgb,var(--c) 14%,var(--panel)) 6px 12px)}
+.tl-bar.flag{box-shadow:0 0 0 2px var(--bad)}
+.tl-bar span{position:relative;font-size:11px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.tl-body{position:relative}
+.tl-lines{position:absolute;top:0;bottom:0;right:0;pointer-events:none}
+.tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:1}
+.tl-evline{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--bad) 7%,transparent);border-left:1px dashed var(--bad)}
+.tl-cal .tl-track{min-height:30px}
+.tl-note{position:absolute;height:19px;border:none;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));border-radius:3px;font-size:11px;text-align:left;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--fg)}
+.schip{display:block;width:100%;text-align:left;border:1px solid var(--c);border-left-width:4px;background:color-mix(in srgb,var(--c) 14%,var(--panel));color:var(--fg);border-radius:4px;padding:1px 5px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.schip.done{background:var(--c);color:#fff}.schip.wait{border-style:dashed}.schip.flag{box-shadow:0 0 0 1.5px var(--bad)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.tsec{border:1px solid var(--line2);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.tsec h3{margin:0 0 2px;font-family:var(--f-display);font-size:18px}
+.trow{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;border-left:4px solid var(--c);padding:4px 8px;background:color-mix(in srgb,var(--c) 8%,var(--panel));border-radius:4px;font-size:12.5px}
+.sbadge{font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;border:1px solid currentColor;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.sbadge.done{color:var(--ok)}.sbadge.started{color:var(--info)}.sbadge.ready{color:var(--accent)}.sbadge.wait{color:var(--muted)}.sbadge.flag{color:var(--bad)}
+.slegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px}.slegend span{display:inline-flex;align-items:center;gap:5px}
+.sbx{width:16px;height:10px;border-radius:2px;display:inline-block;border:1.5px solid var(--info)}.sbx.done{background:var(--info)}.sbx.started{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--info) 30%,transparent) 0 3px,transparent 3px 6px)}.sbx.ready{border-style:dashed}.sbx.flag{box-shadow:0 0 0 2px var(--bad)}
+#printArea .tl{max-height:none;overflow:visible;border-color:#c9cfc9}
+#printArea .tl-lbl{position:static}
+@media print{#printArea .tl-row{break-inside:avoid}#printArea .live{display:none}}
 .fillctl{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);white-space:nowrap}
 .fillctl input{width:110px;accent-color:var(--accent)}
 .opctl{display:flex;align-items:center;gap:8px}
@@ -294,7 +342,7 @@ body.printing #printArea{display:block;background:#fff;color:#1d2420;padding:16p
 <div class="app">
   <header class="top">
     <div class="brand"><small id="dates">Build-up board</small><h1 id="planName">Site board</h1></div>
-    <div class="seg pageseg" id="pageSeg" role="tablist" aria-label="Page"><button type="button" data-page="map" role="tab">Site map</button><button type="button" data-page="cal" role="tab">Calendar</button></div>
+    <div class="seg pageseg" id="pageSeg" role="tablist" aria-label="Page"><button type="button" data-page="map" role="tab">Site map</button><button type="button" data-page="sched" role="tab">Schedule</button><button type="button" data-page="cal" role="tab">Calendar study</button></div>
     <div class="ctl">
       <span class="evpick" id="undoBox" hidden><button class="btn" id="btnUndo" type="button" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button class="btn" id="btnRedo" type="button" title="Redo (Ctrl+Shift+Z)" disabled>↷ Redo</button></span>
       <span class="save" id="saveState"></span>
@@ -357,7 +405,8 @@ body.printing #printArea{display:block;background:#fff;color:#1d2420;padding:16p
       <div class="pbody" id="pbody"></div>
     </section>
   </div>
-  <section class="calview" id="calView" hidden aria-label="Calendar"></section>
+  <section class="calview" id="schedView" hidden aria-label="Schedule"></section>
+  <section class="calview" id="calView" hidden aria-label="Calendar study"></section>
 </div>
 <div id="printArea"></div>
 <div id="gate" class="gate" hidden></div>
@@ -858,7 +907,7 @@ const Z=()=>Store.d.zones||{}, TK=()=>Store.d.tasks||{}, V=()=>Store.d.vendors||
 const editable=()=>Store.canEdit&&ui.viewAs==='planner'&&!!Store.eventId&&!Store.previewing;
 
 /* ============ UI state ============ */
-const ui={page:ls.get('siteboard.page')==='cal'?'cal':'map',calMap:false,multi:ls.get('siteboard.multi')==='1',fill:(()=>{const v=parseFloat(ls.get('siteboard.fill'));return isNaN(v)?1:v;})(),tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
+const ui={page:['cal','sched'].includes(ls.get('siteboard.page'))?ls.get('siteboard.page'):'map',calMap:false,multi:ls.get('siteboard.multi')==='1',fill:(()=>{const v=parseFloat(ls.get('siteboard.fill'));return isNaN(v)?1:v;})(),tool:'select',sel:null,selTask:null,day:0,tab:'schedule',viewAs:ls.get('siteboard.viewAs')||'planner',vb:{x:-20,y:-20,w:1040,h:680},draft:null,hover:null,ptr:null,snap:ls.get('siteboard.snap')!=='off',shift:false};
 function mapH(){const s=S();return s.bgW&&s.bgH?Math.round(W*s.bgH/s.bgW):640;}
 
 /* ============ schedule ============ */
@@ -1651,7 +1700,7 @@ function dateRow(id,job,pad){const t=TK()[id];const pinned=!!t.start;
     `<span class="dstate">${pinned?`Fixed start <button class="btn small ghost" data-auto="${id}" type="button" title="Start as soon as the work before it is done">Make automatic</button>`:'Starts automatically'}</span></div>`;}
 function stepRow(id,i,n,ed){
   const t=TK()[id],s=SCH[id],st=taskState(id);
-  if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div></div><span class="st ${st}">${pillText(id,st)}</span></div>`;
+  if(!ed)return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line2)"><span class="mono muted" style="font-size:11px;padding-top:2px">${i+1}</span><div style="min-width:0"><div style="font-weight:500">${t.withPrev?'<span class="muted">∥ </span>':''}${esc(t.title)}</div><div style="font-size:12px" class="muted"><span class="dot" style="background:${esc(vendorColor(t.vendorId))};width:8px;height:8px"></span> ${esc(vendorName(t.vendorId))} · ${spanTxt(s)}</div></div><span class="st ${st}">${pillText(id,st)}</span></div>`;
   return `<div data-tcard="${id}" style="display:flex;flex-direction:column;gap:5px;padding:7px 0;border-top:1px solid var(--line2)">
     <div class="row" style="flex-wrap:nowrap"><span class="mono muted" style="font-size:11px;width:14px">${i+1}</span><input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Step name" style="flex:1;min-width:0"><span class="st ${st}">${pillText(id,st)}</span></div>
     <div class="row" style="padding-left:22px;font-size:12.5px"><select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1;min-width:120px" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:60px" aria-label="Days"><span class="muted">days</span></div>
@@ -1667,7 +1716,7 @@ function taskCard(id,ed){
     const ks=KIDS[id];
     return `<div class="task" data-tcard="${id}">
       <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Job name" style="font-weight:600">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
-      <div class="mono muted" style="font-size:12px">${ks.length} steps · ${fmtDay(s.s)} → ${fmtDay(s.e)}</div>
+      <div class="mono muted" style="font-size:12px">${ks.length} steps · ${spanTxt(s)}</div>
       ${depLine(id,ed)}
       ${ed?dateRow(id,true):''}
       <div>${ks.map((k,i)=>stepRow(k,i,ks.length,ed)).join('')}</div>
@@ -1677,7 +1726,7 @@ function taskCard(id,ed){
   return `<div class="task" data-tcard="${id}">
     <div class="t1">${ed?`<input class="inp" data-tf="title" value="${esc(t.title)}" aria-label="Task name">`:`<b style="flex:1;font-weight:600">${esc(t.title)}</b>`}<span class="st ${st}">${pillText(id,st)}</span></div>
     <div class="row" style="font-size:12.5px">${ed?`<select class="sel" data-tf="vendorId" data-vendor data-list="vendor" id="tv_${id}" style="flex:1" aria-label="Vendor">${vendorOptions(t.vendorId)}</select><div class="newv" hidden style="flex-basis:100%"><input class="inp" id="tv_${id}_new" placeholder="Vendor name" style="width:100%"></div><input class="inp mono" type="number" min="0.5" step="0.5" data-tf="days" value="${t.days}" style="width:64px" aria-label="Days"><span class="muted">days</span>`:`<span class="dot" style="background:${esc(vendorColor(t.vendorId))}"></span>${esc(vendorName(t.vendorId))} · ${t.days} day${t.days==1?'':'s'}`}</div>
-    ${ed?dateRow(id,false):`<div class="mono muted" style="font-size:12px">${fmtDay(s.s)} → ${fmtDay(s.e)}</div>`}
+    ${ed?dateRow(id,false):`<div class="mono muted" style="font-size:12px">${spanTxt(s)}</div>`}
     ${depLine(id,ed)}
     ${ed?`<div class="row"><select class="sel" data-tf="status" data-list="status" aria-label="Status">${statusOptions(t.status)}</select><button class="btn small" data-addstep="${id}" type="button">+ Split into steps</button><button class="btn small ghost danger" data-tdel="${id}" type="button">Delete task</button></div>`:''}
   </div>`;
@@ -2670,6 +2719,151 @@ function printCalendar(who,inc,note){
 }
 function setPage(p){ui.page=p;ls.set('siteboard.page',p);renderAll();}
 
+/* ============ Schedule page: the map's work, live, as a timeline / month / today ============ */
+function spanTxt(r){const a=fmtDay(r.s,false),b=lastDay(r);return a===b?a:a+' → '+b;}
+function lastDay(r){return fmtDay(Math.max(Math.floor(r.s+1e-6),Math.ceil(r.e-1e-6)-1),false);}
+function todayOff(){return offOf(isoOf0(0));}
+function schedInit(){
+  if(ui.schedFor===Store.eventId)return;ui.schedFor=Store.eventId;
+  let h=null;try{h=JSON.parse(ls.get('siteboard.schedhide.'+Store.eventId)||'null');}catch(e){}
+  ui.schedHide=new Set(Array.isArray(h)?h:[]);
+  if(!ui.schedMode)ui.schedMode=window.innerWidth<720?'today':(ls.get('siteboard.schedmode')||'timeline');
+  if(ui.schedCal==null)ui.schedCal=ls.get('siteboard.schedcal')!=='0';
+  const t=todayOff();ui.schedMonth=(t!=null&&t>=0&&t<=eventOff()?isoOf0(0):(S().setupStart||isoOf0(0))).slice(0,7);
+}
+function saveSchedHide(){ls.set('siteboard.schedhide.'+Store.eventId,JSON.stringify([...ui.schedHide]));}
+// how a piece of work stands right now
+function liveState(id){
+  const t=TK()[id],s=SCH[id],T0=todayOff(),st=taskState(id);const z=Z()[t.zoneId];
+  const marks=z&&progOf(z).length;const pct=st==='done'?1:marks?progressPct(z,null):(st==='started'?null:0);
+  let flag='';
+  if(st!=='done'&&T0!=null){if(s.e<=T0+1e-6)flag='behind';else if(s.s<T0-1e-6&&(st==='ready'||st==='wait'))flag='late start';}
+  const now=T0!=null&&s.s<=T0+1e-6&&T0<s.e-1e-6;
+  return {st,pct,flag,now};
+}
+function schedTasks(){
+  const T=TK();return Object.keys(T).filter(isLeaf).filter(i=>SCH[i]&&!ui.schedHide.has(T[i].vendorId||'_none')).sort((a,b)=>SCH[a].s-SCH[b].s||SCH[a].e-SCH[b].e);
+}
+function clashIds(){const s=new Set();CONF.filter(c=>!c.ignored&&c.level!=='info').forEach(c=>{if(c.a)s.add(c.a);if(c.b)s.add(c.b);});return s;}
+const ST_TXT={done:'Done',started:'In progress',ready:'Ready',wait:'Waiting'};
+function stateBadge(L){return `<span class="sbadge ${L.st}${L.flag?' flag':''}">${L.st==='done'?'✓ ':''}${ST_TXT[L.st]}${L.pct!=null&&L.st!=='done'&&L.pct>0?' · '+pctTxt(L.pct):''}${L.flag?' · '+L.flag:''}</span>`;}
+function schedRange(){
+  const ids=Object.keys(TK()).filter(i=>isLeaf(i)&&SCH[i]);let a=0,b=eventOff()+1;
+  ids.forEach(i=>{a=Math.min(a,Math.floor(SCH[i].s));b=Math.max(b,Math.ceil(SCH[i].e));});
+  if(ui.schedCal)Object.values(calData().entries).forEach(e=>{const s=offOf(e.date),en=offOf(e.end||e.date);if(s!=null){a=Math.min(a,s);b=Math.max(b,en+1);}});
+  return {a,b:Math.max(b,a+1)};
+}
+function schedLegend(interactive){
+  const used=new Set(Object.keys(TK()).filter(isLeaf).map(i=>TK()[i].vendorId||'_none'));
+  const vs=Object.entries(V()).filter(([id])=>used.has(id)).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  if(used.has('_none'))vs.push(['_none',{name:'Unassigned',color:'#868e96'}]);
+  return vs.map(([id,v])=>interactive?`<button class="lchip${ui.schedHide.has(id)?' off':''}" data-schedwho="${esc(id)}" type="button" aria-pressed="${!ui.schedHide.has(id)}"><span class="dot" style="background:${esc(v.color)}"></span>${esc(v.name)}</button>`
+    :(ui.schedHide.has(id)?'':`<span class="lchip"><span class="dot" style="background:${esc(v.color)}"></span>${esc(v.name)}</span>`)).join('');
+}
+/* timeline: one row per piece of work, grouped by supplier */
+function timelineHtml(colW,print){
+  const {a,b}=schedRange();const n=b-a;const T=TK(),T0=todayOff(),ev=eventOff();const W=n*colW;const cl=clashIds();
+  const x=o=>(o-a)*colW;
+  let head=`<div class="tl-row tl-head"><div class="tl-lbl"></div><div class="tl-track" style="width:${W}px">`;
+  for(let o=a;o<b;o++){const d=dateAt(o);head+=`<div class="tl-day${o===ev?' ev':''}${o===T0?' today':''}${d.getDay()===5||d.getDay()===6?' wknd':''}" style="left:${x(o)}px;width:${colW}px"><span${d.getDate()===1||o===a?' class="mo"':''}>${d.getDate()===1||o===a?MON[d.getMonth()]:DOW[d.getDay()].slice(0,colW<30?1:3)}</span><b>${d.getDate()}</b></div>`;}
+  head+=`</div></div>`;
+  const lines=`${T0!=null&&T0>=a&&T0<b?`<div class="tl-now" style="left:${x(T0)+colW*0.5}px" title="Today"></div>`:''}<div class="tl-evline" style="left:${x(ev)}px;width:${colW}px"></div>`;
+  const groups={};schedTasks().forEach(i=>{const v=T[i].vendorId||'_none';(groups[v]=groups[v]||[]).push(i);});
+  const order=Object.keys(groups).sort((p,q)=>SCH[groups[p][0]].s-SCH[groups[q][0]].s);
+  let rows='';
+  order.forEach(v=>{const col=v==='_none'?'#868e96':vendorColor(v);
+    rows+=`<div class="tl-row tl-grp"><div class="tl-lbl"><span class="dot" style="background:${esc(col)}"></span><b>${esc(v==='_none'?'Unassigned':vendorName(v))}</b></div><div class="tl-track" style="width:${W}px"></div></div>`;
+    groups[v].forEach(i=>{const t=T[i],s=SCH[i],L=liveState(i);const z=Z()[t.zoneId];
+      const left=x(s.s),wd=Math.max(colW*0.4,(s.e-s.s)*colW);const fill=L.st==='done'?1:(L.pct||0);
+      rows+=`<div class="tl-row"><div class="tl-lbl"><button class="tl-name" data-goto="${esc(i)}" type="button" title="Show on the map">${esc(taskLabel(i))}</button><span class="muted">${esc(z?.label||'')}</span></div>
+        <div class="tl-track" style="width:${W}px"><div class="tl-bar ${L.st}${L.flag?' flag':''}" data-goto="${esc(i)}" style="left:${left}px;width:${wd}px;--c:${esc(col)}" title="${esc(`${taskLabel(i)} · ${vendorName(t.vendorId)}\n${spanTxt(s)}\n${ST_TXT[L.st]}${L.pct!=null&&L.pct>0?' · '+pctTxt(L.pct)+' done':''}${L.flag?' · '+L.flag:''}`)}">
+          <i style="width:${Math.round(fill*100)}%"></i><span>${cl.has(i)?'⚠ ':''}${L.st==='done'?'✓ ':''}${esc(colW*(s.e-s.s)>50?taskLabel(i):'')}${L.pct!=null&&L.pct>0&&L.st!=='done'&&colW*(s.e-s.s)>60?' '+pctTxt(L.pct):''}</span></div></div></div>`;});
+  });
+  if(ui.schedCal){const es=Object.entries(calData().entries).sort((p,q)=>p[1].date.localeCompare(q[1].date));
+    if(es.length){rows+=`<div class="tl-row tl-grp"><div class="tl-lbl"><b>Calendar study</b></div><div class="tl-track" style="width:${W}px"></div></div><div class="tl-row tl-cal"><div class="tl-lbl muted">Notes and plans</div><div class="tl-track" style="width:${W}px">`;
+      let lane=[];es.forEach(([id,e])=>{const s0=offOf(e.date),e0=offOf(e.end||e.date)+1;if(s0==null)return;let k=lane.findIndex(end=>end<=s0);if(k<0){k=lane.length;lane.push(0);}lane[k]=e0;
+        rows+=`<button class="tl-note" data-cal="${esc(id)}" type="button" style="left:${x(s0)+1}px;width:${(e0-s0)*colW-2}px;top:${4+k*22}px;--c:${esc(whoColor(e.who))}" title="${esc(e.title+' · '+whoName(e.who))}">${esc(e.title)}</button>`;});
+      rows=rows.replace(/<div class="tl-row tl-cal"><div class="tl-lbl muted">Notes and plans<\/div><div class="tl-track" style="width:([\d.]+)px">/,`<div class="tl-row tl-cal" style="height:${8+lane.length*22}px"><div class="tl-lbl muted">Notes and plans</div><div class="tl-track" style="width:$1px">`);
+      rows+=`</div></div>`;}}
+  if(!order.length&&!rows)rows=`<div class="muted" style="padding:16px">No work scheduled yet. Draw items on the site map and give them dates.</div>`;
+  return `<div class="tl${print?' tl-print':''}"><div class="tl-inner" style="width:${W+220}px">${head}<div class="tl-body">${rows}<div class="tl-lines" style="left:220px">${lines}</div></div></div></div>`;
+}
+/* month: each day's work in supplier colours */
+function schedMonthHtml(ym){
+  const [y,m]=ym.split('-').map(Number);const first=new Date(y,m-1,1);const start=new Date(first);start.setDate(1-first.getDay());
+  const s=S(),T0=isoOf0(0),T=TK();const ids=schedTasks();const cl=clashIds();
+  let h=`<div class="mgrid">${DOW.map(d=>`<div class="mdow">${d}</div>`).join('')}`;
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const day=isoD(d);const inM=d.getMonth()===m-1;
+    if(i>=35&&!inM&&d.getDate()<8)break;const o=offOf(day);
+    const build=s.setupStart&&s.eventDate&&day>=s.setupStart&&day<s.eventDate,ev=day===s.eventDate;
+    const work=o==null?[]:ids.filter(k=>SCH[k].s<o+1-1e-6&&SCH[k].e>o+1e-6);
+    const notes=ui.schedCal?calEntriesOn(day,new Set()):[];
+    h+=`<div class="mday${inM?'':' out'}${build?' build':''}${ev?' ev':''}${day===T0?' today':''}"><div class="mnum"><span>${d.getDate()}</span>${ev?'<em>Event day</em>':''}</div>
+      ${work.map(k=>{const L=liveState(k);const st=SCH[k].s>=o-1e-6?'▸ ':'';return `<button class="schip ${L.st}${L.flag?' flag':''}" data-goto="${esc(k)}" type="button" style="--c:${esc(vendorColor(T[k].vendorId))}" title="${esc(`${taskLabel(k)} · ${vendorName(T[k].vendorId)} · ${ST_TXT[L.st]}${L.flag?' · '+L.flag:''}`)}">${cl.has(k)?'⚠ ':''}${L.st==='done'?'✓ ':st}${esc(taskLabel(k))}</button>`;}).join('')}
+      ${notes.map(chip).join('')}</div>`;}
+  return h+'</div>';
+}
+/* today: what's happening now and next */
+function schedTodayHtml(){
+  const T0=todayOff(),T=TK();const ids=schedTasks();const cl=clashIds();
+  if(T0==null)return '';
+  const row=k=>{const t=T[k],L=liveState(k),z=Z()[t.zoneId];return `<div class="trow" style="--c:${esc(vendorColor(t.vendorId))}"><div><button class="tl-name" data-goto="${esc(k)}" type="button">${cl.has(k)?'⚠ ':''}${esc(taskLabel(k))}</button><div class="muted">${esc(vendorName(t.vendorId))} · ${esc(z?.label||'')} · ${esc(spanTxt(SCH[k]))}</div></div>${stateBadge(L)}</div>`;};
+  const on=ids.filter(k=>liveState(k).now),starting=on.filter(k=>Math.floor(SCH[k].s+1e-6)===T0),ending=on.filter(k=>Math.ceil(SCH[k].e-1e-6)-1===T0);
+  const behind=ids.filter(k=>liveState(k).flag);const soon=ids.filter(k=>SCH[k].s>=T0+1-1e-6&&SCH[k].s<T0+4);
+  const notes=ui.schedCal?calEntriesOn(isoOf0(0),new Set()):[];
+  const sec=(t,list,empty)=>`<div class="tsec"><h3>${t} <span class="muted">${list.length}</span></h3>${list.map(row).join('')||`<div class="muted">${empty}</div>`}</div>`;
+  return `<div class="tgrid">${sec('On site today',on,'Nobody scheduled today.')}${sec('Behind schedule',behind,'Nothing is behind.')}${sec('Starting in the next 3 days',soon,'Nothing new starting soon.')}
+    ${notes.length?`<div class="tsec"><h3>Calendar study today <span class="muted">${notes.length}</span></h3>${notes.map(it=>`<div class="trow" style="--c:${esc(whoColor(it.e.who))}"><div><b>${esc(it.e.title)}</b><div class="muted">${esc(whoName(it.e.who))}${it.e.from?' · '+esc(it.e.from):''}${it.e.where?' · '+esc(it.e.where):''}</div></div></div>`).join('')}</div>`:''}</div>
+    <div class="muted" style="font-size:12px">${starting.length?`${starting.length} start${starting.length===1?'s':''} today. `:''}${ending.length?`${ending.length} should finish today.`:''}</div>`;
+}
+function schedSummary(){
+  const T0=todayOff();const ids=Object.keys(TK()).filter(i=>isLeaf(i)&&SCH[i]);if(!ids.length)return '';
+  const Ls=ids.map(liveState);const on=Ls.filter(l=>l.now).length,done=Ls.filter(l=>l.st==='done').length,behind=Ls.filter(l=>l.flag).length;
+  const cl=CONF.filter(c=>!c.ignored&&c.level!=='info').length;
+  const inRange=T0!=null&&T0>=0&&T0<=eventOff();
+  return `<div class="ssum">${inRange?`<b>Today, ${esc(fmtDay(T0,false))}</b>`:`<b>${T0!=null&&T0<0?`Build-up starts in ${-T0} day${T0===-1?'':'s'}`:'After the event'}</b>`}
+    <span class="sk"><i style="background:var(--info)"></i>${on} on site</span><span class="sk"><i style="background:var(--ok)"></i>${done} of ${ids.length} done</span>
+    <span class="sk${behind?' bad':''}"><i style="background:var(--bad)"></i>${behind} behind</span>${cl?`<button class="sk bad linkish" id="schClash" type="button">⚠ ${cl} clash${cl===1?'':'es'}</button>`:''}
+    ${Store.mode==='cloud'?`<span class="live"><i></i>Live</span>`:''}</div>`;
+}
+function fitCol(){const {a,b}=schedRange();const w=(($('#schedView')?.clientWidth||window.innerWidth)-40-220)/(b-a);return Math.max(window.innerWidth<720?34:44,Math.min(140,Math.floor(w)));}
+function renderSchedule(){
+  const v=$('#schedView');if(!v||v.hidden)return;schedInit();
+  const [y,m]=ui.schedMonth.split('-').map(Number);
+  const tl=v.querySelector('.tl');const sx=tl?tl.scrollLeft:null;
+  v.innerHTML=`<div class="cal-top">
+      <div class="row"><h2 class="cal-m" style="text-align:left;min-width:0">Schedule</h2>
+        <div class="seg"><button type="button" data-schedmode="timeline" aria-pressed="${ui.schedMode==='timeline'}">Timeline</button><button type="button" data-schedmode="month" aria-pressed="${ui.schedMode==='month'}">Month</button><button type="button" data-schedmode="today" aria-pressed="${ui.schedMode==='today'}">Today</button></div>
+        ${ui.schedMode==='month'?`<button class="btn small" id="smPrev" type="button" aria-label="Previous month">‹</button><b>${MONTHS[m-1]} ${y}</b><button class="btn small" id="smNext" type="button" aria-label="Next month">›</button>`:''}</div>
+      <div class="row"><label class="mtog"><input type="checkbox" id="schCal" ${ui.schedCal?'checked':''}> Show Calendar study</label><button class="btn small" id="schPdf" type="button">PDF / Print</button></div>
+    </div>
+    ${schedSummary()}
+    <div class="cal-legend">${schedLegend(true)}</div>
+    <div class="cal-body">${ui.schedMode==='month'?schedMonthHtml(ui.schedMonth):ui.schedMode==='today'?schedTodayHtml():timelineHtml(fitCol())}</div>
+    <div class="slegend muted"><span><i class="sbx done"></i>Done</span><span><i class="sbx started"></i>In progress (green = marked finished)</span><span><i class="sbx ready"></i>Ready / waiting</span><span><i class="sbx flag"></i>Behind schedule</span><span>⚠ in a clash</span></div>`;
+  v.querySelectorAll('[data-schedmode]').forEach(b=>b.onclick=()=>{ui.schedMode=b.dataset.schedmode;ls.set('siteboard.schedmode',ui.schedMode);renderSchedule();});
+  const pm=$('#smPrev');if(pm){const sh=k=>{const d=new Date(y,m-1+k,1);ui.schedMonth=d.getFullYear()+'-'+pad2(d.getMonth()+1);renderSchedule();};pm.onclick=()=>sh(-1);$('#smNext').onclick=()=>sh(1);}
+  $('#schCal').onchange=e=>{ui.schedCal=e.target.checked;ls.set('siteboard.schedcal',ui.schedCal?'1':'0');renderSchedule();};
+  $('#schPdf').onclick=printSchedule;
+  const sc=$('#schClash');if(sc)sc.onclick=()=>{ui.tab='conflicts';setPage('map');};
+  v.querySelectorAll('[data-schedwho]').forEach(b=>b.onclick=()=>{const w=b.dataset.schedwho;if(ui.schedHide.has(w))ui.schedHide.delete(w);else ui.schedHide.add(w);saveSchedHide();renderSchedule();});
+  v.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{const k=b.dataset.goto;const t=TK()[k];if(!t)return;ui.sel=t.zoneId;ui.selTask=k;ui.tab='zone';ui.day=Math.floor(SCH[k].s+1e-6);setPage('map');focusZone(t.zoneId);renderAll();});
+  v.querySelectorAll('[data-cal]').forEach(b=>b.onclick=e=>{e.stopPropagation();openCalEntry(b.dataset.cal);});
+  // keep the timeline scrolled where it was; first time, bring today into view
+  const nt=v.querySelector('.tl');if(nt){if(sx!=null)nt.scrollLeft=sx;else{const now=nt.querySelector('.tl-now');if(now)nt.scrollLeft=Math.max(0,parseFloat(now.style.left)-nt.clientWidth/3);}}
+}
+setInterval(()=>{if(ui.page==='sched'&&!document.hidden)renderSchedule();},60000);
+function printSchedule(){
+  const {a,b}=schedRange();const colW=Math.max(14,Math.min(44,Math.floor(830/(b-a))));const s=S();
+  const head=`<div class="ph"><div><div class="pk">Schedule</div><h1>${esc(s.name||'Event')}</h1><div class="pm">${esc(fmtDay(a,false))} → ${esc(fmtDay(b-1,false))}${s.eventDate?` · Event day ${esc(fmtDay(eventOff(),false))}`:''} · status as of ${esc(new Date().toLocaleString())}</div></div><div class="pl">${schedLegend(false)}</div></div>`;
+  const pa=$('#printArea');
+  pa.innerHTML=`<div class="pback"><button class="btn primary" id="printBack" type="button">← Back to the board</button><span class="muted">If the print window didn’t open, use your browser’s Print menu and choose Save as PDF.</span></div><section class="ppage">${head}${timelineHtml(colW,true)}</section><section class="ppage plist">${head}<h2>Today</h2>${schedTodayHtml()}</section><div class="pf">Made with Build-Up Site Board</div>`;
+  document.body.classList.add('printing');
+  const done=()=>{document.body.classList.remove('printing');pa.innerHTML='';window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);$('#printBack').onclick=done;
+  setTimeout(()=>{try{window.print();}catch(e){toast('Printing isn’t available here. Use your browser’s Print menu.');}},60);
+}
+
 /* ============ undo / redo ============
    Every change to the plan is recorded (changes made in one go count as one step). */
 const History={stack:[],i:-1,pending:null,max:100,applying:false,
@@ -2896,11 +3090,12 @@ function ensureSchedule(){if(schedStamp===dataStamp)return;schedStamp=dataStamp;
 function renderAll(){
   ensureSchedule();
   renderGate();
-  const cal=ui.page==='cal'&&!!Store.eventId;
-  document.querySelector('.main').hidden=cal;$('#calView').hidden=!cal;
-  document.querySelectorAll('#pageSeg [data-page]').forEach(b=>b.setAttribute('aria-selected',String((b.dataset.page==='cal')===cal)));
+  const pg=Store.eventId?ui.page:'map';
+  document.querySelector('.main').hidden=pg!=='map';$('#calView').hidden=pg!=='cal';$('#schedView').hidden=pg!=='sched';
+  document.querySelectorAll('#pageSeg [data-page]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===pg)));
   $('#pageSeg').hidden=!Store.eventId;
-  if(cal){renderHeader();renderCalendar();return;}
+  if(pg==='cal'){renderHeader();renderCalendar();return;}
+  if(pg==='sched'){renderHeader();renderSchedule();return;}
   renderHeader();renderRail();renderScrub();renderMap();renderViewbar();
   const ae=document.activeElement;
   if(!ae||!$('#pbody').contains(ae)||ae.tagName==='BUTTON')renderPanel();else renderTabs();
@@ -2910,7 +3105,7 @@ window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setT
 window.addEventListener('beforeunload',e=>{if(Store.mode==='cloud'&&(Store.dirty||Store.saving)){Store.flush();e.preventDefault();e.returnValue='';}});
 renderAll();fit();
 Store.init().then(()=>{dataStamp++;if(Store.role==='vendor'){ui.viewAs=Store.lockedVendor;ui.tab='brief';}renderAll();fit();}).catch(e=>{Store.mode='local';Store.problem='Could not start: '+e.message;renderAll();});
-window.SiteBoard={printCalendar,Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor,progressPct};
+window.SiteBoard={printSchedule,Store,ui,snapPoint,overlap,straighten,polyArea,buildVendorView,briefFor,progressPct};
 })();
 </script>
 </body>
